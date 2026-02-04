@@ -1,0 +1,62 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\funayama\\source\\repos\\LeaseM4BS\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\funayama\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\frmleasecontractmain.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00000000-0000-0000-0000-000000000000}|\u003CSolution\u003E|LeaseM4BS.TestWinForms||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\funayama\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\||{B270807C-D8C6-49EB-8EBE-8E8D566637A1}|8998e48e-b89a-4034-b66e-353d8c1fdc2e"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "LeaseM4BS.TestWinForms",
+              "DocumentMoniker": "C:\\Users\\funayama\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj",
+              "ToolTip": "C:\\Users\\funayama\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-02-02T06:34:42.101Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FrmLeaseContractMain.vb",
+              "DocumentMoniker": "C:\\Users\\funayama\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmLeaseContractMain.vb",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmLeaseContractMain.vb",
+              "ToolTip": "C:\\Users\\funayama\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmLeaseContractMain.vb",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmLeaseContractMain.vb",
+              "ViewState": "AgIAANkCAAAAAAAAAAAQwPQCAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-01-21T00:58:35.192Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

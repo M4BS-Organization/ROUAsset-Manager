@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../LeaseM4BS/LeaseM4BS.DataAccess/LeaseM4BS.DataAccess.vbproj" />
+  <Project Path="LeaseM4BS.TestWinForms/LeaseM4BS.TestWinForms.vbproj" />
+</Solution>
