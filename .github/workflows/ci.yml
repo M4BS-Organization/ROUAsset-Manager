@@ -1,0 +1,41 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - 'devin/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: self-hosted
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+
+      - name: Restore NuGet packages
+        run: nuget restore LeaseM4BS\LeaseM4BS.slnx
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1.2
+
+      - name: Build solution
+        run: msbuild LeaseM4BS\LeaseM4BS.slnx /p:Configuration=Debug /p:Platform="Any CPU"
+
+      - name: Run tests
+        run: vstest.console.exe LeaseM4BS\LeaseM4BS.Tests\bin\Debug\LeaseM4BS.Tests.dll
