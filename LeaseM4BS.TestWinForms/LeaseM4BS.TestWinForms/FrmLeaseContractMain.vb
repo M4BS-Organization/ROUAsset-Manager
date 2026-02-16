@@ -540,6 +540,10 @@ Public Class FrmLeaseContractMain
         grpQ4.Controls.Add(flowQ4)
         AddControlToTable(tlpIdent, 3, "使用指図権", grpQ4, 0, 2)
 
+        tlpIdent.RowStyles(0) = New RowStyle(SizeType.AutoSize)
+        tlpIdent.RowStyles(2) = New RowStyle(SizeType.AutoSize)
+        tlpIdent.RowStyles(3) = New RowStyle(SizeType.AutoSize)
+
         grpIdent.Controls.Add(tlpIdent)
         pnlScroll.Controls.Add(grpIdent)
 
