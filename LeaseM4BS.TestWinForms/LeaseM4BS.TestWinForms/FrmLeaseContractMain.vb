@@ -550,7 +550,7 @@ Public Class FrmLeaseContractMain
         tlpIdent.Controls.Add(grpQ1, 1, 0)
         tlpIdent.SetColumnSpan(grpQ1, 3)
 
-        txtQ1Memo = New TextBox() With {.Dock = DockStyle.Fill, .PlaceholderText = "備考：製造番号、設置場所など、物理的に特定できる情報を入力"}
+        txtQ1Memo = New TextBox() With {.Dock = DockStyle.Fill, .Text = ""}
         tlpIdent.Controls.Add(txtQ1Memo, 1, 1)
         tlpIdent.SetColumnSpan(txtQ1Memo, 3)
 
