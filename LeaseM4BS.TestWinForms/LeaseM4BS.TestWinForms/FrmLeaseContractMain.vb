@@ -66,7 +66,6 @@ Public Class FrmLeaseContractMain
     ' -------------------------------------------------------------------------
     ' 識別判定 Q1~Q4
     Private grpQ1 As GroupBox, rbQ1Yes As RadioButton, rbQ1No As RadioButton
-    Private txtQ1Memo As TextBox
     Private grpQ2 As GroupBox, rbQ2Yes As RadioButton, rbQ2No As RadioButton
     Private grpQ3 As GroupBox, rbQ3Yes As RadioButton, rbQ3No As RadioButton
     Private grpQ4 As GroupBox, rbQ4Yes As RadioButton, rbQ4No As RadioButton
@@ -494,7 +493,7 @@ Public Class FrmLeaseContractMain
         ' =============================================================
         Dim grpIdent As GroupBox = CreateGroupBox("識別判定")
         grpIdent.AutoSize = True
-        Dim tlpIdent As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 4}
+        Dim tlpIdent As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 3}
         SetupTableColumns(tlpIdent)
 
         grpQ1 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
@@ -507,9 +506,6 @@ Public Class FrmLeaseContractMain
         grpQ1.Controls.Add(flowQ1)
         AddControlToTable(tlpIdent, 0, "資産の特定", grpQ1, 3)
 
-        txtQ1Memo = New TextBox() With {.Dock = DockStyle.Fill}
-        AddControlToTable(tlpIdent, 1, "特定メモ", txtQ1Memo, 3)
-
         grpQ2 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
         Dim flowQ2 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         rbQ2Yes = New RadioButton() With {.Text = "あり (サプライヤーの権利)", .AutoSize = True}
@@ -518,7 +514,7 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ2No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ2.Controls.AddRange({rbQ2Yes, rbQ2No})
         grpQ2.Controls.Add(flowQ2)
-        AddControlToTable(tlpIdent, 2, "実質的代替権", grpQ2, 3)
+        AddControlToTable(tlpIdent, 1, "実質的代替権", grpQ2, 3)
 
         grpQ3 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
         Dim flowQ3 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
@@ -528,7 +524,7 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ3No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ3.Controls.AddRange({rbQ3Yes, rbQ3No})
         grpQ3.Controls.Add(flowQ3)
-        AddControlToTable(tlpIdent, 3, "経済的利益", grpQ3)
+        AddControlToTable(tlpIdent, 2, "経済的利益", grpQ3)
 
         grpQ4 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
         Dim flowQ4 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
@@ -538,11 +534,11 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ4No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ4.Controls.AddRange({rbQ4Yes, rbQ4No})
         grpQ4.Controls.Add(flowQ4)
-        AddControlToTable(tlpIdent, 3, "使用指図権", grpQ4, 0, 2)
+        AddControlToTable(tlpIdent, 2, "使用指図権", grpQ4, 0, 2)
 
         tlpIdent.RowStyles(0) = New RowStyle(SizeType.AutoSize)
+        tlpIdent.RowStyles(1) = New RowStyle(SizeType.AutoSize)
         tlpIdent.RowStyles(2) = New RowStyle(SizeType.AutoSize)
-        tlpIdent.RowStyles(3) = New RowStyle(SizeType.AutoSize)
 
         grpIdent.Controls.Add(tlpIdent)
         pnlScroll.Controls.Add(grpIdent)
