@@ -484,60 +484,18 @@ Public Class FrmLeaseContractMain
         pgInitial.Controls.Add(pnl)
     End Sub
     ' =========================================================================
-    ' [ASBJ第34号対応] Tab3: リース判定
-    '  - HTMLモックアップ (lease_checker_gem5.html) のUIとロジックを完全再現
-    '  - 識別判定フロー (Q1~Q4) と免除規定判定を実装
+    ' Tab3: リース判定 (共通ヘルパー使用版)
     ' =========================================================================
     Private Sub InitTabJudge_Pro()
-        Dim clrHeader As Color = ColorTranslator.FromHtml("#fce4d6")
-        Dim clrSectionBg As Color = ColorTranslator.FromHtml("#44546a")
-        Dim clrBorder As Color = ColorTranslator.FromHtml("#7f7f7f")
-
-        Dim pnlScroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(15)}
-
-        Dim rootLayout As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top,
-            .AutoSize = True,
-            .ColumnCount = 1,
-            .RowCount = 4,
-            .Padding = New Padding(0)
-        }
-        rootLayout.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        rootLayout.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        rootLayout.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        rootLayout.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        rootLayout.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        Dim pnlScroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(10)}
 
         ' =============================================================
-        ' セクション1: ASBJ第34号 識別判定
+        ' セクション1: 識別判定
         ' =============================================================
-        Dim lblSec1 As New Label() With {
-            .Text = "＜ASBJ第34号 識別判定＞",
-            .Dock = DockStyle.Fill,
-            .BackColor = clrSectionBg,
-            .ForeColor = Color.White,
-            .Font = New Font(Me.Font, FontStyle.Bold),
-            .Padding = New Padding(10, 3, 0, 3),
-            .AutoSize = True
-        }
-        rootLayout.Controls.Add(lblSec1, 0, 0)
-
-        Dim tlpIdent As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top,
-            .AutoSize = True,
-            .ColumnCount = 4,
-            .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
-            .Margin = New Padding(0, 0, 0, 15)
-        }
-        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 180.0F))
-        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.3F))
-        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.3F))
-        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.3F))
-
-        ' --- Q1. 資産の特定 (2行) ---
-        Dim lblQ1 As New Label() With {.Text = "Q1. 資産の特定", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpIdent.Controls.Add(lblQ1, 0, 0)
-        tlpIdent.SetRowSpan(lblQ1, 2)
+        Dim grpIdent As GroupBox = CreateGroupBox("識別判定")
+        grpIdent.Height = 160
+        Dim tlpIdent As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 4}
+        SetupTableColumns(tlpIdent)
 
         grpQ1 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 0), .AutoSize = True}
         Dim flowQ1 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
@@ -547,19 +505,12 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ1No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ1.Controls.AddRange({rbQ1Yes, rbQ1No})
         grpQ1.Controls.Add(flowQ1)
-        tlpIdent.Controls.Add(grpQ1, 1, 0)
-        tlpIdent.SetColumnSpan(grpQ1, 3)
+        AddControlToTable(tlpIdent, 0, "資産の特定", grpQ1, 3)
 
-        txtQ1Memo = New TextBox() With {.Dock = DockStyle.Fill, .Text = ""}
-        tlpIdent.Controls.Add(txtQ1Memo, 1, 1)
-        tlpIdent.SetColumnSpan(txtQ1Memo, 3)
+        txtQ1Memo = New TextBox() With {.Dock = DockStyle.Fill}
+        AddControlToTable(tlpIdent, 1, "特定メモ", txtQ1Memo, 3)
 
-        ' --- Q2. 実質的な代替権 ---
-        Dim lblQ2 As New Label() With {.Text = "Q2. 実質的な代替権", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpIdent.Controls.Add(lblQ2, 0, 2)
-
-        Dim pnlQ2Cell As New Panel() With {.Dock = DockStyle.Fill, .AutoSize = True, .Padding = New Padding(4)}
-        grpQ2 = New GroupBox() With {.Dock = DockStyle.Top, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 0), .AutoSize = True}
+        grpQ2 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 0), .AutoSize = True}
         Dim flowQ2 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         rbQ2Yes = New RadioButton() With {.Text = "あり (サプライヤーの権利)", .AutoSize = True}
         rbQ2No = New RadioButton() With {.Text = "なし", .AutoSize = True, .Checked = True}
@@ -567,15 +518,7 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ2No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ2.Controls.AddRange({rbQ2Yes, rbQ2No})
         grpQ2.Controls.Add(flowQ2)
-        Dim lblQ2Note As New Label() With {.Text = "※サプライヤーが経済的利益を得るために、資産を自由に他のものと入れ替える権利を持つ場合は「あり」", .AutoSize = True, .ForeColor = Color.Gray, .Font = New Font(Me.Font.FontFamily, 8.5F), .Dock = DockStyle.Top}
-        pnlQ2Cell.Controls.Add(lblQ2Note)
-        pnlQ2Cell.Controls.Add(grpQ2)
-        tlpIdent.Controls.Add(pnlQ2Cell, 1, 2)
-        tlpIdent.SetColumnSpan(pnlQ2Cell, 3)
-
-        ' --- Q3. 経済的利益 & Q4. 使用指図権 (同一行) ---
-        Dim lblQ3 As New Label() With {.Text = "Q3. 経済的利益の享受", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpIdent.Controls.Add(lblQ3, 0, 3)
+        AddControlToTable(tlpIdent, 2, "実質的代替権", grpQ2, 3)
 
         grpQ3 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 0), .AutoSize = True}
         Dim flowQ3 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
@@ -585,10 +528,7 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ3No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ3.Controls.AddRange({rbQ3Yes, rbQ3No})
         grpQ3.Controls.Add(flowQ3)
-        tlpIdent.Controls.Add(grpQ3, 1, 3)
-
-        Dim lblQ4Hdr As New Label() With {.Text = "Q4. 使用指図権", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpIdent.Controls.Add(lblQ4Hdr, 2, 3)
+        AddControlToTable(tlpIdent, 3, "経済的利益", grpQ3)
 
         grpQ4 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 0), .AutoSize = True}
         Dim flowQ4 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
@@ -598,137 +538,63 @@ Public Class FrmLeaseContractMain
         AddHandler rbQ4No.CheckedChanged, AddressOf OnJudgeTrigger
         flowQ4.Controls.AddRange({rbQ4Yes, rbQ4No})
         grpQ4.Controls.Add(flowQ4)
-        tlpIdent.Controls.Add(grpQ4, 3, 3)
+        AddControlToTable(tlpIdent, 3, "使用指図権", grpQ4, 0, 2)
 
-        rootLayout.Controls.Add(tlpIdent, 0, 1)
+        grpIdent.Controls.Add(tlpIdent)
+        pnlScroll.Controls.Add(grpIdent)
 
         ' =============================================================
-        ' セクション2: リース期間・免除規定
+        ' セクション2: 期間・免除規定判定
         ' =============================================================
-        Dim lblSec2 As New Label() With {
-            .Text = "＜リース期間・免除規定＞",
-            .Dock = DockStyle.Fill,
-            .BackColor = clrSectionBg,
-            .ForeColor = Color.White,
-            .Font = New Font(Me.Font, FontStyle.Bold),
-            .Padding = New Padding(10, 3, 0, 3),
-            .AutoSize = True
-        }
+        Dim grpExempt As GroupBox = CreateGroupBox("期間・免除規定判定")
+        grpExempt.Height = 190
+        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 5}
+        SetupTableColumns(tlpExempt)
 
-        Dim tlpExempt As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top,
-            .AutoSize = True,
-            .ColumnCount = 6,
-            .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
-            .Margin = New Padding(0, 0, 0, 10)
-        }
-        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 150.0F))
-        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 110.0F))
-        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 110.0F))
-        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-
-        ' Row 0: 開始日 / 終了日 / 見積期間
-        Dim lblStart As New Label() With {.Text = "開始日", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblStart, 0, 0)
         dtpJudgeStart = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2024, 7, 24)}
         AddHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
-        tlpExempt.Controls.Add(dtpJudgeStart, 1, 0)
-
-        Dim lblEnd As New Label() With {.Text = "終了日", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblEnd, 2, 0)
         dtpJudgeEnd = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2026, 7, 23)}
         AddHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
-        tlpExempt.Controls.Add(dtpJudgeEnd, 3, 0)
+        AddControlToTable(tlpExempt, 0, "開始日", dtpJudgeStart)
+        AddControlToTable(tlpExempt, 0, "終了日", dtpJudgeEnd, 0, 2)
 
-        Dim lblTermHdr As New Label() With {.Text = "見積期間 (月)", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblTermHdr, 4, 0)
+        Dim flowTerm As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        lblTermMonths = New Label() With {.Text = "24", .Font = New Font(Me.Font.FontFamily, 11.0F, FontStyle.Bold), .AutoSize = True}
+        Dim lblMonthUnit As New Label() With {.Text = " ヶ月", .AutoSize = True, .Padding = New Padding(0, 4, 0, 0)}
+        lblDateError = New Label() With {.Text = "", .ForeColor = Color.FromArgb(217, 83, 79), .Font = New Font(Me.Font, FontStyle.Bold), .AutoSize = True, .Padding = New Padding(5, 4, 0, 0)}
+        flowTerm.Controls.AddRange({lblTermMonths, lblMonthUnit, lblDateError})
+        lblShortTermResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
+        AddControlToTable(tlpExempt, 1, "見積期間", flowTerm)
+        AddControlToTable(tlpExempt, 1, "短期判定", lblShortTermResult, 0, 2)
 
-        Dim pnlTermCell As New Panel() With {.Dock = DockStyle.Fill, .BackColor = Color.FromArgb(249, 249, 249), .Padding = New Padding(4)}
-        lblTermMonths = New Label() With {.Text = "24", .Font = New Font(Me.Font.FontFamily, 11.0F, FontStyle.Bold), .AutoSize = True, .Dock = DockStyle.Left}
-        Dim lblMonthUnit As New Label() With {.Text = " ヶ月", .AutoSize = True, .Dock = DockStyle.Left, .Padding = New Padding(0, 4, 0, 0)}
-        lblDateError = New Label() With {.Text = "", .ForeColor = Color.FromArgb(217, 83, 79), .Font = New Font(Me.Font, FontStyle.Bold), .AutoSize = True, .Dock = DockStyle.Bottom}
-        pnlTermCell.Controls.Add(lblDateError)
-        pnlTermCell.Controls.Add(lblMonthUnit)
-        pnlTermCell.Controls.Add(lblTermMonths)
-        tlpExempt.Controls.Add(pnlTermCell, 5, 0)
-
-        ' Row 1: 延長オプション / 延長期間 / 短期リース判定
-        Dim lblExtHdr As New Label() With {.Text = "延長オプション", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblExtHdr, 0, 1)
-
-        Dim pnlExtCell As New Panel() With {.Dock = DockStyle.Fill, .Padding = New Padding(4), .AutoSize = True}
         Dim flowExt As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         chkExtOption = New CheckBox() With {.Text = "あり", .AutoSize = True}
-        Dim lblCert As New Label() With {.Text = "(確実性: ", .AutoSize = True, .Padding = New Padding(5, 4, 0, 0)}
         cboExtCertainty = New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 130, .Enabled = False}
         cboExtCertainty.Items.AddRange({"低い(行使しない)", "高い(行使する)"})
         cboExtCertainty.SelectedIndex = 0
-        Dim lblCertEnd As New Label() With {.Text = ")", .AutoSize = True, .Padding = New Padding(0, 4, 0, 0)}
         AddHandler chkExtOption.CheckedChanged, AddressOf OnExtOptionChanged
         AddHandler cboExtCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
-        flowExt.Controls.AddRange({chkExtOption, lblCert, cboExtCertainty, lblCertEnd})
-        pnlExtCell.Controls.Add(flowExt)
-        tlpExempt.Controls.Add(pnlExtCell, 1, 1)
-
-        Dim lblExtMonthHdr As New Label() With {.Text = "延長期間 (月)", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblExtMonthHdr, 2, 1)
+        flowExt.Controls.AddRange({chkExtOption, cboExtCertainty})
         numExtMonths = New NumericUpDown() With {.Dock = DockStyle.Fill, .Minimum = 0, .Maximum = 600, .Value = 0, .Enabled = False}
         AddHandler numExtMonths.ValueChanged, AddressOf OnJudgeTrigger
-        tlpExempt.Controls.Add(numExtMonths, 3, 1)
+        AddControlToTable(tlpExempt, 2, "延長OP", flowExt)
+        AddControlToTable(tlpExempt, 2, "延長期間", numExtMonths, 0, 2)
 
-        Dim lblShortHdr As New Label() With {.Text = "短期リース判定", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblShortHdr, 4, 1)
-        lblShortTermResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .BackColor = Color.FromArgb(249, 249, 249), .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblShortTermResult, 5, 1)
-
-        ' Row 2: 取得価額 / 少額基準額 / 少額資産判定
-        Dim lblAssetHdr As New Label() With {.Text = "取得価額 (新品時)", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblAssetHdr, 0, 2)
-
-        Dim pnlAssetCell As New Panel() With {.Dock = DockStyle.Fill, .Padding = New Padding(4), .AutoSize = True}
-        Dim flowAsset As New FlowLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .WrapContents = False}
-        numAssetValue = New NumericUpDown() With {.Maximum = 9999999999D, .ThousandsSeparator = True, .Width = 140, .TextAlign = HorizontalAlignment.Right}
+        numAssetValue = New NumericUpDown() With {.Maximum = 9999999999D, .ThousandsSeparator = True, .Dock = DockStyle.Fill, .TextAlign = HorizontalAlignment.Right}
         AddHandler numAssetValue.ValueChanged, AddressOf OnJudgeTrigger
-        Dim lblYen As New Label() With {.Text = "円", .AutoSize = True, .Padding = New Padding(5, 4, 0, 0)}
-        flowAsset.Controls.AddRange({numAssetValue, lblYen})
-        Dim lblAssetNote As New Label() With {.Text = "※不明な場合は公正価値等の見積額", .AutoSize = True, .ForeColor = Color.Gray, .Font = New Font(Me.Font.FontFamily, 8.5F), .Dock = DockStyle.Top}
-        pnlAssetCell.Controls.Add(lblAssetNote)
-        pnlAssetCell.Controls.Add(flowAsset)
-        tlpExempt.Controls.Add(pnlAssetCell, 1, 2)
+        lblLowValueResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
+        AddControlToTable(tlpExempt, 3, "取得価額", numAssetValue)
+        AddControlToTable(tlpExempt, 3, "少額判定", lblLowValueResult, 0, 2)
 
-        Dim lblLowHdr As New Label() With {.Text = "少額基準額", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblLowHdr, 2, 2)
-        Dim lblLowVal As New Label() With {.Text = "3,000,000 円", .Dock = DockStyle.Fill, .BackColor = Color.FromArgb(249, 249, 249), .TextAlign = ContentAlignment.MiddleRight, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblLowVal, 3, 2)
-
-        Dim lblLowJudgeHdr As New Label() With {.Text = "少額資産判定", .BackColor = clrHeader, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblLowJudgeHdr, 4, 2)
-        lblLowValueResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .BackColor = Color.FromArgb(249, 249, 249), .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4)}
-        tlpExempt.Controls.Add(lblLowValueResult, 5, 2)
-
-        ' Row 3: 免除規定の適用 (ColSpan)
-        Dim lblExemptHdr As New Label() With {.Text = "免除規定の適用", .BackColor = Color.FromArgb(255, 204, 204), .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4), .Font = New Font(Me.Font, FontStyle.Bold)}
-        tlpExempt.Controls.Add(lblExemptHdr, 0, 3)
-
-        Dim pnlExemptCell As New Panel() With {.Dock = DockStyle.Fill, .Padding = New Padding(4), .AutoSize = True}
-        chkApplyExemption = New CheckBox() With {.Text = "短期または少額の免除規定を適用する (オフバランス処理)", .AutoSize = True, .Font = New Font(Me.Font, FontStyle.Bold), .Enabled = False, .Dock = DockStyle.Top}
+        chkApplyExemption = New CheckBox() With {.Text = "免除規定を適用する (オフバランス処理)", .AutoSize = True, .Enabled = False, .Dock = DockStyle.Fill}
         AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
-        Dim lblExemptNote As New Label() With {.Text = "※適用条件（期間12ヶ月以内 または 少額資産）を満たす場合のみ選択可能です。", .AutoSize = True, .ForeColor = Color.Gray, .Font = New Font(Me.Font.FontFamily, 8.5F), .Dock = DockStyle.Top}
-        pnlExemptCell.Controls.Add(lblExemptNote)
-        pnlExemptCell.Controls.Add(chkApplyExemption)
-        tlpExempt.Controls.Add(pnlExemptCell, 1, 3)
-        tlpExempt.SetColumnSpan(pnlExemptCell, 5)
+        AddControlToTable(tlpExempt, 4, "免除規定", chkApplyExemption, 3)
 
-        ' セクション2ヘッダーと免除規定テーブルをまとめるパネル
-        Dim pnlSec2 As New Panel() With {.Dock = DockStyle.Top, .AutoSize = True}
-        pnlSec2.Controls.Add(tlpExempt)
-        pnlSec2.Controls.Add(lblSec2)
-        rootLayout.Controls.Add(pnlSec2, 0, 2)
+        grpExempt.Controls.Add(tlpExempt)
+        pnlScroll.Controls.Add(grpExempt)
 
         ' =============================================================
-        ' セクション3: 判定結果パネル
+        ' セクション3: 判定結果
         ' =============================================================
         pnlResult = New Panel() With {
             .Dock = DockStyle.Top,
@@ -745,7 +611,7 @@ Public Class FrmLeaseContractMain
         tlpResult.RowStyles.Add(New RowStyle(SizeType.Percent, 60.0F))
         tlpResult.RowStyles.Add(New RowStyle(SizeType.Percent, 40.0F))
 
-        Dim lblResultTitle As New Label() With {.Text = "現在の判定結果：", .Font = New Font(Me.Font, FontStyle.Bold), .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
+        Dim lblResultTitle As New Label() With {.Text = "判定結果：", .Font = New Font(Me.Font, FontStyle.Bold), .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
         tlpResult.Controls.Add(lblResultTitle, 0, 0)
         tlpResult.SetRowSpan(lblResultTitle, 2)
 
@@ -759,9 +625,12 @@ Public Class FrmLeaseContractMain
         tlpResult.Controls.Add(lblResultReason, 1, 1)
 
         pnlResult.Controls.Add(tlpResult)
-        rootLayout.Controls.Add(pnlResult, 0, 3)
+        pnlScroll.Controls.Add(pnlResult)
 
-        pnlScroll.Controls.Add(rootLayout)
+        grpIdent.BringToFront()
+        grpExempt.BringToFront()
+        pnlResult.BringToFront()
+
         pgJudge.Controls.Add(pnlScroll)
     End Sub
 
