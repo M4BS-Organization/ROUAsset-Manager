@@ -493,7 +493,7 @@ Public Class FrmLeaseContractMain
         ' セクション1: 識別判定
         ' =============================================================
         Dim grpIdent As GroupBox = CreateGroupBox("識別判定")
-        grpIdent.Height = 160
+        grpIdent.AutoSize = True
         Dim tlpIdent As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 4}
         SetupTableColumns(tlpIdent)
 
@@ -547,7 +547,7 @@ Public Class FrmLeaseContractMain
         ' セクション2: 期間・免除規定判定
         ' =============================================================
         Dim grpExempt As GroupBox = CreateGroupBox("期間・免除規定判定")
-        grpExempt.Height = 190
+        grpExempt.AutoSize = True
         Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 5}
         SetupTableColumns(tlpExempt)
 
