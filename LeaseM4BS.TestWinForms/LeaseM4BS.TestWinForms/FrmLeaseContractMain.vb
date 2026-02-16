@@ -37,31 +37,46 @@ Public Class FrmLeaseContractMain
     Private txtApprovalDate As TextBox
     Private lblApprovalBadge As Label
 
-    Private cmbContractType As ComboBox
+    Private rdoContractTypeNormal As RadioButton
+    Private rdoContractTypePeriodic As RadioButton
     Private txtContractNo As TextBox
-    Private txtContractName As TextBox
     Private lblContractClass As Label
-    Private txtMgmtDept As TextBox
-    Private txtCostDept As TextBox
-    Private txtMgmtPerson As TextBox
+    Private txtMgmtDeptCode As TextBox
+    Private txtMgmtDeptName As TextBox
+    Private txtCostDeptCode As TextBox
+    Private txtCostDeptName As TextBox
+    Private txtContractExternalNo As TextBox
+    Private txtManagementNo As TextBox
+    Private txtLandlordName As TextBox
+    Private txtBrokerCompany As TextBox
+    Private txtPaymentAgent As TextBox
+    Private txtGuarantor As TextBox
+
+    Private txtPropertyName As TextBox
     Private txtLocation As TextBox
+    Private txtSection As TextBox
     Private txtArea As TextBox
     Private txtLayout As TextBox
+    Private txtUsageRestrictions As TextBox
     Private txtStructure As TextBox
-    Private txtUsage As TextBox
     Private numUsefulLife As NumericUpDown
     Private dtpCompletion As DateTimePicker
     Private lblBuildingAge As Label
-    Private txtEquipmentList As TextBox
-    Private dtpFirstContract As DateTimePicker
+    Private dgvEquipment As DataGridView
+
     Private dtpStartDate As DateTimePicker
     Private dtpEndDate As DateTimePicker
     Private numFreePeriod As NumericUpDown
     Private lblLeaseMonths As Label
-    Private cmbRenewalOption As ComboBox
     Private numRenewalCount As NumericUpDown
-    Private cmbPurchaseOption As ComboBox
+    Private numRenewalRent As NumericUpDown
+    Private cmbRenewalLikelihood As ComboBox
+    Private numCancelNoticePeriod As NumericUpDown
+    Private numCancelPenalty As NumericUpDown
+    Private cmbCancelLikelihood As ComboBox
+    Private numPurchasePrice As NumericUpDown
     Private cmbPurchaseLikelihood As ComboBox
+    Private dtpMoveOutDate As DateTimePicker
 
     Private dgvInitialCosts As DataGridView
     Private numInitialDirectCost As NumericUpDown
@@ -141,7 +156,7 @@ Public Class FrmLeaseContractMain
     Private Sub BuildGlobalHeader()
         pnlHeader = New Panel() With {
             .Dock = DockStyle.Top,
-            .Height = 90,
+            .Height = 110,
             .BackColor = CLR_HEADER,
             .Padding = New Padding(10, 8, 10, 8)
         }
@@ -151,8 +166,8 @@ Public Class FrmLeaseContractMain
             .ColumnCount = 2,
             .RowCount = 1
         }
-        tblHeader.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 55.0F))
-        tblHeader.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 45.0F))
+        tblHeader.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 40.0F))
+        tblHeader.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 60.0F))
 
         Dim flowButtons As New FlowLayoutPanel() With {
             .Dock = DockStyle.Fill,
@@ -172,13 +187,13 @@ Public Class FrmLeaseContractMain
         For i As Integer = 0 To btnNames.Length - 1
             Dim btn As New Button() With {
                 .Text = btnNames(i),
-                .Width = 110,
+                .Width = 100,
                 .Height = 32,
                 .FlatStyle = FlatStyle.Flat,
                 .BackColor = btnColors(i),
                 .ForeColor = Color.White,
                 .Font = New Font("Meiryo", 9.0F, FontStyle.Bold),
-                .Margin = New Padding(0, 0, 6, 0),
+                .Margin = New Padding(0, 0, 4, 0),
                 .Cursor = Cursors.Hand
             }
             btn.FlatAppearance.BorderSize = 0
@@ -192,15 +207,19 @@ Public Class FrmLeaseContractMain
 
         Dim tblMgmt As New TableLayoutPanel() With {
             .Dock = DockStyle.Fill,
-            .ColumnCount = 6,
+            .ColumnCount = 7,
             .RowCount = 2,
             .BackColor = Color.FromArgb(0, 40, 80),
             .Padding = New Padding(4),
             .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
         }
-        For c As Integer = 0 To 5
-            tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 16.67F))
-        Next
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 65.0F))
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 65.0F))
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 35.0F))
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 35.0F))
+        tblMgmt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
         tblMgmt.RowStyles.Add(New RowStyle(SizeType.Percent, 50.0F))
         tblMgmt.RowStyles.Add(New RowStyle(SizeType.Percent, 50.0F))
 
@@ -214,7 +233,7 @@ Public Class FrmLeaseContractMain
             .Text = "承認済",
             .BackColor = CLR_ACCENT,
             .ForeColor = Color.White,
-            .Font = New Font("Meiryo", 8.5F, FontStyle.Bold),
+            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
             .TextAlign = ContentAlignment.MiddleCenter,
             .Dock = DockStyle.Fill,
             .Margin = New Padding(4)
@@ -226,13 +245,13 @@ Public Class FrmLeaseContractMain
         tblMgmt.Controls.Add(txtChangeCount, 3, 0)
         tblMgmt.Controls.Add(CreateHeaderLabel("起案者"), 4, 0)
         tblMgmt.Controls.Add(txtDrafter, 5, 0)
+        tblMgmt.Controls.Add(lblApprovalBadge, 6, 0)
+        tblMgmt.SetRowSpan(lblApprovalBadge, 2)
 
         tblMgmt.Controls.Add(CreateHeaderLabel("稟議No"), 0, 1)
         tblMgmt.Controls.Add(txtApprovalNo, 1, 1)
         tblMgmt.Controls.Add(CreateHeaderLabel("承認日"), 2, 1)
         tblMgmt.Controls.Add(txtApprovalDate, 3, 1)
-        tblMgmt.Controls.Add(CreateHeaderLabel("承認状態"), 4, 1)
-        tblMgmt.Controls.Add(lblApprovalBadge, 5, 1)
 
         pnlMgmt.Controls.Add(tblMgmt)
 
@@ -337,25 +356,86 @@ Public Class FrmLeaseContractMain
         tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))
         tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
 
-        cmbContractType = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList}
-        cmbContractType.Items.AddRange({"普通賃貸借", "定期賃貸借"})
-        cmbContractType.SelectedIndex = 0
-        txtContractNo = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "LC-2025-0001"}
+        Dim pnlRadio As New FlowLayoutPanel() With {
+            .Dock = DockStyle.Fill, .FlowDirection = FlowDirection.LeftToRight,
+            .WrapContents = False
+        }
+        rdoContractTypeNormal = New RadioButton() With {
+            .Text = "普通", .AutoSize = True, .Checked = True, .Font = FNT_INPUT
+        }
+        rdoContractTypePeriodic = New RadioButton() With {
+            .Text = "定期", .AutoSize = True, .Font = FNT_INPUT
+        }
+        pnlRadio.Controls.Add(rdoContractTypeNormal)
+        pnlRadio.Controls.Add(rdoContractTypePeriodic)
+
+        txtContractNo = New TextBox() With {
+            .Dock = DockStyle.Fill, .ReadOnly = True,
+            .BackColor = CLR_READONLY, .Text = "LC-2025-0001"
+        }
         _tooltipProvider.SetToolTip(txtContractNo, "契約番号は自動採番されます")
-        txtContractName = New TextBox() With {.Dock = DockStyle.Fill}
+
         lblContractClass = New Label() With {
             .Dock = DockStyle.Fill, .Text = "（自動判定）", .BackColor = CLR_READONLY,
             .TextAlign = ContentAlignment.MiddleCenter, .Font = FNT_LABEL
         }
         _tooltipProvider.SetToolTip(lblContractClass, "リース判定タブの結果が自動反映されます")
-        txtMgmtDept = New TextBox() With {.Dock = DockStyle.Fill}
-        txtCostDept = New TextBox() With {.Dock = DockStyle.Fill}
-        txtMgmtPerson = New TextBox() With {.Dock = DockStyle.Fill}
 
-        AddFieldRow(tblBasic, "契約種類", cmbContractType, "契約番号", txtContractNo)
-        AddFieldRow(tblBasic, "契約名称", txtContractName, "契約区分", lblContractClass)
-        AddFieldRow(tblBasic, "契約管理所属", txtMgmtDept, "費用負担部署", txtCostDept)
-        AddFieldRow(tblBasic, "管理責任者", txtMgmtPerson, Nothing, Nothing)
+        AddFieldRow(tblBasic, "契約種類", pnlRadio, "契約番号", txtContractNo)
+
+        Dim r2 As Integer = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("契約区分"), 0, r2)
+        tblBasic.Controls.Add(lblContractClass, 1, r2)
+        tblBasic.SetColumnSpan(lblContractClass, 3)
+        tblBasic.RowCount += 1
+
+        Dim pnlMgmtDept As New TableLayoutPanel() With {
+            .Dock = DockStyle.Fill, .ColumnCount = 2, .RowCount = 1
+        }
+        pnlMgmtDept.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
+        pnlMgmtDept.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        txtMgmtDeptCode = New TextBox() With {.Dock = DockStyle.Fill}
+        txtMgmtDeptName = New TextBox() With {.Dock = DockStyle.Fill}
+        pnlMgmtDept.Controls.Add(txtMgmtDeptCode, 0, 0)
+        pnlMgmtDept.Controls.Add(txtMgmtDeptName, 1, 0)
+
+        Dim rMgmt As Integer = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("契約管理所属"), 0, rMgmt)
+        tblBasic.Controls.Add(pnlMgmtDept, 1, rMgmt)
+        tblBasic.SetColumnSpan(pnlMgmtDept, 3)
+        tblBasic.RowCount += 1
+
+        Dim pnlCostDept As New TableLayoutPanel() With {
+            .Dock = DockStyle.Fill, .ColumnCount = 2, .RowCount = 1
+        }
+        pnlCostDept.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
+        pnlCostDept.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        txtCostDeptCode = New TextBox() With {.Dock = DockStyle.Fill}
+        txtCostDeptName = New TextBox() With {.Dock = DockStyle.Fill}
+        pnlCostDept.Controls.Add(txtCostDeptCode, 0, 0)
+        pnlCostDept.Controls.Add(txtCostDeptName, 1, 0)
+
+        Dim rCost As Integer = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("費用負担部署"), 0, rCost)
+        tblBasic.Controls.Add(pnlCostDept, 1, rCost)
+        tblBasic.SetColumnSpan(pnlCostDept, 3)
+        tblBasic.RowCount += 1
+
+        txtContractExternalNo = New TextBox() With {.Dock = DockStyle.Fill}
+        txtManagementNo = New TextBox() With {.Dock = DockStyle.Fill}
+        AddFieldRow(tblBasic, "契約No", txtContractExternalNo, "管理番号", txtManagementNo)
+
+        txtLandlordName = New TextBox() With {.Dock = DockStyle.Fill}
+        txtBrokerCompany = New TextBox() With {.Dock = DockStyle.Fill}
+        AddFieldRow(tblBasic, "貸主名", txtLandlordName, "仲介会社", txtBrokerCompany)
+
+        txtPaymentAgent = New TextBox() With {.Dock = DockStyle.Fill}
+        txtGuarantor = New TextBox() With {.Dock = DockStyle.Fill}
+        AddFieldRow(tblBasic, "決済代行", txtPaymentAgent, "連帯保証人", txtGuarantor)
+
         grpBasic.Controls.Add(tblBasic)
 
         Dim grpProperty As GroupBox = CreateSection("物件詳細（不動産）")
@@ -363,58 +443,113 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 6, .Padding = New Padding(8)
         }
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 34.0F))
 
+        txtPropertyName = New TextBox() With {.Dock = DockStyle.Fill}
         txtLocation = New TextBox() With {.Dock = DockStyle.Fill}
+        txtSection = New TextBox() With {.Dock = DockStyle.Fill}
         txtArea = New TextBox() With {.Dock = DockStyle.Fill}
         txtLayout = New TextBox() With {.Dock = DockStyle.Fill}
+        txtUsageRestrictions = New TextBox() With {.Dock = DockStyle.Fill}
         txtStructure = New TextBox() With {.Dock = DockStyle.Fill}
-        txtUsage = New TextBox() With {.Dock = DockStyle.Fill}
-        numUsefulLife = New NumericUpDown() With {.Dock = DockStyle.Fill, .Maximum = 100, .Value = 47, .TextAlign = HorizontalAlignment.Right}
-        _tooltipProvider.SetToolTip(numUsefulLife, "法定耐用年数（年）。リース判定の経済的耐用年数基準に使用")
-        dtpCompletion = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short, .ShowCheckBox = True}
-        lblBuildingAge = New Label() With {.Dock = DockStyle.Fill, .Text = "---年", .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleCenter}
-        _tooltipProvider.SetToolTip(lblBuildingAge, "竣工日から自動計算")
-
-        txtEquipmentList = New TextBox() With {
-            .Dock = DockStyle.Fill, .Multiline = True,
-            .ScrollBars = ScrollBars.Vertical, .Height = 60
+        numUsefulLife = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 100, .Value = 47,
+            .TextAlign = HorizontalAlignment.Right
         }
+        _tooltipProvider.SetToolTip(numUsefulLife, "法定耐用年数（年）。リース判定の経済的耐用年数基準に使用")
+        dtpCompletion = New DateTimePicker() With {
+            .Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short,
+            .ShowCheckBox = True
+        }
+        lblBuildingAge = New Label() With {
+            .Dock = DockStyle.Fill, .Text = "---年", .BackColor = CLR_READONLY,
+            .TextAlign = ContentAlignment.MiddleCenter
+        }
+        _tooltipProvider.SetToolTip(lblBuildingAge, "竣工日から自動計算")
 
         AddHandler dtpCompletion.ValueChanged, Sub(s, e) CalcBuildingAge()
 
-        AddField6Col(tblProp, "所在地", txtLocation, "面積", txtArea, "間取り", txtLayout)
-        AddField6Col(tblProp, "構造", txtStructure, "用途", txtUsage, "耐用年数", numUsefulLife)
-        AddField6Col(tblProp, "竣工", dtpCompletion, "築年数", lblBuildingAge, Nothing, Nothing)
+        Dim rPropName As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(CreateFieldLabel("物件名"), 0, rPropName)
+        tblProp.Controls.Add(txtPropertyName, 1, rPropName)
+        tblProp.SetColumnSpan(txtPropertyName, 3)
+        tblProp.RowCount += 1
 
-        Dim rowEquip As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 70.0F))
-        tblProp.Controls.Add(CreateFieldLabel("設備リスト"), 0, rowEquip)
-        tblProp.Controls.Add(txtEquipmentList, 1, rowEquip)
-        tblProp.SetColumnSpan(txtEquipmentList, 5)
+        Dim rLoc As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(CreateFieldLabel("所在地"), 0, rLoc)
+        tblProp.Controls.Add(txtLocation, 1, rLoc)
+        tblProp.SetColumnSpan(txtLocation, 3)
+        tblProp.Controls.Add(CreateFieldLabel("区画"), 4, rLoc)
+        tblProp.Controls.Add(txtSection, 5, rLoc)
+        tblProp.RowCount += 1
+
+        AddField6Col(tblProp, "面積(㎡)", txtArea, "間取り", txtLayout, "用途・制限事項", txtUsageRestrictions)
+        AddField6Col(tblProp, "構造・用途", txtStructure, "耐用年数(年)", numUsefulLife, "竣工(年月)", dtpCompletion)
+
+        Dim rAge As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(CreateFieldLabel("築年数"), 0, rAge)
+        tblProp.Controls.Add(lblBuildingAge, 1, rAge)
+        tblProp.RowCount += 1
+
+        dgvEquipment = New DataGridView() With {
+            .Dock = DockStyle.Fill,
+            .BackgroundColor = CLR_CARD,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .AllowUserToAddRows = True,
+            .RowHeadersVisible = False,
+            .BorderStyle = BorderStyle.None,
+            .GridColor = CLR_BORDER,
+            .Height = 120,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
+            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
+                .BackColor = Color.FromArgb(240, 244, 248),
+                .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
+                .Alignment = DataGridViewContentAlignment.MiddleCenter
+            },
+            .EnableHeadersVisualStyles = False
+        }
+        dgvEquipment.Columns.Add("EquipName", "設備名")
+        dgvEquipment.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "金額", .Name = "EquipAmount",
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
+            }
+        })
+        dgvEquipment.Columns.Add("EquipDate", "日付")
+
+        Dim rEquip As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 130.0F))
+        tblProp.Controls.Add(CreateFieldLabel("設置設備詳細"), 0, rEquip)
+        tblProp.Controls.Add(dgvEquipment, 1, rEquip)
+        tblProp.SetColumnSpan(dgvEquipment, 5)
         tblProp.RowCount += 1
 
         grpProperty.Controls.Add(tblProp)
 
-        Dim grpPeriod As GroupBox = CreateSection("期間・オプション")
+        Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
         Dim tblPeriod As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 4, .Padding = New Padding(8)
         }
-        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
         tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
         tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
 
-        dtpFirstContract = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
         dtpStartDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
         dtpEndDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
-        numFreePeriod = New NumericUpDown() With {.Dock = DockStyle.Fill, .Maximum = 60, .TextAlign = HorizontalAlignment.Right}
+        numFreePeriod = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 60,
+            .TextAlign = HorizontalAlignment.Right
+        }
         lblLeaseMonths = New Label() With {
             .Dock = DockStyle.Fill, .Text = "---ヶ月",
             .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleCenter,
@@ -422,16 +557,45 @@ Public Class FrmLeaseContractMain
         }
         _tooltipProvider.SetToolTip(lblLeaseMonths, "リース期間 = (終了日 - 開始日の月数) - 無償期間")
 
-        cmbRenewalOption = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList}
-        cmbRenewalOption.Items.AddRange({"無", "有"})
-        cmbRenewalOption.SelectedIndex = 0
-        numRenewalCount = New NumericUpDown() With {.Dock = DockStyle.Fill, .Maximum = 99, .TextAlign = HorizontalAlignment.Right, .Enabled = False}
-        cmbPurchaseOption = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList}
-        cmbPurchaseOption.Items.AddRange({"無", "有"})
-        cmbPurchaseOption.SelectedIndex = 0
-        cmbPurchaseLikelihood = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Enabled = False}
-        cmbPurchaseLikelihood.Items.AddRange({"---", "行使確実", "行使可能性高い", "行使可能性低い"})
-        cmbPurchaseLikelihood.SelectedIndex = 0
+        numRenewalCount = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 99,
+            .TextAlign = HorizontalAlignment.Right
+        }
+        numRenewalRent = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 9999999999D,
+            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right
+        }
+        cmbRenewalLikelihood = New ComboBox() With {
+            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList
+        }
+        cmbRenewalLikelihood.Items.AddRange({"確実", "高い", "低い"})
+
+        numCancelNoticePeriod = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 120,
+            .TextAlign = HorizontalAlignment.Right
+        }
+        numCancelPenalty = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 9999999999D,
+            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right
+        }
+        cmbCancelLikelihood = New ComboBox() With {
+            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList
+        }
+        cmbCancelLikelihood.Items.AddRange({"確実", "高い", "低い"})
+
+        numPurchasePrice = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 9999999999D,
+            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right
+        }
+        cmbPurchaseLikelihood = New ComboBox() With {
+            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList
+        }
+        cmbPurchaseLikelihood.Items.AddRange({"確実", "高い", "低い"})
+
+        dtpMoveOutDate = New DateTimePicker() With {
+            .Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short,
+            .ShowCheckBox = True, .Checked = False
+        }
 
         AddHandler dtpStartDate.ValueChanged, Sub(s, e)
                                                   CalcLeaseMonths()
@@ -445,14 +609,25 @@ Public Class FrmLeaseContractMain
                                                    CalcLeaseMonths()
                                                    RecalcAll()
                                                End Sub
-        AddHandler cmbRenewalOption.SelectedIndexChanged, Sub(s, e) numRenewalCount.Enabled = (cmbRenewalOption.SelectedIndex = 1)
-        AddHandler cmbPurchaseOption.SelectedIndexChanged, Sub(s, e) cmbPurchaseLikelihood.Enabled = (cmbPurchaseOption.SelectedIndex = 1)
 
-        AddFieldRow(tblPeriod, "初回契約日", dtpFirstContract, "リース期間", lblLeaseMonths)
+        AddSectionLabel(tblPeriod, "■ 契約期間")
         AddFieldRow(tblPeriod, "開始日", dtpStartDate, "終了日", dtpEndDate)
-        AddFieldRow(tblPeriod, "無償期間(月)", numFreePeriod, Nothing, Nothing)
-        AddFieldRow(tblPeriod, "更新オプション", cmbRenewalOption, "更新予測回数", numRenewalCount)
-        AddFieldRow(tblPeriod, "購入オプション", cmbPurchaseOption, "行使可能性", cmbPurchaseLikelihood)
+        AddFieldRow(tblPeriod, "無償期間（月）", numFreePeriod, "リース期間（月）", lblLeaseMonths)
+
+        AddSectionLabel(tblPeriod, "■ 更新オプション")
+        AddFieldRow(tblPeriod, "更新予測回数", numRenewalCount, "更新時賃料", numRenewalRent)
+        AddFieldRow(tblPeriod, "更新行使可能性", cmbRenewalLikelihood, Nothing, Nothing)
+
+        AddSectionLabel(tblPeriod, "■ 解約規定")
+        AddFieldRow(tblPeriod, "解約告知期間（月）", numCancelNoticePeriod, "解約違約金", numCancelPenalty)
+        AddFieldRow(tblPeriod, "解約行使可能性", cmbCancelLikelihood, Nothing, Nothing)
+
+        AddSectionLabel(tblPeriod, "■ 購入オプション")
+        AddFieldRow(tblPeriod, "購入オプション価額", numPurchasePrice, "購入行使可能性", cmbPurchaseLikelihood)
+
+        AddSectionLabel(tblPeriod, "■ その他")
+        AddFieldRow(tblPeriod, "退去予定日", dtpMoveOutDate, Nothing, Nothing)
+
         grpPeriod.Controls.Add(tblPeriod)
 
         mainTbl.Controls.Add(grpBasic, 0, 0)
@@ -1442,6 +1617,22 @@ Public Class FrmLeaseContractMain
             If ctrl3 IsNot Nothing Then tbl.Controls.Add(ctrl3, 5, r)
         End If
 
+        tbl.RowCount += 1
+    End Sub
+
+    Private Sub AddSectionLabel(tbl As TableLayoutPanel, text As String)
+        Dim r As Integer = tbl.RowCount
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        Dim lbl As New Label() With {
+            .Text = text,
+            .Font = FNT_LABEL,
+            .ForeColor = CLR_HEADER,
+            .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.BottomLeft,
+            .Padding = New Padding(0, 4, 0, 0)
+        }
+        tbl.Controls.Add(lbl, 0, r)
+        tbl.SetColumnSpan(lbl, tbl.ColumnCount)
         tbl.RowCount += 1
     End Sub
 
