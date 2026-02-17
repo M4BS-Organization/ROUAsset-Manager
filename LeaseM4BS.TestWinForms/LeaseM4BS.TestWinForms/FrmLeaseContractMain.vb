@@ -87,6 +87,7 @@ Public Class FrmLeaseContractMain
     Private chkServiceComponent As CheckBox
     Private chkOwnershipTransfer As CheckBox
     Private numDiscountRate As NumericUpDown
+    Private numMonthlyRentJudge As NumericUpDown
 
     ' 判定結果パネル
     Private pnlResult As Panel
@@ -569,7 +570,7 @@ Public Class FrmLeaseContractMain
         ' =============================================================
         Dim grpExempt As GroupBox = CreateGroupBox("期間・免除規定判定")
         grpExempt.AutoSize = True
-        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 9}
+        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 10}
         SetupTableColumns(tlpExempt)
 
         dtpJudgeStart = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2024, 7, 24)}
@@ -629,9 +630,13 @@ Public Class FrmLeaseContractMain
         AddHandler chkOwnershipTransfer.CheckedChanged, AddressOf OnJudgeTrigger
         AddControlToTable(tlpExempt, 7, "所有権移転", chkOwnershipTransfer, 3)
 
+        numMonthlyRentJudge = New NumericUpDown() With {.Maximum = 9900000000D, .Minimum = 0D, .Value = 0D, .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right, .Width = 120}
+        AddHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
+        AddControlToTable(tlpExempt, 8, "月額リース料", numMonthlyRentJudge, 1)
+
         numDiscountRate = New NumericUpDown() With {.DecimalPlaces = 2, .Increment = 0.01D, .Maximum = 20D, .Minimum = 0D, .Value = 0D, .TextAlign = HorizontalAlignment.Right, .Width = 100}
         AddHandler numDiscountRate.ValueChanged, AddressOf OnJudgeTrigger
-        AddControlToTable(tlpExempt, 8, "割引率(%)", numDiscountRate, 1)
+        AddControlToTable(tlpExempt, 9, "割引率(%)", numDiscountRate, 1)
 
         grpExempt.Controls.Add(tlpExempt)
         pnlScroll.Controls.Add(grpExempt)
@@ -887,8 +892,30 @@ Public Class FrmLeaseContractMain
             lblShortTermResult.Font = _regularFont
         End If
 
-        Dim isLowValue As Boolean = (assetVal > 0 AndAlso assetVal <= LOW_VALUE_THRESHOLD)
-        If assetVal > 0 Then
+        Dim monthlyRent As Decimal = numMonthlyRentJudge.Value
+        Dim discountRate As Decimal = numDiscountRate.Value
+        Dim isLowValue As Boolean = False
+
+        If monthlyRent > 0 AndAlso months > 0 Then
+            Dim pvValue As Double
+            Dim r As Double = CDbl(discountRate) / 12.0 / 100.0
+            If r > 0 Then
+                pvValue = CDbl(monthlyRent) * ((1.0 - Math.Pow(1.0 + r, -months)) / r)
+            Else
+                pvValue = CDbl(monthlyRent) * months
+            End If
+            isLowValue = (pvValue <= CDbl(LOW_VALUE_THRESHOLD))
+            If isLowValue Then
+                lblLowValueResult.Text = String.Format("該当 (PV: ¥{0:N0})", pvValue)
+                lblLowValueResult.ForeColor = Color.FromArgb(0, 123, 255)
+                lblLowValueResult.Font = _boldFont
+            Else
+                lblLowValueResult.Text = String.Format("非該当 (PV: ¥{0:N0})", pvValue)
+                lblLowValueResult.ForeColor = Color.FromArgb(51, 51, 51)
+                lblLowValueResult.Font = _regularFont
+            End If
+        ElseIf assetVal > 0 Then
+            isLowValue = (assetVal <= LOW_VALUE_THRESHOLD)
             If isLowValue Then
                 lblLowValueResult.Text = "該当 (基準額以下)"
                 lblLowValueResult.ForeColor = Color.FromArgb(0, 123, 255)
