@@ -86,6 +86,7 @@ Public Class FrmLeaseContractMain
     Private chkApplyExemption As CheckBox
     Private chkServiceComponent As CheckBox
     Private chkOwnershipTransfer As CheckBox
+    Private numDiscountRate As NumericUpDown
 
     ' 判定結果パネル
     Private pnlResult As Panel
@@ -627,6 +628,10 @@ Public Class FrmLeaseContractMain
         chkOwnershipTransfer = New CheckBox() With {.Text = "所有権移転条項あり（または割安購入選択権あり）", .AutoSize = True, .Dock = DockStyle.Fill}
         AddHandler chkOwnershipTransfer.CheckedChanged, AddressOf OnJudgeTrigger
         AddControlToTable(tlpExempt, 7, "所有権移転", chkOwnershipTransfer, 3)
+
+        numDiscountRate = New NumericUpDown() With {.DecimalPlaces = 2, .Increment = 0.01D, .Maximum = 20D, .Minimum = 0D, .Value = 0D, .TextAlign = HorizontalAlignment.Right, .Width = 100}
+        AddHandler numDiscountRate.ValueChanged, AddressOf OnJudgeTrigger
+        AddControlToTable(tlpExempt, 8, "割引率(%)", numDiscountRate, 1)
 
         grpExempt.Controls.Add(tlpExempt)
         pnlScroll.Controls.Add(grpExempt)
