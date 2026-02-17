@@ -496,7 +496,7 @@ Public Class FrmLeaseContractMain
         Dim tlpIdent As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 3}
         SetupTableColumns(tlpIdent)
 
-        grpQ1 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
+        grpQ1 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True}
         Dim flowQ1 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         rbQ1Yes = New RadioButton() With {.Text = "あり (特定されている)", .AutoSize = True}
         rbQ1No = New RadioButton() With {.Text = "なし", .AutoSize = True}
@@ -506,7 +506,7 @@ Public Class FrmLeaseContractMain
         grpQ1.Controls.Add(flowQ1)
         AddControlToTable(tlpIdent, 0, "資産の特定", grpQ1, 3)
 
-        grpQ2 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
+        grpQ2 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True}
         Dim flowQ2 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         rbQ2Yes = New RadioButton() With {.Text = "あり (サプライヤーの権利)", .AutoSize = True}
         rbQ2No = New RadioButton() With {.Text = "なし", .AutoSize = True, .Checked = True}
@@ -516,7 +516,7 @@ Public Class FrmLeaseContractMain
         grpQ2.Controls.Add(flowQ2)
         AddControlToTable(tlpIdent, 1, "実質的代替権", grpQ2, 3)
 
-        grpQ3 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
+        grpQ3 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True}
         Dim flowQ3 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         rbQ3Yes = New RadioButton() With {.Text = "あり", .AutoSize = True, .Checked = True}
         rbQ3No = New RadioButton() With {.Text = "なし", .AutoSize = True}
@@ -526,7 +526,7 @@ Public Class FrmLeaseContractMain
         grpQ3.Controls.Add(flowQ3)
         AddControlToTable(tlpIdent, 2, "経済的利益", grpQ3)
 
-        grpQ4 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 10, 0, 0), .AutoSize = True}
+        grpQ4 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True}
         Dim flowQ4 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
         rbQ4Yes = New RadioButton() With {.Text = "あり", .AutoSize = True, .Checked = True}
         rbQ4No = New RadioButton() With {.Text = "なし", .AutoSize = True}
