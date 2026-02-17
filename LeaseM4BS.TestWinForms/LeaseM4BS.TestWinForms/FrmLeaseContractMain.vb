@@ -889,13 +889,13 @@ Public Class FrmLeaseContractMain
 
         RemoveHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
 
+        chkApplyExemption.Enabled = False
+
         If exemptEligible Then
-            chkApplyExemption.Enabled = True
             If Not _prevExemptEligible Then
                 chkApplyExemption.Checked = True
             End If
         Else
-            chkApplyExemption.Enabled = False
             chkApplyExemption.Checked = False
         End If
 
