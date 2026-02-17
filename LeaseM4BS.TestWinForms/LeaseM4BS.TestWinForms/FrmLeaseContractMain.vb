@@ -82,6 +82,7 @@ Public Class FrmLeaseContractMain
     Private numAssetValue As NumericUpDown
     Private lblLowValueResult As Label
     Private chkApplyExemption As CheckBox
+    Private _prevExemptEligible As Boolean = False
 
     ' 判定結果パネル
     Private pnlResult As Panel
@@ -847,12 +848,26 @@ Public Class FrmLeaseContractMain
         End If
 
         ' --- 5. 免除規定チェックボックスの制御 ---
-        If isLease AndAlso (isShortTerm OrElse isLowValue) Then
+        Dim exemptEligible As Boolean = (isLease AndAlso (isShortTerm OrElse isLowValue))
+        If exemptEligible Then
             chkApplyExemption.Enabled = True
+
+            If Not _prevExemptEligible AndAlso Not chkApplyExemption.Checked Then
+                RemoveHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+                chkApplyExemption.Checked = True
+                AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+            End If
         Else
             chkApplyExemption.Enabled = False
-            chkApplyExemption.Checked = False
+
+            If chkApplyExemption.Checked Then
+                RemoveHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+                chkApplyExemption.Checked = False
+                AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+            End If
         End If
+
+        _prevExemptEligible = exemptEligible
 
         ' --- 6. 最終結果判定 ---
         lblResultText.ForeColor = Color.FromArgb(51, 51, 51)
