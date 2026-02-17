@@ -84,6 +84,7 @@ Public Class FrmLeaseContractMain
     Private numAssetValue As NumericUpDown
     Private lblLowValueResult As Label
     Private chkApplyExemption As CheckBox
+    Private chkServiceComponent As CheckBox
 
     ' 判定結果パネル
     Private pnlResult As Panel
@@ -618,6 +619,10 @@ Public Class FrmLeaseContractMain
         AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
         AddControlToTable(tlpExempt, 5, "免除規定", chkApplyExemption, 3)
 
+        chkServiceComponent = New CheckBox() With {.Text = "非リース構成要素を分離せず、リース料として結合する（実務的便法）", .AutoSize = True, .Dock = DockStyle.Fill}
+        AddHandler chkServiceComponent.CheckedChanged, AddressOf OnJudgeTrigger
+        AddControlToTable(tlpExempt, 6, "構成要素", chkServiceComponent, 3)
+
         grpExempt.Controls.Add(tlpExempt)
         pnlScroll.Controls.Add(grpExempt)
 
@@ -929,6 +934,10 @@ Public Class FrmLeaseContractMain
 
         If isLease AndAlso chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
             lblResultReason.Text &= vbCrLf & "※解約オプションの行使が見込まれるため、期間短縮を考慮する必要があります"
+        End If
+
+        If isLease AndAlso chkServiceComponent.Checked Then
+            lblResultReason.Text &= vbCrLf & "※実務的便法を適用し、非リース構成要素を含めた金額で資産計上します"
         End If
     End Sub
     ' =========================================================================
