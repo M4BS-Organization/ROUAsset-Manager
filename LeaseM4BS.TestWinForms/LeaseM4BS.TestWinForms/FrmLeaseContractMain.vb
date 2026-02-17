@@ -569,7 +569,7 @@ Public Class FrmLeaseContractMain
         ' =============================================================
         Dim grpExempt As GroupBox = CreateGroupBox("期間・免除規定判定")
         grpExempt.AutoSize = True
-        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 6}
+        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 9}
         SetupTableColumns(tlpExempt)
 
         dtpJudgeStart = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2024, 7, 24)}
