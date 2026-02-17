@@ -82,6 +82,7 @@ Public Class FrmLeaseContractMain
     Private numAssetValue As NumericUpDown
     Private lblLowValueResult As Label
     Private chkApplyExemption As CheckBox
+    Private numDiscountRate As NumericUpDown
 
     ' 判定結果パネル
     Private pnlResult As Panel
@@ -548,7 +549,7 @@ Public Class FrmLeaseContractMain
         ' =============================================================
         Dim grpExempt As GroupBox = CreateGroupBox("期間・免除規定判定")
         grpExempt.AutoSize = True
-        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 5}
+        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 6}
         SetupTableColumns(tlpExempt)
 
         dtpJudgeStart = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2024, 7, 24)}
@@ -586,9 +587,16 @@ Public Class FrmLeaseContractMain
         AddControlToTable(tlpExempt, 3, "取得価額", numAssetValue)
         AddControlToTable(tlpExempt, 3, "少額判定", lblLowValueResult, 0, 2)
 
+        numDiscountRate = New NumericUpDown() With {.DecimalPlaces = 3, .Increment = 0.001D, .Maximum = 20D, .Dock = DockStyle.Fill, .TextAlign = HorizontalAlignment.Right, .Enabled = False, .BackColor = Color.WhiteSmoke}
+        AddHandler numDiscountRate.ValueChanged, AddressOf OnJudgeTrigger
+        AddControlToTable(tlpExempt, 4, "割引率 (%)", numDiscountRate)
+
         chkApplyExemption = New CheckBox() With {.Text = "免除規定を適用する (オフバランス処理)", .AutoSize = True, .Enabled = False, .Dock = DockStyle.Fill}
         AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
-        AddControlToTable(tlpExempt, 4, "免除規定", chkApplyExemption, 3)
+        AddControlToTable(tlpExempt, 5, "免除規定", chkApplyExemption, 3)
+
+        tlpExempt.RowStyles(4) = New RowStyle(SizeType.AutoSize)
+        tlpExempt.RowStyles(5) = New RowStyle(SizeType.AutoSize)
 
         grpExempt.Controls.Add(tlpExempt)
         pnlScroll.Controls.Add(grpExempt)
@@ -874,7 +882,22 @@ Public Class FrmLeaseContractMain
                 lblResultText.ForeColor = Color.FromArgb(217, 83, 79)
                 lblResultBadge.Text = "資産計上必須"
                 lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
-                lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
+                lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。" & vbCrLf & "※Tab4のスケジュール計算にて現在価値を算出するため、割引率の設定が必要です。"
+            End If
+        End If
+
+        ' --- 7. 割引率入力欄の制御 ---
+        If numDiscountRate IsNot Nothing Then
+            If isLease AndAlso Not chkApplyExemption.Checked Then
+                numDiscountRate.Enabled = True
+                If numDiscountRate.Value = 0D Then
+                    numDiscountRate.BackColor = Color.LightPink
+                Else
+                    numDiscountRate.BackColor = SystemColors.Window
+                End If
+            Else
+                numDiscountRate.Enabled = False
+                numDiscountRate.BackColor = Color.WhiteSmoke
             End If
         End If
     End Sub
