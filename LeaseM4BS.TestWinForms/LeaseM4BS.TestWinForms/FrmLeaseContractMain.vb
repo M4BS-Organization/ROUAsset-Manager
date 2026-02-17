@@ -85,6 +85,7 @@ Public Class FrmLeaseContractMain
     Private lblLowValueResult As Label
     Private chkApplyExemption As CheckBox
     Private chkServiceComponent As CheckBox
+    Private chkOwnershipTransfer As CheckBox
 
     ' 判定結果パネル
     Private pnlResult As Panel
@@ -623,6 +624,10 @@ Public Class FrmLeaseContractMain
         AddHandler chkServiceComponent.CheckedChanged, AddressOf OnJudgeTrigger
         AddControlToTable(tlpExempt, 6, "構成要素", chkServiceComponent, 3)
 
+        chkOwnershipTransfer = New CheckBox() With {.Text = "所有権移転条項あり（または割安購入選択権あり）", .AutoSize = True, .Dock = DockStyle.Fill}
+        AddHandler chkOwnershipTransfer.CheckedChanged, AddressOf OnJudgeTrigger
+        AddControlToTable(tlpExempt, 7, "所有権移転", chkOwnershipTransfer, 3)
+
         grpExempt.Controls.Add(tlpExempt)
         pnlScroll.Controls.Add(grpExempt)
 
@@ -938,6 +943,14 @@ Public Class FrmLeaseContractMain
 
         If isLease AndAlso chkServiceComponent.Checked Then
             lblResultReason.Text &= vbCrLf & "※実務的便法を適用し、非リース構成要素を含めた金額で資産計上します"
+        End If
+
+        If isLease AndAlso Not chkApplyExemption.Checked Then
+            If chkOwnershipTransfer.Checked Then
+                lblResultReason.Text &= vbCrLf & "※所有権移転リースとして、経済的耐用年数に基づき償却計算を行います。"
+            Else
+                lblResultReason.Text &= vbCrLf & "※所有権移転外リースとして、リース期間に基づき償却計算を行います。"
+            End If
         End If
     End Sub
     ' =========================================================================
