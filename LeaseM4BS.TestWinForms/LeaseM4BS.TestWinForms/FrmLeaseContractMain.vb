@@ -481,8 +481,24 @@ Public Class FrmLeaseContractMain
         AddField6Col(tblProp, "面積(㎡)", txtArea, "間取り", txtLayout, "構造・用途", txtStructure)
         AddField6Col(tblProp, "耐用年数(年)", numUsefulLife, "竣工(年月)", dtpCompletion, "築年数", lblBuildingAge)
 
-        AddField6Col(tblProp, "貸主名", txtLandlordName, "仲介会社", txtBrokerCompany, Nothing, Nothing)
-        AddField6Col(tblProp, "決済代行", txtPaymentAgent, "連帯保証人", txtGuarantor, Nothing, Nothing)
+        Dim rLandlord As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(CreateFieldLabel("貸主名"), 0, rLandlord)
+        tblProp.Controls.Add(txtLandlordName, 1, rLandlord)
+        tblProp.Controls.Add(CreateFieldLabel("仲介会社"), 2, rLandlord)
+        tblProp.Controls.Add(txtBrokerCompany, 3, rLandlord)
+        tblProp.Controls.Add(CreateFieldLabel("用途・制限事項"), 4, rLandlord)
+        tblProp.Controls.Add(txtUsageRestrictions, 5, rLandlord)
+        tblProp.SetRowSpan(txtUsageRestrictions, 2)
+        tblProp.RowCount += 1
+
+        Dim rAgent As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(CreateFieldLabel("決済代行"), 0, rAgent)
+        tblProp.Controls.Add(txtPaymentAgent, 1, rAgent)
+        tblProp.Controls.Add(CreateFieldLabel("連帯保証人"), 2, rAgent)
+        tblProp.Controls.Add(txtGuarantor, 3, rAgent)
+        tblProp.RowCount += 1
 
         dgvEquipment = New DataGridView() With {
             .Dock = DockStyle.Fill,
@@ -514,9 +530,7 @@ Public Class FrmLeaseContractMain
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 130.0F))
         tblProp.Controls.Add(CreateFieldLabel("付属設備"), 0, rEquip)
         tblProp.Controls.Add(dgvEquipment, 1, rEquip)
-        tblProp.SetColumnSpan(dgvEquipment, 3)
-        tblProp.Controls.Add(CreateFieldLabel("用途・制限事項"), 4, rEquip)
-        tblProp.Controls.Add(txtUsageRestrictions, 5, rEquip)
+        tblProp.SetColumnSpan(dgvEquipment, 5)
         tblProp.RowCount += 1
 
         grpProperty.Controls.Add(tblProp)
