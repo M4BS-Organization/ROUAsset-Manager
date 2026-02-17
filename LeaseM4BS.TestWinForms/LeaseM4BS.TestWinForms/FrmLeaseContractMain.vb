@@ -804,7 +804,9 @@ Public Class FrmLeaseContractMain
         cboExtCertainty.Enabled = Not isDisabled
         numExtMonths.Enabled = Not isDisabled
         If isDisabled Then
+            RemoveHandler numExtMonths.ValueChanged, AddressOf OnJudgeTrigger
             numExtMonths.Value = 0
+            AddHandler numExtMonths.ValueChanged, AddressOf OnJudgeTrigger
         End If
         RecalcJudge()
     End Sub
@@ -813,7 +815,9 @@ Public Class FrmLeaseContractMain
         If Not _isLoaded Then Return
         cboTerminateCertainty.Enabled = chkTerminateOption.Checked
         If Not chkTerminateOption.Checked Then
+            RemoveHandler cboTerminateCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
             cboTerminateCertainty.SelectedIndex = 0
+            AddHandler cboTerminateCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
         End If
         RecalcJudge()
     End Sub
@@ -922,43 +926,47 @@ Public Class FrmLeaseContractMain
         lblResultText.ForeColor = Color.FromArgb(51, 51, 51)
         lblResultBadge.BackColor = Color.FromArgb(204, 204, 204)
 
+        Dim reasonParts As New List(Of String)
+
         If Not isLease Then
             lblResultText.Text = "対象外"
             lblResultBadge.Text = "リース資産計上不要"
-            lblResultReason.Text = "識別判定の条件を満たさないため、通常の賃貸借処理（オフバランス）となります。"
+            reasonParts.Add("識別判定の条件を満たさないため、通常の賃貸借処理（オフバランス）となります。")
         Else
             If chkApplyExemption.Checked Then
                 lblResultText.Text = "オフバランス処理"
                 lblResultText.ForeColor = Color.FromArgb(0, 123, 255)
                 lblResultBadge.Text = "免除規定適用"
                 lblResultBadge.BackColor = Color.FromArgb(23, 162, 184)
-                lblResultReason.Text = "短期または少額資産の免除規定を適用し、賃貸借処理として処理します。"
+                reasonParts.Add("短期または少額資産の免除規定を適用し、賃貸借処理として処理します。")
             Else
                 lblResultText.Text = "オンバランス処理"
                 lblResultText.ForeColor = Color.FromArgb(217, 83, 79)
                 lblResultBadge.Text = "資産計上必須"
                 lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
-                lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
+                reasonParts.Add("使用権資産およびリース負債の計上が必要です。")
+            End If
+
+            If chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
+                ' ※ 本システムでは期間の自動減算は行わず、ユーザーに通知する仕様としている。
+                '    (ユーザーは終了日を変更するか、判定結果を見て運用で対応する想定)
+                reasonParts.Add("※解約オプションの行使が見込まれるため、期間短縮を考慮する必要があります")
+            End If
+
+            If chkServiceComponent.Checked Then
+                reasonParts.Add("※実務的便法を適用し、非リース構成要素を含めた金額で資産計上します")
+            End If
+
+            If Not chkApplyExemption.Checked Then
+                If chkOwnershipTransfer.Checked Then
+                    reasonParts.Add("※所有権移転リースとして、経済的耐用年数に基づき償却計算を行います。")
+                Else
+                    reasonParts.Add("※所有権移転外リースとして、リース期間に基づき償却計算を行います。")
+                End If
             End If
         End If
 
-        If isLease AndAlso chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
-            ' ※ 本システムでは期間の自動減算は行わず、ユーザーに通知する仕様としている。
-            '    (ユーザーは終了日を変更するか、判定結果を見て運用で対応する想定)
-            lblResultReason.Text &= vbCrLf & "※解約オプションの行使が見込まれるため、期間短縮を考慮する必要があります"
-        End If
-
-        If isLease AndAlso chkServiceComponent.Checked Then
-            lblResultReason.Text &= vbCrLf & "※実務的便法を適用し、非リース構成要素を含めた金額で資産計上します"
-        End If
-
-        If isLease AndAlso Not chkApplyExemption.Checked Then
-            If chkOwnershipTransfer.Checked Then
-                lblResultReason.Text &= vbCrLf & "※所有権移転リースとして、経済的耐用年数に基づき償却計算を行います。"
-            Else
-                lblResultReason.Text &= vbCrLf & "※所有権移転外リースとして、リース期間に基づき償却計算を行います。"
-            End If
-        End If
+        lblResultReason.Text = String.Join(vbCrLf, reasonParts)
     End Sub
     ' =========================================================================
     ' [統合版] 全タブ共通ヘルパーメソッド群
