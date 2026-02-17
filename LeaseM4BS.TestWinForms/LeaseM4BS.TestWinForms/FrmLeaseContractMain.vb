@@ -626,7 +626,7 @@ Public Class FrmLeaseContractMain
         ' =============================================================
         pnlResult = New Panel() With {
             .Dock = DockStyle.Top,
-            .Height = 80,
+            .Height = 100,
             .BorderStyle = BorderStyle.FixedSingle,
             .BackColor = Color.FromArgb(240, 244, 255),
             .Padding = New Padding(10),
