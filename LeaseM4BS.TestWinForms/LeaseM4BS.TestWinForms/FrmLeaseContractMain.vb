@@ -104,6 +104,7 @@ Public Class FrmLeaseContractMain
 
     ' 制御用フラグ
     Private _isLoaded As Boolean = False
+    Private _prevExemptEligible As Boolean = False
 
     ' -------------------------------------------------------------------------
     ' Tab4: 会計入力用 変数
@@ -884,13 +885,23 @@ Public Class FrmLeaseContractMain
         End If
 
         ' --- 5. 免除規定チェックボックスの制御 ---
-        chkApplyExemption.Enabled = False
+        Dim exemptEligible As Boolean = (isShortTerm OrElse isLowValue)
 
-        If chkApplyExemption.Checked Then
-            RemoveHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+        RemoveHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+
+        If exemptEligible Then
+            chkApplyExemption.Enabled = True
+            If Not _prevExemptEligible Then
+                chkApplyExemption.Checked = True
+            End If
+        Else
+            chkApplyExemption.Enabled = False
             chkApplyExemption.Checked = False
-            AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
         End If
+
+        _prevExemptEligible = exemptEligible
+
+        AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
 
         ' --- 6. 最終結果判定 ---
         lblResultText.ForeColor = Color.FromArgb(51, 51, 51)
@@ -901,11 +912,19 @@ Public Class FrmLeaseContractMain
             lblResultBadge.Text = "リース資産計上不要"
             lblResultReason.Text = "識別判定の条件を満たさないため、通常の賃貸借処理（オフバランス）となります。"
         Else
-            lblResultText.Text = "オンバランス処理"
-            lblResultText.ForeColor = Color.FromArgb(217, 83, 79)
-            lblResultBadge.Text = "資産計上必須"
-            lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
-            lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
+            If chkApplyExemption.Checked Then
+                lblResultText.Text = "オフバランス処理"
+                lblResultText.ForeColor = Color.FromArgb(0, 123, 255)
+                lblResultBadge.Text = "免除規定適用"
+                lblResultBadge.BackColor = Color.FromArgb(23, 162, 184)
+                lblResultReason.Text = "短期または少額資産の免除規定を適用し、賃貸借処理として処理します。"
+            Else
+                lblResultText.Text = "オンバランス処理"
+                lblResultText.ForeColor = Color.FromArgb(217, 83, 79)
+                lblResultBadge.Text = "資産計上必須"
+                lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
+                lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
+            End If
         End If
 
         If isLease AndAlso chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
