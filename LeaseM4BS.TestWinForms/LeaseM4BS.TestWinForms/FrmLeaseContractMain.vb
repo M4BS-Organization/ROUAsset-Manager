@@ -97,6 +97,10 @@ Public Class FrmLeaseContractMain
     ' キャッシュフォント
     Private _boldFont As Font
     Private _regularFont As Font
+    Private _font11Bold As Font
+    Private _font16Bold As Font
+    Private _fontResultBadge As Font
+    Private _fontResultReason As Font
 
     ' 制御用フラグ
     Private _isLoaded As Boolean = False
@@ -119,6 +123,10 @@ Public Class FrmLeaseContractMain
 
         _boldFont = New Font(Me.Font, FontStyle.Bold)
         _regularFont = New Font(Me.Font, FontStyle.Regular)
+        _font11Bold = New Font(Me.Font.FontFamily, 11.0F, FontStyle.Bold)
+        _font16Bold = New Font(Me.Font.FontFamily, 16.0F, FontStyle.Bold)
+        _fontResultBadge = New Font(Me.Font.FontFamily, 9.0F)
+        _fontResultReason = New Font(Me.Font.FontFamily, 8.5F)
 
         InitializeComponent()
 
@@ -568,9 +576,9 @@ Public Class FrmLeaseContractMain
         AddControlToTable(tlpExempt, 0, "終了日", dtpJudgeEnd, 0, 2)
 
         Dim flowTerm As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
-        lblTermMonths = New Label() With {.Text = "24", .Font = New Font(Me.Font.FontFamily, 11.0F, FontStyle.Bold), .AutoSize = True}
+        lblTermMonths = New Label() With {.Text = "24", .Font = _font11Bold, .AutoSize = True}
         Dim lblMonthUnit As New Label() With {.Text = " ヶ月", .AutoSize = True, .Padding = New Padding(0, 4, 0, 0)}
-        lblDateError = New Label() With {.Text = "", .ForeColor = Color.FromArgb(217, 83, 79), .Font = New Font(Me.Font, FontStyle.Bold), .AutoSize = True, .Padding = New Padding(5, 4, 0, 0)}
+        lblDateError = New Label() With {.Text = "", .ForeColor = Color.FromArgb(217, 83, 79), .Font = _boldFont, .AutoSize = True, .Padding = New Padding(5, 4, 0, 0)}
         flowTerm.Controls.AddRange({lblTermMonths, lblMonthUnit, lblDateError})
         lblShortTermResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
         AddControlToTable(tlpExempt, 1, "見積期間", flowTerm)
@@ -630,17 +638,17 @@ Public Class FrmLeaseContractMain
         tlpResult.RowStyles.Add(New RowStyle(SizeType.Percent, 60.0F))
         tlpResult.RowStyles.Add(New RowStyle(SizeType.Percent, 40.0F))
 
-        Dim lblResultTitle As New Label() With {.Text = "判定結果：", .Font = New Font(Me.Font, FontStyle.Bold), .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
+        Dim lblResultTitle As New Label() With {.Text = "判定結果：", .Font = _boldFont, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
         tlpResult.Controls.Add(lblResultTitle, 0, 0)
         tlpResult.SetRowSpan(lblResultTitle, 2)
 
         Dim flowResultTop As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
-        lblResultText = New Label() With {.Text = "---", .Font = New Font(Me.Font.FontFamily, 16.0F, FontStyle.Bold), .AutoSize = True, .ForeColor = Color.FromArgb(51, 51, 51)}
-        lblResultBadge = New Label() With {.Text = "---", .AutoSize = True, .ForeColor = Color.White, .BackColor = Color.FromArgb(204, 204, 204), .Padding = New Padding(6, 3, 6, 3), .Margin = New Padding(15, 4, 0, 0), .Font = New Font(Me.Font.FontFamily, 9.0F)}
+        lblResultText = New Label() With {.Text = "---", .Font = _font16Bold, .AutoSize = True, .ForeColor = Color.FromArgb(51, 51, 51)}
+        lblResultBadge = New Label() With {.Text = "---", .AutoSize = True, .ForeColor = Color.White, .BackColor = Color.FromArgb(204, 204, 204), .Padding = New Padding(6, 3, 6, 3), .Margin = New Padding(15, 4, 0, 0), .Font = _fontResultBadge}
         flowResultTop.Controls.AddRange({lblResultText, lblResultBadge})
         tlpResult.Controls.Add(flowResultTop, 1, 0)
 
-        lblResultReason = New Label() With {.Text = "判定条件を入力してください。", .AutoSize = True, .ForeColor = Color.FromArgb(85, 85, 85), .Font = New Font(Me.Font.FontFamily, 8.5F), .Dock = DockStyle.Fill}
+        lblResultReason = New Label() With {.Text = "判定条件を入力してください。", .AutoSize = True, .ForeColor = Color.FromArgb(85, 85, 85), .Font = _fontResultReason, .Dock = DockStyle.Fill}
         tlpResult.Controls.Add(lblResultReason, 1, 1)
 
         pnlResult.Controls.Add(tlpResult)
@@ -893,19 +901,11 @@ Public Class FrmLeaseContractMain
             lblResultBadge.Text = "リース資産計上不要"
             lblResultReason.Text = "識別判定の条件を満たさないため、通常の賃貸借処理（オフバランス）となります。"
         Else
-            If chkApplyExemption.Checked Then
-                lblResultText.Text = "オフバランス処理"
-                lblResultText.ForeColor = Color.FromArgb(0, 123, 255)
-                lblResultBadge.Text = "免除規定適用"
-                lblResultBadge.BackColor = Color.FromArgb(23, 162, 184)
-                lblResultReason.Text = "短期または少額資産の免除規定を適用し、賃貸借処理として処理します。"
-            Else
-                lblResultText.Text = "オンバランス処理"
-                lblResultText.ForeColor = Color.FromArgb(217, 83, 79)
-                lblResultBadge.Text = "資産計上必須"
-                lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
-                lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
-            End If
+            lblResultText.Text = "オンバランス処理"
+            lblResultText.ForeColor = Color.FromArgb(217, 83, 79)
+            lblResultBadge.Text = "資産計上必須"
+            lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
+            lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
         End If
 
         If isLease AndAlso chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
@@ -960,6 +960,10 @@ Public Class FrmLeaseContractMain
         If disposing Then
             _boldFont?.Dispose()
             _regularFont?.Dispose()
+            _font11Bold?.Dispose()
+            _font16Bold?.Dispose()
+            _fontResultBadge?.Dispose()
+            _fontResultReason?.Dispose()
         End If
         MyBase.Dispose(disposing)
     End Sub
