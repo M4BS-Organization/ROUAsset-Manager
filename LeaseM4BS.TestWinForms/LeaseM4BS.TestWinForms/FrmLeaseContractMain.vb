@@ -78,6 +78,8 @@ Public Class FrmLeaseContractMain
     Private chkExtOption As CheckBox
     Private cboExtCertainty As ComboBox
     Private numExtMonths As NumericUpDown
+    Private chkTerminateOption As CheckBox
+    Private cboTerminateCertainty As ComboBox
     Private lblShortTermResult As Label
     Private numAssetValue As NumericUpDown
     Private lblLowValueResult As Label
@@ -548,7 +550,7 @@ Public Class FrmLeaseContractMain
         ' =============================================================
         Dim grpExempt As GroupBox = CreateGroupBox("期間・免除規定判定")
         grpExempt.AutoSize = True
-        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 5}
+        Dim tlpExempt As New TableLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .ColumnCount = 4, .RowCount = 6}
         SetupTableColumns(tlpExempt)
 
         dtpJudgeStart = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2024, 7, 24)}
@@ -580,15 +582,25 @@ Public Class FrmLeaseContractMain
         AddControlToTable(tlpExempt, 2, "延長OP", flowExt)
         AddControlToTable(tlpExempt, 2, "延長期間", numExtMonths, 0, 2)
 
+        Dim flowTerm2 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        chkTerminateOption = New CheckBox() With {.Text = "あり", .AutoSize = True}
+        cboTerminateCertainty = New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 160, .Enabled = False}
+        cboTerminateCertainty.Items.AddRange({"行使しない(期間短縮なし)", "行使する(期間短縮)"})
+        cboTerminateCertainty.SelectedIndex = 0
+        AddHandler chkTerminateOption.CheckedChanged, AddressOf OnTerminateOptionChanged
+        AddHandler cboTerminateCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
+        flowTerm2.Controls.AddRange({chkTerminateOption, cboTerminateCertainty})
+        AddControlToTable(tlpExempt, 3, "解約OP", flowTerm2, 3)
+
         numAssetValue = New NumericUpDown() With {.Maximum = 9999999999D, .ThousandsSeparator = True, .Dock = DockStyle.Fill, .TextAlign = HorizontalAlignment.Right}
         AddHandler numAssetValue.ValueChanged, AddressOf OnJudgeTrigger
         lblLowValueResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}
-        AddControlToTable(tlpExempt, 3, "取得価額", numAssetValue)
-        AddControlToTable(tlpExempt, 3, "少額判定", lblLowValueResult, 0, 2)
+        AddControlToTable(tlpExempt, 4, "取得価額", numAssetValue)
+        AddControlToTable(tlpExempt, 4, "少額判定", lblLowValueResult, 0, 2)
 
         chkApplyExemption = New CheckBox() With {.Text = "免除規定を適用する (オフバランス処理)", .AutoSize = True, .Enabled = False, .Dock = DockStyle.Fill}
         AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
-        AddControlToTable(tlpExempt, 4, "免除規定", chkApplyExemption, 3)
+        AddControlToTable(tlpExempt, 5, "免除規定", chkApplyExemption, 3)
 
         grpExempt.Controls.Add(tlpExempt)
         pnlScroll.Controls.Add(grpExempt)
@@ -766,6 +778,15 @@ Public Class FrmLeaseContractMain
         RecalcJudge()
     End Sub
 
+    Private Sub OnTerminateOptionChanged(sender As Object, e As EventArgs)
+        If Not _isLoaded Then Return
+        cboTerminateCertainty.Enabled = chkTerminateOption.Checked
+        If Not chkTerminateOption.Checked Then
+            cboTerminateCertainty.SelectedIndex = 0
+        End If
+        RecalcJudge()
+    End Sub
+
     ' =========================================================================
     ' 判定トリガー (全コントロール共通)
     ' =========================================================================
@@ -877,6 +898,10 @@ Public Class FrmLeaseContractMain
                 lblResultBadge.BackColor = Color.FromArgb(40, 167, 69)
                 lblResultReason.Text = "使用権資産およびリース負債の計上が必要です。"
             End If
+        End If
+
+        If isLease AndAlso chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
+            lblResultReason.Text &= vbCrLf & "※解約オプションの行使が見込まれるため、期間短縮を考慮する必要があります"
         End If
     End Sub
     ' =========================================================================
