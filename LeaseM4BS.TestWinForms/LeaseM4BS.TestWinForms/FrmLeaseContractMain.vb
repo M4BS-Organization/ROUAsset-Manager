@@ -481,6 +481,9 @@ Public Class FrmLeaseContractMain
         AddField6Col(tblProp, "面積(㎡)", txtArea, "間取り", txtLayout, "構造・用途", txtStructure)
         AddField6Col(tblProp, "耐用年数(年)", numUsefulLife, "竣工(年月)", dtpCompletion, "築年数", lblBuildingAge)
 
+        AddField6Col(tblProp, "貸主名", txtLandlordName, "仲介会社", txtBrokerCompany, Nothing, Nothing)
+        AddField6Col(tblProp, "決済代行", txtPaymentAgent, "連帯保証人", txtGuarantor, Nothing, Nothing)
+
         dgvEquipment = New DataGridView() With {
             .Dock = DockStyle.Fill,
             .BackgroundColor = CLR_CARD,
@@ -515,9 +518,6 @@ Public Class FrmLeaseContractMain
         tblProp.Controls.Add(CreateFieldLabel("用途・制限事項"), 4, rEquip)
         tblProp.Controls.Add(txtUsageRestrictions, 5, rEquip)
         tblProp.RowCount += 1
-
-        AddField6Col(tblProp, "貸主名", txtLandlordName, "仲介会社", txtBrokerCompany, Nothing, Nothing)
-        AddField6Col(tblProp, "決済代行", txtPaymentAgent, "連帯保証人", txtGuarantor, Nothing, Nothing)
 
         grpProperty.Controls.Add(tblProp)
 
