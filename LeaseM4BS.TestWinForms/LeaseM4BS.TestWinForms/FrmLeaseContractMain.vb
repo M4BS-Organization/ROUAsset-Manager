@@ -943,6 +943,8 @@ Public Class FrmLeaseContractMain
         End If
 
         If isLease AndAlso chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
+            ' ※ 本システムでは期間の自動減算は行わず、ユーザーに通知する仕様としている。
+            '    (ユーザーは終了日を変更するか、判定結果を見て運用で対応する想定)
             lblResultReason.Text &= vbCrLf & "※解約オプションの行使が見込まれるため、期間短縮を考慮する必要があります"
         End If
 
