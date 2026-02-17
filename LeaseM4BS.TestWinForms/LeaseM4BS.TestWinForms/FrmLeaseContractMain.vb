@@ -94,6 +94,10 @@ Public Class FrmLeaseContractMain
     ' 定数
     Private Const LOW_VALUE_THRESHOLD As Decimal = 3000000D
 
+    ' キャッシュフォント
+    Private _boldFont As Font
+    Private _regularFont As Font
+
     ' 制御用フラグ
     Private _isLoaded As Boolean = False
 
@@ -112,6 +116,9 @@ Public Class FrmLeaseContractMain
         Me.StartPosition = FormStartPosition.CenterScreen
         Me.Font = New Font("Meiryo UI", 9.0F)
         Me.MinimumSize = New Size(1200, 720)
+
+        _boldFont = New Font(Me.Font, FontStyle.Bold)
+        _regularFont = New Font(Me.Font, FontStyle.Regular)
 
         InitializeComponent()
 
@@ -829,8 +836,9 @@ Public Class FrmLeaseContractMain
         Else
             lblDateError.Text = ""
             months = (endDt.Year - startDt.Year) * 12 + (endDt.Month - startDt.Month)
-            If endDt.Day >= startDt.Day Then
-                months += 1
+            Dim tempDate As DateTime = startDt.AddMonths(months)
+            If endDt < tempDate.AddDays(-1) Then
+                months -= 1
             End If
             If hasExt AndAlso isExtCertain Then
                 months += extMonths
@@ -844,11 +852,11 @@ Public Class FrmLeaseContractMain
         If isShortTerm Then
             lblShortTermResult.Text = "該当 (12ヶ月以内)"
             lblShortTermResult.ForeColor = Color.FromArgb(0, 123, 255)
-            lblShortTermResult.Font = New Font(lblShortTermResult.Font, FontStyle.Bold)
+            lblShortTermResult.Font = _boldFont
         Else
             lblShortTermResult.Text = "非該当"
             lblShortTermResult.ForeColor = Color.FromArgb(51, 51, 51)
-            lblShortTermResult.Font = New Font(lblShortTermResult.Font, FontStyle.Regular)
+            lblShortTermResult.Font = _regularFont
         End If
 
         Dim isLowValue As Boolean = (assetVal > 0 AndAlso assetVal <= LOW_VALUE_THRESHOLD)
@@ -856,11 +864,11 @@ Public Class FrmLeaseContractMain
             If isLowValue Then
                 lblLowValueResult.Text = "該当 (基準額以下)"
                 lblLowValueResult.ForeColor = Color.FromArgb(0, 123, 255)
-                lblLowValueResult.Font = New Font(lblLowValueResult.Font, FontStyle.Bold)
+                lblLowValueResult.Font = _boldFont
             Else
                 lblLowValueResult.Text = "非該当"
                 lblLowValueResult.ForeColor = Color.FromArgb(51, 51, 51)
-                lblLowValueResult.Font = New Font(lblLowValueResult.Font, FontStyle.Regular)
+                lblLowValueResult.Font = _regularFont
             End If
         Else
             lblLowValueResult.Text = "-"
@@ -946,6 +954,14 @@ Public Class FrmLeaseContractMain
             tlp.Controls.Add(ctrl, 1 + colOffset, row)
             If span > 1 Then tlp.SetColumnSpan(ctrl, span)
         End If
+    End Sub
+
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        If disposing Then
+            _boldFont?.Dispose()
+            _regularFont?.Dispose()
+        End If
+        MyBase.Dispose(disposing)
     End Sub
 
 End Class
