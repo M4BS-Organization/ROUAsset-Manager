@@ -139,59 +139,7 @@
     <Compile Include="..\..\LeaseM4BS\LeaseM4BS.DataAccess\UsageExamples.vb">
       <Link>UsageExamples.vb</Link>
     </Compile>
-    <Compile Include="ContractEntryForm.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.vb">
-      <DependentUpon>Form1.vb</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmAccountingInput.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmContractEntry.Designer.vb">
-      <DependentUpon>FrmContractEntry.vb</DependentUpon>
-    </Compile>
-    <Compile Include="FrmContractEntry.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmContractEntry_New.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmContractList.Designer.vb">
-      <DependentUpon>FrmContractList.vb</DependentUpon>
-    </Compile>
-    <Compile Include="FrmContractList.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmInitialLumpSum.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmJournalEntry.Designer.vb">
-      <DependentUpon>FrmJournalEntry.vb</DependentUpon>
-    </Compile>
-    <Compile Include="FrmJournalEntry.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="FrmLeaseContractMain.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmLeaseJudgment.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmLeaseJudgment_Lite.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmLeaseJudgment_Pro.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmLeaseJudgment_Pro_Scroll.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmLeaseJudgment_Pro_Splitter.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -212,21 +160,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ContractEntryForm.resx">
-      <DependentUpon>ContractEntryForm.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmContractEntry.resx">
-      <DependentUpon>FrmContractEntry.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmJournalEntry.resx">
-      <DependentUpon>FrmJournalEntry.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmLeaseJudgment.resx">
-      <DependentUpon>FrmLeaseJudgment.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
