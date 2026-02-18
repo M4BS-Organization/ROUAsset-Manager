@@ -283,25 +283,19 @@ Public Class FrmLeaseContractMain
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
-        Dim tblTopWrapper As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 2, .RowCount = 1
-        }
-        tblTopWrapper.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 75.0F))
-        tblTopWrapper.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tblTopWrapper.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-
         Dim grpBasic As GroupBox = CreateSection("基本・管理情報")
         Dim tblBasic As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 6, .Padding = New Padding(8)
+            .ColumnCount = 8, .Padding = New Padding(8)
         }
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 110.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 110.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.0F))
         tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 34.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
 
         cmbAccountTarget = New ComboBox() With {
             .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT
@@ -328,6 +322,21 @@ Public Class FrmLeaseContractMain
         cmbContractType.SelectedIndex = 0
         txtSupplier = New TextBox() With {.Dock = DockStyle.Fill}
         txtPayeeId = New TextBox() With {.Dock = DockStyle.Fill}
+
+        txtUpdateCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "3"}
+        txtChangeCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "1"}
+        txtDrafter = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "山田太郎"}
+        txtApprovalNo = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "R2025-0123"}
+        txtApprovalDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "2025/01/15"}
+        lblApprovalBadge = New Label() With {
+            .Text = "承認済",
+            .BackColor = CLR_ACCENT,
+            .ForeColor = Color.White,
+            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
+            .TextAlign = ContentAlignment.MiddleCenter,
+            .Dock = DockStyle.Fill,
+            .Margin = New Padding(4)
+        }
 
         Dim pnlMgmtDept As New TableLayoutPanel() With {
             .Dock = DockStyle.Fill, .ColumnCount = 2, .RowCount = 1
@@ -375,65 +384,89 @@ Public Class FrmLeaseContractMain
                                                    RecalcAll()
                                                End Sub
 
-        AddField6Col(tblBasic, "計上対象", cmbAccountTarget, "適用日", dtpApplyDate, Nothing, Nothing)
-        AddField6Col(tblBasic, "契約番号", txtContractNo, "契約名称", txtContractName, Nothing, Nothing)
-        AddField6Col(tblBasic, "自社管理番号", txtManagementNo, "契約区分", lblContractClass, Nothing, Nothing)
-        AddField6Col(tblBasic, "契約種類", cmbContractType, "取引先", txtSupplier, "支払先ID", txtPayeeId)
-
-        Dim rMgmt As Integer = tblBasic.RowCount
+        Dim r As Integer = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("契約管理所属"), 0, rMgmt)
-        tblBasic.Controls.Add(pnlMgmtDept, 1, rMgmt)
-        tblBasic.SetColumnSpan(pnlMgmtDept, 5)
+        tblBasic.Controls.Add(CreateFieldLabel("計上対象"), 0, r)
+        tblBasic.Controls.Add(cmbAccountTarget, 1, r)
+        tblBasic.Controls.Add(CreateFieldLabel("適用日"), 2, r)
+        tblBasic.Controls.Add(dtpApplyDate, 3, r)
+        tblBasic.Controls.Add(CreateFieldLabel("更新回数"), 4, r)
+        tblBasic.Controls.Add(txtUpdateCount, 5, r)
+        tblBasic.Controls.Add(CreateFieldLabel("変更回数"), 6, r)
+        tblBasic.Controls.Add(txtChangeCount, 7, r)
         tblBasic.RowCount += 1
 
-        Dim rCost As Integer = tblBasic.RowCount
+        r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("費用負担部署"), 0, rCost)
-        tblBasic.Controls.Add(pnlCostDept, 1, rCost)
-        tblBasic.SetColumnSpan(pnlCostDept, 5)
+        tblBasic.Controls.Add(CreateFieldLabel("契約番号"), 0, r)
+        tblBasic.Controls.Add(txtContractNo, 1, r)
+        tblBasic.Controls.Add(CreateFieldLabel("契約名称"), 2, r)
+        tblBasic.Controls.Add(txtContractName, 3, r)
+        tblBasic.Controls.Add(CreateFieldLabel("起案者"), 4, r)
+        tblBasic.Controls.Add(txtDrafter, 5, r)
+        tblBasic.Controls.Add(CreateFieldLabel("稟議No"), 6, r)
+        tblBasic.Controls.Add(txtApprovalNo, 7, r)
         tblBasic.RowCount += 1
 
-        AddField6Col(tblBasic, "契約開始日", dtpStartDate, "契約終了日", dtpEndDate, Nothing, Nothing)
-        AddField6Col(tblBasic, "無償期間（月）", numFreePeriod, "リース期間（月）", lblLeaseMonths, Nothing, Nothing)
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("管理番号"), 0, r)
+        tblBasic.Controls.Add(txtManagementNo, 1, r)
+        tblBasic.Controls.Add(CreateFieldLabel("契約区分"), 2, r)
+        tblBasic.Controls.Add(lblContractClass, 3, r)
+        tblBasic.Controls.Add(CreateFieldLabel("更新日"), 4, r)
+        tblBasic.Controls.Add(txtApprovalDate, 5, r)
+        tblBasic.Controls.Add(CreateFieldLabel("ステータス"), 6, r)
+        tblBasic.Controls.Add(lblApprovalBadge, 7, r)
+        tblBasic.RowCount += 1
+
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("契約種類"), 0, r)
+        tblBasic.Controls.Add(cmbContractType, 1, r)
+        tblBasic.Controls.Add(CreateFieldLabel("取引先ID"), 2, r)
+        tblBasic.Controls.Add(txtSupplier, 3, r)
+        tblBasic.Controls.Add(CreateFieldLabel("支払先ID"), 4, r)
+        tblBasic.Controls.Add(txtPayeeId, 5, r)
+        tblBasic.RowCount += 1
+
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("契約管理所属"), 0, r)
+        tblBasic.Controls.Add(pnlMgmtDept, 1, r)
+        tblBasic.SetColumnSpan(pnlMgmtDept, 7)
+        tblBasic.RowCount += 1
+
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("費用負担部署"), 0, r)
+        tblBasic.Controls.Add(pnlCostDept, 1, r)
+        tblBasic.SetColumnSpan(pnlCostDept, 7)
+        tblBasic.RowCount += 1
+
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("契約開始日"), 0, r)
+        tblBasic.Controls.Add(dtpStartDate, 1, r)
+        tblBasic.SetColumnSpan(dtpStartDate, 3)
+        tblBasic.Controls.Add(CreateFieldLabel("契約終了日"), 4, r)
+        tblBasic.Controls.Add(dtpEndDate, 5, r)
+        tblBasic.SetColumnSpan(dtpEndDate, 3)
+        tblBasic.RowCount += 1
+
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("無償期間"), 0, r)
+        tblBasic.Controls.Add(numFreePeriod, 1, r)
+        tblBasic.SetColumnSpan(numFreePeriod, 3)
+        tblBasic.Controls.Add(CreateFieldLabel("リース期間"), 4, r)
+        tblBasic.Controls.Add(lblLeaseMonths, 5, r)
+        tblBasic.SetColumnSpan(lblLeaseMonths, 3)
+        tblBasic.RowCount += 1
 
         grpBasic.Controls.Add(tblBasic)
 
-        Dim grpStatus As GroupBox = CreateSection("管理情報")
-        Dim tblStatus As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
-        }
-        tblStatus.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblStatus.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblStatus.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblStatus.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        txtUpdateCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "3"}
-        txtChangeCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "1"}
-        txtDrafter = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "山田太郎"}
-        txtApprovalNo = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "R2025-0123"}
-        txtApprovalDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "2025/01/15"}
-        lblApprovalBadge = New Label() With {
-            .Text = "承認済",
-            .BackColor = CLR_ACCENT,
-            .ForeColor = Color.White,
-            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
-            .TextAlign = ContentAlignment.MiddleCenter,
-            .Dock = DockStyle.Fill,
-            .Margin = New Padding(4)
-        }
-
-        AddFieldRow(tblStatus, "更新回数", txtUpdateCount, "変更回数", txtChangeCount)
-        AddFieldRow(tblStatus, "起案者", txtDrafter, "稟議No", txtApprovalNo)
-        AddFieldRow(tblStatus, "更新日", txtApprovalDate, "更新ステータス", lblApprovalBadge)
-
-        grpStatus.Controls.Add(tblStatus)
-
-        tblTopWrapper.Controls.Add(grpBasic, 0, 0)
-        tblTopWrapper.Controls.Add(grpStatus, 1, 0)
-
-        Dim grpProperty As GroupBox = CreateSection("物件詳細（不動産）")
+        Dim grpProperty As GroupBox = CreateSection("物件情報")
         Dim tblProp As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 6, .Padding = New Padding(8)
@@ -492,7 +525,7 @@ Public Class FrmLeaseContractMain
         tblProp.RowCount += 1
 
         AddField6Col(tblProp, "面積(㎡)", txtArea, "間取り", txtLayout, "構造・用途", txtStructure)
-        AddField6Col(tblProp, "耐用年数(年)", numUsefulLife, "竣工(年月)", dtpCompletion, "築年数", lblBuildingAge)
+        AddField6Col(tblProp, "耐用年数", numUsefulLife, "竣工", dtpCompletion, "築年数", lblBuildingAge)
 
         Dim rLandlord As Integer = tblProp.RowCount
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
@@ -614,7 +647,7 @@ Public Class FrmLeaseContractMain
 
         grpPeriod.Controls.Add(tblPeriod)
 
-        mainTbl.Controls.Add(tblTopWrapper, 0, 0)
+        mainTbl.Controls.Add(grpBasic, 0, 0)
         mainTbl.Controls.Add(grpProperty, 0, 1)
         mainTbl.Controls.Add(grpPeriod, 0, 2)
 
