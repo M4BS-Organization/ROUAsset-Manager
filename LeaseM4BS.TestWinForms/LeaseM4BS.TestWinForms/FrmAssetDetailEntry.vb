@@ -11,6 +11,24 @@ Partial Public Class FrmAssetDetailEntry
     Public Property AssetId As Integer = 0
     Public Property IsReadOnly As Boolean = False
 
+    Public ReadOnly Property PropertyName As String
+        Get
+            Return txtPropertyName.Text
+        End Get
+    End Property
+
+    Public ReadOnly Property CashPrice As String
+        Get
+            Return ""
+        End Get
+    End Property
+
+    Public ReadOnly Property MonthlyLease As String
+        Get
+            Return ""
+        End Get
+    End Property
+
     Private Sub FrmAssetDetailEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         If AssetId > 0 Then
             LoadAssetData()

@@ -52,7 +52,10 @@ Public Class FrmLeaseContractMain
     Private dtpApplyDate As DateTimePicker
     Private txtAssetNo As TextBox
     Private btnAssetSearch As Button
+    Private btnAddAsset As Button
     Private btnAssetNew As Button
+    Private dgvAssets As DataGridView
+    Private lblAssetCount As Label
 
     Private dtpStartDate As DateTimePicker
     Private dtpEndDate As DateTimePicker
@@ -453,7 +456,7 @@ Public Class FrmLeaseContractMain
 
         grpBasic.Controls.Add(tblBasic)
 
-        Dim grpProperty As GroupBox = CreateSection("物件情報")
+        Dim grpProperty As GroupBox = CreateSection("資産情報")
         Dim tblProp As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 6, .Padding = New Padding(8)
@@ -480,6 +483,18 @@ Public Class FrmLeaseContractMain
         }
         btnAssetSearch.FlatAppearance.BorderSize = 0
 
+        btnAddAsset = New Button() With {
+            .Text = "追加",
+            .Dock = DockStyle.Fill,
+            .Height = 28,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(23, 162, 184),
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand
+        }
+        btnAddAsset.FlatAppearance.BorderSize = 0
+
         btnAssetNew = New Button() With {
             .Text = "＋新規登録",
             .Dock = DockStyle.Fill,
@@ -493,6 +508,7 @@ Public Class FrmLeaseContractMain
         btnAssetNew.FlatAppearance.BorderSize = 0
 
         AddHandler btnAssetSearch.Click, AddressOf OnAssetSearchClick
+        AddHandler btnAddAsset.Click, AddressOf OnAddAssetClick
         AddHandler btnAssetNew.Click, AddressOf OnAssetNewClick
 
         Dim rAsset As Integer = tblProp.RowCount
@@ -500,10 +516,75 @@ Public Class FrmLeaseContractMain
         tblProp.Controls.Add(CreateFieldLabel("資産番号"), 0, rAsset)
         tblProp.Controls.Add(txtAssetNo, 1, rAsset)
         tblProp.Controls.Add(btnAssetSearch, 2, rAsset)
+        tblProp.Controls.Add(btnAddAsset, 3, rAsset)
         tblProp.Controls.Add(btnAssetNew, 4, rAsset)
         tblProp.SetColumnSpan(btnAssetNew, 2)
         tblProp.RowCount += 1
 
+        lblAssetCount = New Label() With {
+            .Text = "資産件数: 0件",
+            .Dock = DockStyle.Top,
+            .Font = FNT_LABEL,
+            .ForeColor = CLR_LABEL,
+            .Height = 24,
+            .TextAlign = ContentAlignment.MiddleLeft,
+            .Padding = New Padding(8, 4, 0, 0)
+        }
+
+        dgvAssets = New DataGridView() With {
+            .Dock = DockStyle.Fill,
+            .BackgroundColor = CLR_CARD,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .AllowUserToAddRows = False,
+            .RowHeadersVisible = False,
+            .BorderStyle = BorderStyle.None,
+            .GridColor = CLR_BORDER,
+            .SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
+            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
+                .BackColor = Color.FromArgb(240, 244, 248),
+                .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
+                .Alignment = DataGridViewContentAlignment.MiddleCenter
+            },
+            .EnableHeadersVisualStyles = False
+        }
+        dgvAssets.Columns.Add("AssetNo", "資産No")
+        dgvAssets.Columns.Add("AccountClass", "計上区分")
+        dgvAssets.Columns.Add("PropertyName", "物件名称")
+        dgvAssets.Columns.Add("Quantity", "数量")
+        dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
+            .HeaderText = "中途解約", .Name = "EarlyTermination"
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "現金購入価額", .Name = "CashPrice",
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
+            }
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "月額リース料", .Name = "MonthlyLease",
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
+            }
+        })
+        dgvAssets.Columns("AssetNo").FillWeight = 10
+        dgvAssets.Columns("AccountClass").FillWeight = 12
+        dgvAssets.Columns("PropertyName").FillWeight = 25
+        dgvAssets.Columns("Quantity").FillWeight = 8
+        dgvAssets.Columns("EarlyTermination").FillWeight = 10
+        dgvAssets.Columns("CashPrice").FillWeight = 15
+        dgvAssets.Columns("MonthlyLease").FillWeight = 15
+
+        Dim pnlGrid As New Panel() With {
+            .Dock = DockStyle.Top,
+            .Height = 180,
+            .Padding = New Padding(8, 0, 8, 8)
+        }
+        pnlGrid.Controls.Add(dgvAssets)
+
+        grpProperty.Controls.Add(pnlGrid)
+        grpProperty.Controls.Add(lblAssetCount)
         grpProperty.Controls.Add(tblProp)
 
         Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
@@ -1590,12 +1671,65 @@ Public Class FrmLeaseContractMain
         End Try
     End Sub
 
+    Private Sub OnAddAssetClick(sender As Object, e As EventArgs)
+        If String.IsNullOrWhiteSpace(txtAssetNo.Text) Then
+            MessageBox.Show("資産番号を入力してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim assetId As Integer
+        If Not Integer.TryParse(txtAssetNo.Text, assetId) Then
+            MessageBox.Show("資産番号は数値で入力してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        For Each row As DataGridViewRow In dgvAssets.Rows
+            If row.Cells("AssetNo").Value IsNot Nothing AndAlso
+               row.Cells("AssetNo").Value.ToString() = assetId.ToString() Then
+                MessageBox.Show("この資産番号は既に追加されています。", "重複エラー",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+        Next
+
+        AddAssetRow(assetId, "", "", "1", False, "", "")
+        txtAssetNo.Text = ""
+    End Sub
+
     Private Sub OnAssetNewClick(sender As Object, e As EventArgs)
         Using frm As New FrmAssetDetailEntry()
             If frm.ShowDialog(Me) = DialogResult.OK Then
-                txtAssetNo.Text = frm.AssetId.ToString()
+                AddAssetRow(
+                    frm.AssetId,
+                    "",
+                    frm.PropertyName,
+                    "1",
+                    False,
+                    frm.CashPrice,
+                    frm.MonthlyLease)
             End If
         End Using
+    End Sub
+
+    Private Sub AddAssetRow(assetId As Integer, accountClass As String,
+                            propertyName As String, quantity As String,
+                            earlyTermination As Boolean,
+                            cashPrice As String, monthlyLease As String)
+        dgvAssets.Rows.Add(
+            assetId.ToString(),
+            accountClass,
+            propertyName,
+            quantity,
+            earlyTermination,
+            cashPrice,
+            monthlyLease)
+        UpdateAssetCount()
+    End Sub
+
+    Private Sub UpdateAssetCount()
+        lblAssetCount.Text = "資産件数: " & dgvAssets.Rows.Count.ToString() & "件"
     End Sub
 
 End Class
