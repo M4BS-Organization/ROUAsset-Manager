@@ -136,8 +136,11 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\LeaseM4BS\LeaseM4BS.DataAccess\UsageExamples.vb">
-      <Link>UsageExamples.vb</Link>
+    <Compile Include="FrmAssetDetailEntry.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmAssetDetailEntry.Designer.vb">
+      <DependentUpon>FrmAssetDetailEntry.vb</DependentUpon>
     </Compile>
     <Compile Include="FrmLeaseContractMain.vb">
       <SubType>Form</SubType>
@@ -160,6 +163,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="FrmAssetDetailEntry.resx">
+      <DependentUpon>FrmAssetDetailEntry.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>

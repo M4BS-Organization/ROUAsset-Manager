@@ -50,22 +50,9 @@ Public Class FrmLeaseContractMain
     Private txtPayeeId As TextBox
     Private cmbAccountTarget As ComboBox
     Private dtpApplyDate As DateTimePicker
-    Private txtLandlordName As TextBox
-    Private txtBrokerCompany As TextBox
-    Private txtPaymentAgent As TextBox
-    Private txtGuarantor As TextBox
-
-    Private txtPropertyName As TextBox
-    Private txtLocation As TextBox
-    Private txtSection As TextBox
-    Private txtArea As TextBox
-    Private txtLayout As TextBox
-    Private txtUsageRestrictions As TextBox
-    Private txtStructure As TextBox
-    Private numUsefulLife As NumericUpDown
-    Private dtpCompletion As DateTimePicker
-    Private lblBuildingAge As Label
-    Private dgvEquipment As DataGridView
+    Private txtAssetNo As TextBox
+    Private btnAssetSearch As Button
+    Private btnAssetNew As Button
 
     Private dtpStartDate As DateTimePicker
     Private dtpEndDate As DateTimePicker
@@ -472,111 +459,49 @@ Public Class FrmLeaseContractMain
             .ColumnCount = 6, .Padding = New Padding(8)
         }
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 33.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 34.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 40.0F))
 
-        txtPropertyName = New TextBox() With {.Dock = DockStyle.Fill}
-        txtLocation = New TextBox() With {.Dock = DockStyle.Fill}
-        txtSection = New TextBox() With {.Dock = DockStyle.Fill}
-        txtArea = New TextBox() With {.Dock = DockStyle.Fill}
-        txtLayout = New TextBox() With {.Dock = DockStyle.Fill}
-        txtStructure = New TextBox() With {.Dock = DockStyle.Fill}
-        txtUsageRestrictions = New TextBox() With {
-            .Dock = DockStyle.Fill, .Multiline = True, .ScrollBars = ScrollBars.Vertical
-        }
-        numUsefulLife = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 100, .Value = 47,
-            .TextAlign = HorizontalAlignment.Right
-        }
-        _tooltipProvider.SetToolTip(numUsefulLife, "法定耐用年数（年）。リース判定の経済的耐用年数基準に使用")
-        dtpCompletion = New DateTimePicker() With {
-            .Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short,
-            .ShowCheckBox = True
-        }
-        lblBuildingAge = New Label() With {
-            .Dock = DockStyle.Fill, .Text = "---年", .BackColor = CLR_READONLY,
-            .TextAlign = ContentAlignment.MiddleCenter
-        }
-        _tooltipProvider.SetToolTip(lblBuildingAge, "竣工日から自動計算")
-        txtLandlordName = New TextBox() With {.Dock = DockStyle.Fill}
-        txtBrokerCompany = New TextBox() With {.Dock = DockStyle.Fill}
-        txtPaymentAgent = New TextBox() With {.Dock = DockStyle.Fill}
-        txtGuarantor = New TextBox() With {.Dock = DockStyle.Fill}
+        txtAssetNo = New TextBox() With {.Dock = DockStyle.Fill}
+        _tooltipProvider.SetToolTip(txtAssetNo, "資産番号を入力して検索、または＋新規登録で資産を作成")
 
-        AddHandler dtpCompletion.ValueChanged, Sub(s, e) CalcBuildingAge()
-
-        Dim rPropName As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("物件名"), 0, rPropName)
-        tblProp.Controls.Add(txtPropertyName, 1, rPropName)
-        tblProp.SetColumnSpan(txtPropertyName, 3)
-        tblProp.RowCount += 1
-
-        Dim rLoc As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("所在地"), 0, rLoc)
-        tblProp.Controls.Add(txtLocation, 1, rLoc)
-        tblProp.SetColumnSpan(txtLocation, 3)
-        tblProp.Controls.Add(CreateFieldLabel("区画"), 4, rLoc)
-        tblProp.Controls.Add(txtSection, 5, rLoc)
-        tblProp.RowCount += 1
-
-        AddField6Col(tblProp, "面積(㎡)", txtArea, "間取り", txtLayout, "構造・用途", txtStructure)
-        AddField6Col(tblProp, "耐用年数", numUsefulLife, "竣工", dtpCompletion, "築年数", lblBuildingAge)
-
-        Dim rLandlord As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("貸主名"), 0, rLandlord)
-        tblProp.Controls.Add(txtLandlordName, 1, rLandlord)
-        tblProp.Controls.Add(CreateFieldLabel("仲介会社"), 2, rLandlord)
-        tblProp.Controls.Add(txtBrokerCompany, 3, rLandlord)
-        tblProp.Controls.Add(CreateFieldLabel("用途・制限事項"), 4, rLandlord)
-        tblProp.Controls.Add(txtUsageRestrictions, 5, rLandlord)
-        tblProp.SetRowSpan(txtUsageRestrictions, 2)
-        tblProp.RowCount += 1
-
-        Dim rAgent As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("決済代行"), 0, rAgent)
-        tblProp.Controls.Add(txtPaymentAgent, 1, rAgent)
-        tblProp.Controls.Add(CreateFieldLabel("連帯保証人"), 2, rAgent)
-        tblProp.Controls.Add(txtGuarantor, 3, rAgent)
-        tblProp.RowCount += 1
-
-        dgvEquipment = New DataGridView() With {
+        btnAssetSearch = New Button() With {
+            .Text = "検索",
             .Dock = DockStyle.Fill,
-            .BackgroundColor = CLR_CARD,
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            .AllowUserToAddRows = True,
-            .RowHeadersVisible = False,
-            .BorderStyle = BorderStyle.None,
-            .GridColor = CLR_BORDER,
-            .Height = 120,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
-            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
-                .BackColor = Color.FromArgb(240, 244, 248),
-                .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
-                .Alignment = DataGridViewContentAlignment.MiddleCenter
-            },
-            .EnableHeadersVisualStyles = False
+            .Height = 28,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(0, 123, 255),
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand
         }
-        dgvEquipment.Columns.Add("EquipName", "設備名")
-        dgvEquipment.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "金額", .Name = "EquipAmount",
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvEquipment.Columns.Add("EquipDate", "日付")
+        btnAssetSearch.FlatAppearance.BorderSize = 0
 
-        Dim rEquip As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 130.0F))
-        tblProp.Controls.Add(CreateFieldLabel("付属設備"), 0, rEquip)
-        tblProp.Controls.Add(dgvEquipment, 1, rEquip)
-        tblProp.SetColumnSpan(dgvEquipment, 5)
+        btnAssetNew = New Button() With {
+            .Text = "＋新規登録",
+            .Dock = DockStyle.Fill,
+            .Height = 28,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = CLR_ACCENT,
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand
+        }
+        btnAssetNew.FlatAppearance.BorderSize = 0
+
+        AddHandler btnAssetSearch.Click, AddressOf OnAssetSearchClick
+        AddHandler btnAssetNew.Click, AddressOf OnAssetNewClick
+
+        Dim rAsset As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(CreateFieldLabel("資産番号"), 0, rAsset)
+        tblProp.Controls.Add(txtAssetNo, 1, rAsset)
+        tblProp.Controls.Add(btnAssetSearch, 2, rAsset)
+        tblProp.Controls.Add(btnAssetNew, 4, rAsset)
+        tblProp.SetColumnSpan(btnAssetNew, 2)
         tblProp.RowCount += 1
 
         grpProperty.Controls.Add(tblProp)
@@ -1287,7 +1212,6 @@ Public Class FrmLeaseContractMain
         If Not _isLoaded Then Return
 
         CalcLeaseMonths()
-        CalcBuildingAge()
         UpdateAppliedRate()
         CalcMonthlyTotals()
 
@@ -1314,19 +1238,6 @@ Public Class FrmLeaseContractMain
         End Try
     End Sub
 
-    Private Sub CalcBuildingAge()
-        If Not _isLoaded Then Return
-        Try
-            If dtpCompletion.Checked Then
-                Dim age As Integer = DateTime.Now.Year - dtpCompletion.Value.Year
-                lblBuildingAge.Text = age.ToString() & "年"
-            Else
-                lblBuildingAge.Text = "---年"
-            End If
-        Catch ex As Exception
-            lblBuildingAge.Text = "---年"
-        End Try
-    End Sub
 
     Private Sub UpdateAppliedRate()
         If Not _isLoaded Then Return
@@ -1651,6 +1562,40 @@ Public Class FrmLeaseContractMain
         tbl.Controls.Add(lbl, 0, r)
         tbl.SetColumnSpan(lbl, tbl.ColumnCount)
         tbl.RowCount += 1
+    End Sub
+
+    Private Sub OnAssetSearchClick(sender As Object, e As EventArgs)
+        If String.IsNullOrWhiteSpace(txtAssetNo.Text) Then
+            MessageBox.Show("資産番号を入力してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim assetId As Integer
+        If Not Integer.TryParse(txtAssetNo.Text, assetId) Then
+            MessageBox.Show("資産番号は数値で入力してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Try
+            Using frm As New FrmAssetDetailEntry()
+                frm.AssetId = assetId
+                frm.IsReadOnly = True
+                frm.ShowDialog(Me)
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("資産情報の取得に失敗しました。" & vbCrLf & ex.Message,
+                            "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub OnAssetNewClick(sender As Object, e As EventArgs)
+        Using frm As New FrmAssetDetailEntry()
+            If frm.ShowDialog(Me) = DialogResult.OK Then
+                txtAssetNo.Text = frm.AssetId.ToString()
+            End If
+        End Using
     End Sub
 
 End Class
