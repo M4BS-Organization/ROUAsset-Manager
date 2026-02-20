@@ -37,11 +37,11 @@ Partial Public Class FrmAssetDetailEntry
             ApplyReadOnlyMode()
         End If
 
-        Dim currentRows As Integer = dgvEquipment.Rows.Count
-        If dgvEquipment.AllowUserToAddRows Then currentRows -= 1
-        If currentRows < 7 Then
-            For i As Integer = 0 To 6 - currentRows
-                dgvEquipment.Rows.Add()
+        Dim selfEquipRows As Integer = dgvSelfEquipment.Rows.Count
+        If dgvSelfEquipment.AllowUserToAddRows Then selfEquipRows -= 1
+        If selfEquipRows < 3 Then
+            For i As Integer = 0 To 2 - selfEquipRows
+                dgvSelfEquipment.Rows.Add()
             Next
         End If
 
@@ -93,10 +93,10 @@ Partial Public Class FrmAssetDetailEntry
                 Dim eqDt As DataTable = db.GetDataTable(
                     "SELECT * FROM d_asset_equipment WHERE asset_id = @asset_id ORDER BY eq_id", eqParams)
                 For Each eqRow As DataRow In eqDt.Rows
-                    dgvEquipment.Rows.Add(
+                    dgvSelfEquipment.Rows.Add(
                         db.SafeConvert(Of String)(eqRow("eq_name"), ""),
-                        db.SafeConvert(Of String)(eqRow("eq_amount"), ""),
-                        db.SafeConvert(Of String)(eqRow("eq_date"), ""))
+                        db.SafeConvert(Of String)(eqRow("eq_date"), ""),
+                        db.SafeConvert(Of String)(eqRow("eq_amount"), ""))
                 Next
             End Using
         Catch ex As Exception
@@ -119,8 +119,8 @@ Partial Public Class FrmAssetDetailEntry
         txtBrokerCompany.ReadOnly = True
         txtPaymentAgent.ReadOnly = True
         txtGuarantor.ReadOnly = True
-        dgvEquipment.ReadOnly = True
-        dgvEquipment.AllowUserToAddRows = False
+        dgvSelfEquipment.ReadOnly = True
+        dgvSelfEquipment.AllowUserToAddRows = False
         dgvAllocations.ReadOnly = True
         dgvAllocations.AllowUserToAddRows = False
         txtShikikin.ReadOnly = True
@@ -215,14 +215,14 @@ Partial Public Class FrmAssetDetailEntry
                     delParams.Add(New NpgsqlParameter("@d_asset_id", AssetId))
                     db.Delete("d_asset_equipment", "asset_id = @d_asset_id", delParams)
 
-                    For Each row As DataGridViewRow In dgvEquipment.Rows
+                    For Each row As DataGridViewRow In dgvSelfEquipment.Rows
                         If row.IsNewRow Then Continue For
-                        Dim eqName As String = If(row.Cells("EquipName").Value IsNot Nothing,
-                                                  row.Cells("EquipName").Value.ToString(), "")
-                        Dim eqAmount As String = If(row.Cells("EquipAmount").Value IsNot Nothing,
-                                                    row.Cells("EquipAmount").Value.ToString(), "")
-                        Dim eqDate As String = If(row.Cells("EquipDate").Value IsNot Nothing,
-                                                  row.Cells("EquipDate").Value.ToString(), "")
+                        Dim eqName As String = If(row.Cells("SelfEquipName").Value IsNot Nothing,
+                                                  row.Cells("SelfEquipName").Value.ToString(), "")
+                        Dim eqDate As String = If(row.Cells("SelfEquipDate").Value IsNot Nothing,
+                                                  row.Cells("SelfEquipDate").Value.ToString(), "")
+                        Dim eqAmount As String = If(row.Cells("SelfEquipAmount").Value IsNot Nothing,
+                                                    row.Cells("SelfEquipAmount").Value.ToString(), "")
                         If String.IsNullOrWhiteSpace(eqName) AndAlso
                            String.IsNullOrWhiteSpace(eqAmount) AndAlso
                            String.IsNullOrWhiteSpace(eqDate) Then Continue For
