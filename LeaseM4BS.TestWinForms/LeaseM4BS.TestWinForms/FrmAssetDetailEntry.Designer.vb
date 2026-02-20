@@ -204,7 +204,7 @@ Partial Class FrmAssetDetailEntry
         Me.tblProperty.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32.0F))
         Me.tblProperty.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32.0F))
         Me.tblProperty.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32.0F))
-        Me.tblProperty.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.tblProperty.Dock = System.Windows.Forms.DockStyle.Top
         Me.tblProperty.Location = New System.Drawing.Point(6, 24)
         Me.tblProperty.Name = "tblProperty"
         Me.tblProperty.Padding = New System.Windows.Forms.Padding(4)
@@ -453,7 +453,7 @@ Partial Class FrmAssetDetailEntry
         Me.lblSelfEquipment.Padding = New System.Windows.Forms.Padding(6, 0, 0, 0)
         Me.lblSelfEquipment.Size = New System.Drawing.Size(764, 24)
         Me.lblSelfEquipment.TabIndex = 1
-        Me.lblSelfEquipment.Text = "自己設備"
+        Me.lblSelfEquipment.Text = "自己設備明細"
         Me.lblSelfEquipment.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         ' dgvSelfEquipment
