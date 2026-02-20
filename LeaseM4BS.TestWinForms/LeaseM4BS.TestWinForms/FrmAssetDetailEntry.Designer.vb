@@ -22,7 +22,6 @@ Partial Class FrmAssetDetailEntry
         Me.tabControl = New System.Windows.Forms.TabControl()
         Me.tabAsset = New System.Windows.Forms.TabPage()
         Me.tabInitialCost = New System.Windows.Forms.TabPage()
-        Me.tabMonthlyDetail = New System.Windows.Forms.TabPage()
         Me.grpProperty = New System.Windows.Forms.GroupBox()
         Me.tblProperty = New System.Windows.Forms.TableLayoutPanel()
         Me.lblPropertyName = New System.Windows.Forms.Label()
@@ -53,6 +52,17 @@ Partial Class FrmAssetDetailEntry
         Me.txtPaymentAgent = New System.Windows.Forms.TextBox()
         Me.lblGuarantor = New System.Windows.Forms.Label()
         Me.txtGuarantor = New System.Windows.Forms.TextBox()
+        Me.grpEquipment = New System.Windows.Forms.GroupBox()
+        Me.dgvEquipment = New System.Windows.Forms.DataGridView()
+        Me.colEquipName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colEquipAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colEquipDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.grpAllocations = New System.Windows.Forms.GroupBox()
+        Me.dgvAllocations = New System.Windows.Forms.DataGridView()
+        Me.colAllocRate = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colPaymentAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colPrepaidAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colCostDept = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.grpInitialCost = New System.Windows.Forms.GroupBox()
         Me.tblInitialCost = New System.Windows.Forms.TableLayoutPanel()
         Me.lblShikikin = New System.Windows.Forms.Label()
@@ -65,23 +75,19 @@ Partial Class FrmAssetDetailEntry
         Me.txtBrokerFee = New System.Windows.Forms.TextBox()
         Me.lblPrepaidRent = New System.Windows.Forms.Label()
         Me.txtPrepaidRent = New System.Windows.Forms.TextBox()
-        Me.grpEquipment = New System.Windows.Forms.GroupBox()
-        Me.dgvEquipment = New System.Windows.Forms.DataGridView()
-        Me.colEquipName = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colEquipAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colEquipDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlBottom.SuspendLayout()
         Me.tabControl.SuspendLayout()
         Me.tabAsset.SuspendLayout()
         Me.tabInitialCost.SuspendLayout()
-        Me.tabMonthlyDetail.SuspendLayout()
         Me.grpProperty.SuspendLayout()
         Me.tblProperty.SuspendLayout()
         CType(Me.numUsefulLife, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.grpInitialCost.SuspendLayout()
-        Me.tblInitialCost.SuspendLayout()
         Me.grpEquipment.SuspendLayout()
         CType(Me.dgvEquipment, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.grpAllocations.SuspendLayout()
+        CType(Me.dgvAllocations, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.grpInitialCost.SuspendLayout()
+        Me.tblInitialCost.SuspendLayout()
         Me.SuspendLayout()
         '
         ' pnlBottom
@@ -90,7 +96,7 @@ Partial Class FrmAssetDetailEntry
         Me.pnlBottom.Controls.Add(Me.btnCancel)
         Me.pnlBottom.Controls.Add(Me.btnSave)
         Me.pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.pnlBottom.Location = New System.Drawing.Point(0, 510)
+        Me.pnlBottom.Location = New System.Drawing.Point(0, 730)
         Me.pnlBottom.Name = "pnlBottom"
         Me.pnlBottom.Size = New System.Drawing.Size(800, 50)
         Me.pnlBottom.TabIndex = 2
@@ -129,24 +135,26 @@ Partial Class FrmAssetDetailEntry
         '
         Me.tabControl.Controls.Add(Me.tabAsset)
         Me.tabControl.Controls.Add(Me.tabInitialCost)
-        Me.tabControl.Controls.Add(Me.tabMonthlyDetail)
         Me.tabControl.Dock = System.Windows.Forms.DockStyle.Fill
         Me.tabControl.Font = New System.Drawing.Font("Meiryo", 9.75F, System.Drawing.FontStyle.Bold)
         Me.tabControl.Location = New System.Drawing.Point(0, 0)
         Me.tabControl.Name = "tabControl"
         Me.tabControl.Padding = New System.Drawing.Point(12, 4)
         Me.tabControl.SelectedIndex = 0
-        Me.tabControl.Size = New System.Drawing.Size(800, 510)
+        Me.tabControl.Size = New System.Drawing.Size(800, 730)
         Me.tabControl.TabIndex = 0
         '
         ' tabAsset
         '
+        Me.tabAsset.AutoScroll = True
         Me.tabAsset.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
+        Me.tabAsset.Controls.Add(Me.grpAllocations)
+        Me.tabAsset.Controls.Add(Me.grpEquipment)
         Me.tabAsset.Controls.Add(Me.grpProperty)
         Me.tabAsset.Location = New System.Drawing.Point(4, 30)
         Me.tabAsset.Name = "tabAsset"
         Me.tabAsset.Padding = New System.Windows.Forms.Padding(8)
-        Me.tabAsset.Size = New System.Drawing.Size(792, 476)
+        Me.tabAsset.Size = New System.Drawing.Size(792, 696)
         Me.tabAsset.TabIndex = 0
         Me.tabAsset.Text = "資産"
         '
@@ -157,20 +165,9 @@ Partial Class FrmAssetDetailEntry
         Me.tabInitialCost.Location = New System.Drawing.Point(4, 30)
         Me.tabInitialCost.Name = "tabInitialCost"
         Me.tabInitialCost.Padding = New System.Windows.Forms.Padding(8)
-        Me.tabInitialCost.Size = New System.Drawing.Size(792, 476)
+        Me.tabInitialCost.Size = New System.Drawing.Size(792, 696)
         Me.tabInitialCost.TabIndex = 1
-        Me.tabInitialCost.Text = "初回金"
-        '
-        ' tabMonthlyDetail
-        '
-        Me.tabMonthlyDetail.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
-        Me.tabMonthlyDetail.Controls.Add(Me.grpEquipment)
-        Me.tabMonthlyDetail.Location = New System.Drawing.Point(4, 30)
-        Me.tabMonthlyDetail.Name = "tabMonthlyDetail"
-        Me.tabMonthlyDetail.Padding = New System.Windows.Forms.Padding(8)
-        Me.tabMonthlyDetail.Size = New System.Drawing.Size(792, 476)
-        Me.tabMonthlyDetail.TabIndex = 2
-        Me.tabMonthlyDetail.Text = "月次明細"
+        Me.tabInitialCost.Text = "初回一時金"
         '
         ' grpProperty
         '
@@ -443,6 +440,130 @@ Partial Class FrmAssetDetailEntry
         Me.tblProperty.Controls.Add(Me.lblGuarantor, 2, 5)
         Me.tblProperty.Controls.Add(Me.txtGuarantor, 3, 5)
         '
+        ' grpEquipment
+        '
+        Me.grpEquipment.BackColor = System.Drawing.Color.White
+        Me.grpEquipment.Controls.Add(Me.dgvEquipment)
+        Me.grpEquipment.Dock = System.Windows.Forms.DockStyle.Top
+        Me.grpEquipment.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
+        Me.grpEquipment.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
+        Me.grpEquipment.Location = New System.Drawing.Point(8, 268)
+        Me.grpEquipment.Margin = New System.Windows.Forms.Padding(0, 0, 0, 8)
+        Me.grpEquipment.Name = "grpEquipment"
+        Me.grpEquipment.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
+        Me.grpEquipment.Size = New System.Drawing.Size(776, 210)
+        Me.grpEquipment.TabIndex = 1
+        Me.grpEquipment.TabStop = False
+        Me.grpEquipment.Text = "付属設備"
+        '
+        ' dgvEquipment
+        '
+        Me.dgvEquipment.AllowUserToAddRows = True
+        Me.dgvEquipment.BackgroundColor = System.Drawing.Color.White
+        Me.dgvEquipment.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(CType(240, Integer), CType(244, Integer), CType(248, Integer))
+        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
+        Me.dgvEquipment.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colEquipName, Me.colEquipAmount, Me.colEquipDate})
+        Me.dgvEquipment.DefaultCellStyle.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.dgvEquipment.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(CType(33, Integer), CType(37, Integer), CType(41, Integer))
+        Me.dgvEquipment.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.dgvEquipment.EnableHeadersVisualStyles = False
+        Me.dgvEquipment.GridColor = System.Drawing.Color.FromArgb(CType(222, Integer), CType(226, Integer), CType(230, Integer))
+        Me.dgvEquipment.Location = New System.Drawing.Point(6, 24)
+        Me.dgvEquipment.Name = "dgvEquipment"
+        Me.dgvEquipment.RowHeadersVisible = False
+        Me.dgvEquipment.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect
+        Me.dgvEquipment.Size = New System.Drawing.Size(764, 180)
+        Me.dgvEquipment.TabIndex = 14
+        Me.dgvEquipment.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
+        '
+        ' colEquipName
+        '
+        Me.colEquipName.HeaderText = "設備名"
+        Me.colEquipName.Name = "EquipName"
+        '
+        ' colEquipAmount
+        '
+        Me.colEquipAmount.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        Me.colEquipAmount.DefaultCellStyle.Format = "N0"
+        Me.colEquipAmount.HeaderText = "金額"
+        Me.colEquipAmount.Name = "EquipAmount"
+        '
+        ' colEquipDate
+        '
+        Me.colEquipDate.HeaderText = "日付"
+        Me.colEquipDate.Name = "EquipDate"
+        '
+        ' grpAllocations
+        '
+        Me.grpAllocations.BackColor = System.Drawing.Color.White
+        Me.grpAllocations.Controls.Add(Me.dgvAllocations)
+        Me.grpAllocations.Dock = System.Windows.Forms.DockStyle.Top
+        Me.grpAllocations.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
+        Me.grpAllocations.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
+        Me.grpAllocations.Location = New System.Drawing.Point(8, 478)
+        Me.grpAllocations.Margin = New System.Windows.Forms.Padding(0, 0, 0, 8)
+        Me.grpAllocations.Name = "grpAllocations"
+        Me.grpAllocations.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
+        Me.grpAllocations.Size = New System.Drawing.Size(776, 210)
+        Me.grpAllocations.TabIndex = 2
+        Me.grpAllocations.TabStop = False
+        Me.grpAllocations.Text = "配賦行情報"
+        '
+        ' dgvAllocations
+        '
+        Me.dgvAllocations.AllowUserToAddRows = True
+        Me.dgvAllocations.BackgroundColor = System.Drawing.Color.White
+        Me.dgvAllocations.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.dgvAllocations.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(CType(240, Integer), CType(244, Integer), CType(248, Integer))
+        Me.dgvAllocations.ColumnHeadersDefaultCellStyle.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.dgvAllocations.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.dgvAllocations.ColumnHeadersDefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
+        Me.dgvAllocations.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colAllocRate, Me.colPaymentAmount, Me.colPrepaidAmount, Me.colCostDept})
+        Me.dgvAllocations.DefaultCellStyle.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.dgvAllocations.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(CType(33, Integer), CType(37, Integer), CType(41, Integer))
+        Me.dgvAllocations.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.dgvAllocations.EnableHeadersVisualStyles = False
+        Me.dgvAllocations.GridColor = System.Drawing.Color.FromArgb(CType(222, Integer), CType(226, Integer), CType(230, Integer))
+        Me.dgvAllocations.Location = New System.Drawing.Point(6, 24)
+        Me.dgvAllocations.Name = "dgvAllocations"
+        Me.dgvAllocations.RowHeadersVisible = False
+        Me.dgvAllocations.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect
+        Me.dgvAllocations.Size = New System.Drawing.Size(764, 180)
+        Me.dgvAllocations.TabIndex = 15
+        Me.dgvAllocations.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
+        '
+        ' colAllocRate
+        '
+        Me.colAllocRate.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        Me.colAllocRate.HeaderText = "配賦率(%)"
+        Me.colAllocRate.Name = "AllocRate"
+        Me.colAllocRate.FillWeight = 80.0F
+        '
+        ' colPaymentAmount
+        '
+        Me.colPaymentAmount.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        Me.colPaymentAmount.DefaultCellStyle.Format = "N0"
+        Me.colPaymentAmount.HeaderText = "支払額"
+        Me.colPaymentAmount.Name = "PaymentAmount"
+        Me.colPaymentAmount.FillWeight = 80.0F
+        '
+        ' colPrepaidAmount
+        '
+        Me.colPrepaidAmount.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        Me.colPrepaidAmount.DefaultCellStyle.Format = "N0"
+        Me.colPrepaidAmount.HeaderText = "前払額"
+        Me.colPrepaidAmount.Name = "PrepaidAmount"
+        Me.colPrepaidAmount.FillWeight = 80.0F
+        '
+        ' colCostDept
+        '
+        Me.colCostDept.HeaderText = "費用負担部署"
+        Me.colCostDept.Name = "CostDept"
+        Me.colCostDept.FillWeight = 160.0F
+        '
         ' grpInitialCost
         '
         Me.grpInitialCost.BackColor = System.Drawing.Color.White
@@ -456,7 +577,7 @@ Partial Class FrmAssetDetailEntry
         Me.grpInitialCost.Size = New System.Drawing.Size(776, 220)
         Me.grpInitialCost.TabIndex = 0
         Me.grpInitialCost.TabStop = False
-        Me.grpInitialCost.Text = "初回金情報"
+        Me.grpInitialCost.Text = "初回一時金情報"
         '
         ' tblInitialCost
         '
@@ -565,66 +686,11 @@ Partial Class FrmAssetDetailEntry
         Me.tblInitialCost.Controls.Add(Me.lblPrepaidRent, 0, 2)
         Me.tblInitialCost.Controls.Add(Me.txtPrepaidRent, 1, 2)
         '
-        ' grpEquipment
-        '
-        Me.grpEquipment.BackColor = System.Drawing.Color.White
-        Me.grpEquipment.Controls.Add(Me.dgvEquipment)
-        Me.grpEquipment.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.grpEquipment.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
-        Me.grpEquipment.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
-        Me.grpEquipment.Location = New System.Drawing.Point(8, 8)
-        Me.grpEquipment.Name = "grpEquipment"
-        Me.grpEquipment.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
-        Me.grpEquipment.Size = New System.Drawing.Size(776, 460)
-        Me.grpEquipment.TabIndex = 0
-        Me.grpEquipment.TabStop = False
-        Me.grpEquipment.Text = "付属設備"
-        '
-        ' dgvEquipment
-        '
-        Me.dgvEquipment.AllowUserToAddRows = True
-        Me.dgvEquipment.BackgroundColor = System.Drawing.Color.White
-        Me.dgvEquipment.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(CType(240, Integer), CType(244, Integer), CType(248, Integer))
-        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
-        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
-        Me.dgvEquipment.ColumnHeadersDefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
-        Me.dgvEquipment.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colEquipName, Me.colEquipAmount, Me.colEquipDate})
-        Me.dgvEquipment.DefaultCellStyle.Font = New System.Drawing.Font("Meiryo", 9.75F)
-        Me.dgvEquipment.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(CType(33, Integer), CType(37, Integer), CType(41, Integer))
-        Me.dgvEquipment.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.dgvEquipment.EnableHeadersVisualStyles = False
-        Me.dgvEquipment.GridColor = System.Drawing.Color.FromArgb(CType(222, Integer), CType(226, Integer), CType(230, Integer))
-        Me.dgvEquipment.Location = New System.Drawing.Point(6, 24)
-        Me.dgvEquipment.Name = "dgvEquipment"
-        Me.dgvEquipment.RowHeadersVisible = False
-        Me.dgvEquipment.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect
-        Me.dgvEquipment.Size = New System.Drawing.Size(764, 430)
-        Me.dgvEquipment.TabIndex = 14
-        Me.dgvEquipment.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
-        '
-        ' colEquipName
-        '
-        Me.colEquipName.HeaderText = "設備名"
-        Me.colEquipName.Name = "EquipName"
-        '
-        ' colEquipAmount
-        '
-        Me.colEquipAmount.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
-        Me.colEquipAmount.DefaultCellStyle.Format = "N0"
-        Me.colEquipAmount.HeaderText = "金額"
-        Me.colEquipAmount.Name = "EquipAmount"
-        '
-        ' colEquipDate
-        '
-        Me.colEquipDate.HeaderText = "日付"
-        Me.colEquipDate.Name = "EquipDate"
-        '
         ' FrmAssetDetailEntry
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0F, 12.0F)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(800, 560)
+        Me.ClientSize = New System.Drawing.Size(800, 780)
         Me.Controls.Add(Me.tabControl)
         Me.Controls.Add(Me.pnlBottom)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
@@ -634,12 +700,13 @@ Partial Class FrmAssetDetailEntry
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "資産詳細入力"
         Me.pnlBottom.ResumeLayout(False)
-        Me.tabMonthlyDetail.ResumeLayout(False)
         Me.tabInitialCost.ResumeLayout(False)
         Me.tabAsset.ResumeLayout(False)
         Me.tabControl.ResumeLayout(False)
         Me.grpEquipment.ResumeLayout(False)
         CType(Me.dgvEquipment, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.grpAllocations.ResumeLayout(False)
+        CType(Me.dgvAllocations, System.ComponentModel.ISupportInitialize).EndInit()
         Me.grpInitialCost.ResumeLayout(False)
         Me.tblInitialCost.ResumeLayout(False)
         Me.tblInitialCost.PerformLayout()
@@ -656,7 +723,6 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents tabControl As System.Windows.Forms.TabControl
     Friend WithEvents tabAsset As System.Windows.Forms.TabPage
     Friend WithEvents tabInitialCost As System.Windows.Forms.TabPage
-    Friend WithEvents tabMonthlyDetail As System.Windows.Forms.TabPage
     Friend WithEvents grpProperty As System.Windows.Forms.GroupBox
     Friend WithEvents tblProperty As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents lblPropertyName As System.Windows.Forms.Label
@@ -687,6 +753,17 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents txtPaymentAgent As System.Windows.Forms.TextBox
     Friend WithEvents lblGuarantor As System.Windows.Forms.Label
     Friend WithEvents txtGuarantor As System.Windows.Forms.TextBox
+    Friend WithEvents grpEquipment As System.Windows.Forms.GroupBox
+    Friend WithEvents dgvEquipment As System.Windows.Forms.DataGridView
+    Friend WithEvents colEquipName As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colEquipAmount As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colEquipDate As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents grpAllocations As System.Windows.Forms.GroupBox
+    Friend WithEvents dgvAllocations As System.Windows.Forms.DataGridView
+    Friend WithEvents colAllocRate As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colPaymentAmount As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colPrepaidAmount As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colCostDept As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents grpInitialCost As System.Windows.Forms.GroupBox
     Friend WithEvents tblInitialCost As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents lblShikikin As System.Windows.Forms.Label
@@ -699,10 +776,5 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents txtBrokerFee As System.Windows.Forms.TextBox
     Friend WithEvents lblPrepaidRent As System.Windows.Forms.Label
     Friend WithEvents txtPrepaidRent As System.Windows.Forms.TextBox
-    Friend WithEvents grpEquipment As System.Windows.Forms.GroupBox
-    Friend WithEvents dgvEquipment As System.Windows.Forms.DataGridView
-    Friend WithEvents colEquipName As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colEquipAmount As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colEquipDate As System.Windows.Forms.DataGridViewTextBoxColumn
 
 End Class

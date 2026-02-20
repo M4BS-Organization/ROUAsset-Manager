@@ -45,6 +45,14 @@ Partial Public Class FrmAssetDetailEntry
             Next
         End If
 
+        Dim allocRows As Integer = dgvAllocations.Rows.Count
+        If dgvAllocations.AllowUserToAddRows Then allocRows -= 1
+        If allocRows < 7 Then
+            For i As Integer = 0 To 6 - allocRows
+                dgvAllocations.Rows.Add()
+            Next
+        End If
+
         CalcBuildingAge()
     End Sub
 
@@ -113,6 +121,8 @@ Partial Public Class FrmAssetDetailEntry
         txtGuarantor.ReadOnly = True
         dgvEquipment.ReadOnly = True
         dgvEquipment.AllowUserToAddRows = False
+        dgvAllocations.ReadOnly = True
+        dgvAllocations.AllowUserToAddRows = False
         txtShikikin.ReadOnly = True
         txtHoshokin.ReadOnly = True
         txtReikin.ReadOnly = True
