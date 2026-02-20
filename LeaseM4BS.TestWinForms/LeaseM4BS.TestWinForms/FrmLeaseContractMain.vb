@@ -576,7 +576,13 @@ Public Class FrmLeaseContractMain
         dgvAssets.Columns("CashPrice").FillWeight = 15
         dgvAssets.Columns("MonthlyLease").FillWeight = 15
 
-        Dim pnlGrid As New Panel() With {
+        dgvAssets.AllowUserToAddRows = True
+        dgvAssets.ReadOnly = False
+        For i As Integer = 0 To 6
+            dgvAssets.Rows.Add()
+        Next
+
+        Dim pnlGrid As New Panel()With {
             .Dock = DockStyle.Top,
             .Height = 180,
             .Padding = New Padding(8, 0, 8, 8)
@@ -1686,7 +1692,9 @@ Public Class FrmLeaseContractMain
         End If
 
         For Each row As DataGridViewRow In dgvAssets.Rows
+            If row.IsNewRow Then Continue For
             If row.Cells("AssetNo").Value IsNot Nothing AndAlso
+               Not String.IsNullOrEmpty(row.Cells("AssetNo").Value.ToString()) AndAlso
                row.Cells("AssetNo").Value.ToString() = assetId.ToString() Then
                 MessageBox.Show("この資産番号は既に追加されています。", "重複エラー",
                                 MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -1717,19 +1725,49 @@ Public Class FrmLeaseContractMain
                             propertyName As String, quantity As String,
                             earlyTermination As Boolean,
                             cashPrice As String, monthlyLease As String)
-        dgvAssets.Rows.Add(
-            assetId.ToString(),
-            accountClass,
-            propertyName,
-            quantity,
-            earlyTermination,
-            cashPrice,
-            monthlyLease)
+        Dim emptyRowIndex As Integer = -1
+        For i As Integer = 0 To dgvAssets.Rows.Count - 1
+            Dim row As DataGridViewRow = dgvAssets.Rows(i)
+            If row.IsNewRow Then Continue For
+            If row.Cells("AssetNo").Value Is Nothing OrElse
+               String.IsNullOrEmpty(row.Cells("AssetNo").Value.ToString()) Then
+                emptyRowIndex = i
+                Exit For
+            End If
+        Next
+
+        If emptyRowIndex >= 0 Then
+            Dim row As DataGridViewRow = dgvAssets.Rows(emptyRowIndex)
+            row.Cells("AssetNo").Value = assetId.ToString()
+            row.Cells("AccountClass").Value = accountClass
+            row.Cells("PropertyName").Value = propertyName
+            row.Cells("Quantity").Value = quantity
+            row.Cells("EarlyTermination").Value = earlyTermination
+            row.Cells("CashPrice").Value = cashPrice
+            row.Cells("MonthlyLease").Value = monthlyLease
+        Else
+            dgvAssets.Rows.Add(
+                assetId.ToString(),
+                accountClass,
+                propertyName,
+                quantity,
+                earlyTermination,
+                cashPrice,
+                monthlyLease)
+        End If
         UpdateAssetCount()
     End Sub
 
     Private Sub UpdateAssetCount()
-        lblAssetCount.Text = "資産件数: " & dgvAssets.Rows.Count.ToString() & "件"
+        Dim count As Integer = 0
+        For Each row As DataGridViewRow In dgvAssets.Rows
+            If row.IsNewRow Then Continue For
+            If row.Cells("AssetNo").Value IsNot Nothing AndAlso
+               Not String.IsNullOrEmpty(row.Cells("AssetNo").Value.ToString()) Then
+                count += 1
+            End If
+        Next
+        lblAssetCount.Text = "資産件数: " & count.ToString() & "件"
     End Sub
 
 End Class

@@ -36,6 +36,15 @@ Partial Public Class FrmAssetDetailEntry
         If IsReadOnly Then
             ApplyReadOnlyMode()
         End If
+
+        Dim currentRows As Integer = dgvEquipment.Rows.Count
+        If dgvEquipment.AllowUserToAddRows Then currentRows -= 1
+        If currentRows < 7 Then
+            For i As Integer = 0 To 6 - currentRows
+                dgvEquipment.Rows.Add()
+            Next
+        End If
+
         CalcBuildingAge()
     End Sub
 
