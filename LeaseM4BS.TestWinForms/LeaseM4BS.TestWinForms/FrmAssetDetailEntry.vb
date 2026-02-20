@@ -113,6 +113,11 @@ Partial Public Class FrmAssetDetailEntry
         txtGuarantor.ReadOnly = True
         dgvEquipment.ReadOnly = True
         dgvEquipment.AllowUserToAddRows = False
+        txtShikikin.ReadOnly = True
+        txtHoshokin.ReadOnly = True
+        txtReikin.ReadOnly = True
+        txtBrokerFee.ReadOnly = True
+        txtPrepaidRent.ReadOnly = True
         btnSave.Visible = False
 
         Dim readOnlyColor As Color = Color.FromArgb(233, 236, 239)
@@ -127,6 +132,11 @@ Partial Public Class FrmAssetDetailEntry
         txtBrokerCompany.BackColor = readOnlyColor
         txtPaymentAgent.BackColor = readOnlyColor
         txtGuarantor.BackColor = readOnlyColor
+        txtShikikin.BackColor = readOnlyColor
+        txtHoshokin.BackColor = readOnlyColor
+        txtReikin.BackColor = readOnlyColor
+        txtBrokerFee.BackColor = readOnlyColor
+        txtPrepaidRent.BackColor = readOnlyColor
 
         Me.Text = "資産詳細（照会）"
     End Sub

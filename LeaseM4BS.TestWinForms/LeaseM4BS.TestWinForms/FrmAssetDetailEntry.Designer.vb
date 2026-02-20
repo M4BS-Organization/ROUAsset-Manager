@@ -19,12 +19,10 @@ Partial Class FrmAssetDetailEntry
         Me.pnlBottom = New System.Windows.Forms.Panel()
         Me.btnSave = New System.Windows.Forms.Button()
         Me.btnCancel = New System.Windows.Forms.Button()
-        Me.pnlMain = New System.Windows.Forms.Panel()
-        Me.grpEquipment = New System.Windows.Forms.GroupBox()
-        Me.dgvEquipment = New System.Windows.Forms.DataGridView()
-        Me.colEquipName = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colEquipAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colEquipDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.tabControl = New System.Windows.Forms.TabControl()
+        Me.tabAsset = New System.Windows.Forms.TabPage()
+        Me.tabInitialCost = New System.Windows.Forms.TabPage()
+        Me.tabMonthlyDetail = New System.Windows.Forms.TabPage()
         Me.grpProperty = New System.Windows.Forms.GroupBox()
         Me.tblProperty = New System.Windows.Forms.TableLayoutPanel()
         Me.lblPropertyName = New System.Windows.Forms.Label()
@@ -55,13 +53,35 @@ Partial Class FrmAssetDetailEntry
         Me.txtPaymentAgent = New System.Windows.Forms.TextBox()
         Me.lblGuarantor = New System.Windows.Forms.Label()
         Me.txtGuarantor = New System.Windows.Forms.TextBox()
+        Me.grpInitialCost = New System.Windows.Forms.GroupBox()
+        Me.tblInitialCost = New System.Windows.Forms.TableLayoutPanel()
+        Me.lblShikikin = New System.Windows.Forms.Label()
+        Me.txtShikikin = New System.Windows.Forms.TextBox()
+        Me.lblHoshokin = New System.Windows.Forms.Label()
+        Me.txtHoshokin = New System.Windows.Forms.TextBox()
+        Me.lblReikin = New System.Windows.Forms.Label()
+        Me.txtReikin = New System.Windows.Forms.TextBox()
+        Me.lblBrokerFee = New System.Windows.Forms.Label()
+        Me.txtBrokerFee = New System.Windows.Forms.TextBox()
+        Me.lblPrepaidRent = New System.Windows.Forms.Label()
+        Me.txtPrepaidRent = New System.Windows.Forms.TextBox()
+        Me.grpEquipment = New System.Windows.Forms.GroupBox()
+        Me.dgvEquipment = New System.Windows.Forms.DataGridView()
+        Me.colEquipName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colEquipAmount = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colEquipDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlBottom.SuspendLayout()
-        Me.pnlMain.SuspendLayout()
-        Me.grpEquipment.SuspendLayout()
-        CType(Me.dgvEquipment, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.tabControl.SuspendLayout()
+        Me.tabAsset.SuspendLayout()
+        Me.tabInitialCost.SuspendLayout()
+        Me.tabMonthlyDetail.SuspendLayout()
         Me.grpProperty.SuspendLayout()
         Me.tblProperty.SuspendLayout()
         CType(Me.numUsefulLife, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.grpInitialCost.SuspendLayout()
+        Me.tblInitialCost.SuspendLayout()
+        Me.grpEquipment.SuspendLayout()
+        CType(Me.dgvEquipment, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         ' pnlBottom
@@ -70,9 +90,9 @@ Partial Class FrmAssetDetailEntry
         Me.pnlBottom.Controls.Add(Me.btnCancel)
         Me.pnlBottom.Controls.Add(Me.btnSave)
         Me.pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.pnlBottom.Location = New System.Drawing.Point(0, 490)
+        Me.pnlBottom.Location = New System.Drawing.Point(0, 510)
         Me.pnlBottom.Name = "pnlBottom"
-        Me.pnlBottom.Size = New System.Drawing.Size(780, 50)
+        Me.pnlBottom.Size = New System.Drawing.Size(800, 50)
         Me.pnlBottom.TabIndex = 2
         '
         ' btnSave
@@ -83,7 +103,7 @@ Partial Class FrmAssetDetailEntry
         Me.btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnSave.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
         Me.btnSave.ForeColor = System.Drawing.Color.White
-        Me.btnSave.Location = New System.Drawing.Point(578, 12)
+        Me.btnSave.Location = New System.Drawing.Point(598, 12)
         Me.btnSave.Name = "btnSave"
         Me.btnSave.Size = New System.Drawing.Size(90, 28)
         Me.btnSave.TabIndex = 0
@@ -98,25 +118,59 @@ Partial Class FrmAssetDetailEntry
         Me.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnCancel.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
         Me.btnCancel.ForeColor = System.Drawing.Color.White
-        Me.btnCancel.Location = New System.Drawing.Point(674, 12)
+        Me.btnCancel.Location = New System.Drawing.Point(694, 12)
         Me.btnCancel.Name = "btnCancel"
         Me.btnCancel.Size = New System.Drawing.Size(90, 28)
         Me.btnCancel.TabIndex = 1
         Me.btnCancel.Text = "キャンセル"
         Me.btnCancel.UseVisualStyleBackColor = False
         '
-        ' pnlMain
+        ' tabControl
         '
-        Me.pnlMain.AutoScroll = True
-        Me.pnlMain.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
-        Me.pnlMain.Controls.Add(Me.grpEquipment)
-        Me.pnlMain.Controls.Add(Me.grpProperty)
-        Me.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.pnlMain.Location = New System.Drawing.Point(0, 0)
-        Me.pnlMain.Name = "pnlMain"
-        Me.pnlMain.Padding = New System.Windows.Forms.Padding(8, 8, 8, 0)
-        Me.pnlMain.Size = New System.Drawing.Size(780, 490)
-        Me.pnlMain.TabIndex = 1
+        Me.tabControl.Controls.Add(Me.tabAsset)
+        Me.tabControl.Controls.Add(Me.tabInitialCost)
+        Me.tabControl.Controls.Add(Me.tabMonthlyDetail)
+        Me.tabControl.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.tabControl.Font = New System.Drawing.Font("Meiryo", 9.75F, System.Drawing.FontStyle.Bold)
+        Me.tabControl.Location = New System.Drawing.Point(0, 0)
+        Me.tabControl.Name = "tabControl"
+        Me.tabControl.Padding = New System.Drawing.Point(12, 4)
+        Me.tabControl.SelectedIndex = 0
+        Me.tabControl.Size = New System.Drawing.Size(800, 510)
+        Me.tabControl.TabIndex = 0
+        '
+        ' tabAsset
+        '
+        Me.tabAsset.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
+        Me.tabAsset.Controls.Add(Me.grpProperty)
+        Me.tabAsset.Location = New System.Drawing.Point(4, 30)
+        Me.tabAsset.Name = "tabAsset"
+        Me.tabAsset.Padding = New System.Windows.Forms.Padding(8)
+        Me.tabAsset.Size = New System.Drawing.Size(792, 476)
+        Me.tabAsset.TabIndex = 0
+        Me.tabAsset.Text = "資産"
+        '
+        ' tabInitialCost
+        '
+        Me.tabInitialCost.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
+        Me.tabInitialCost.Controls.Add(Me.grpInitialCost)
+        Me.tabInitialCost.Location = New System.Drawing.Point(4, 30)
+        Me.tabInitialCost.Name = "tabInitialCost"
+        Me.tabInitialCost.Padding = New System.Windows.Forms.Padding(8)
+        Me.tabInitialCost.Size = New System.Drawing.Size(792, 476)
+        Me.tabInitialCost.TabIndex = 1
+        Me.tabInitialCost.Text = "初回金"
+        '
+        ' tabMonthlyDetail
+        '
+        Me.tabMonthlyDetail.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
+        Me.tabMonthlyDetail.Controls.Add(Me.grpEquipment)
+        Me.tabMonthlyDetail.Location = New System.Drawing.Point(4, 30)
+        Me.tabMonthlyDetail.Name = "tabMonthlyDetail"
+        Me.tabMonthlyDetail.Padding = New System.Windows.Forms.Padding(8)
+        Me.tabMonthlyDetail.Size = New System.Drawing.Size(792, 476)
+        Me.tabMonthlyDetail.TabIndex = 2
+        Me.tabMonthlyDetail.Text = "月次明細"
         '
         ' grpProperty
         '
@@ -129,10 +183,10 @@ Partial Class FrmAssetDetailEntry
         Me.grpProperty.Margin = New System.Windows.Forms.Padding(0, 0, 0, 8)
         Me.grpProperty.Name = "grpProperty"
         Me.grpProperty.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
-        Me.grpProperty.Size = New System.Drawing.Size(764, 260)
+        Me.grpProperty.Size = New System.Drawing.Size(776, 260)
         Me.grpProperty.TabIndex = 0
         Me.grpProperty.TabStop = False
-        Me.grpProperty.Text = "物件情報"
+        Me.grpProperty.Text = "基本情報"
         '
         ' tblProperty
         '
@@ -154,10 +208,11 @@ Partial Class FrmAssetDetailEntry
         Me.tblProperty.Location = New System.Drawing.Point(6, 24)
         Me.tblProperty.Name = "tblProperty"
         Me.tblProperty.Padding = New System.Windows.Forms.Padding(4)
-        Me.tblProperty.Size = New System.Drawing.Size(752, 230)
+        Me.tblProperty.Size = New System.Drawing.Size(764, 230)
         Me.tblProperty.TabIndex = 0
         '
         ' Labels
+        '
         '
         Me.lblPropertyName.Dock = System.Windows.Forms.DockStyle.Fill
         Me.lblPropertyName.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
@@ -220,7 +275,7 @@ Partial Class FrmAssetDetailEntry
         Me.lblCompletion.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
         Me.lblCompletion.Name = "lblCompletion"
         Me.lblCompletion.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
-        Me.lblCompletion.Text = "竣工"
+        Me.lblCompletion.Text = "竪工"
         Me.lblCompletion.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         Me.lblBuildingAgeCaption.Dock = System.Windows.Forms.DockStyle.Fill
@@ -272,6 +327,7 @@ Partial Class FrmAssetDetailEntry
         Me.lblGuarantor.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         ' Input Controls
+        '
         '
         Me.txtPropertyName.Dock = System.Windows.Forms.DockStyle.Fill
         Me.txtPropertyName.Font = New System.Drawing.Font("Meiryo", 9.75F)
@@ -336,13 +392,6 @@ Partial Class FrmAssetDetailEntry
         Me.txtBrokerCompany.Name = "txtBrokerCompany"
         Me.txtBrokerCompany.TabIndex = 10
         '
-        Me.txtUsageRestrictions.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.txtUsageRestrictions.Font = New System.Drawing.Font("Meiryo", 9.75F)
-        Me.txtUsageRestrictions.Multiline = True
-        Me.txtUsageRestrictions.Name = "txtUsageRestrictions"
-        Me.txtUsageRestrictions.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.txtUsageRestrictions.TabIndex = 11
-        '
         Me.txtPaymentAgent.Dock = System.Windows.Forms.DockStyle.Fill
         Me.txtPaymentAgent.Font = New System.Drawing.Font("Meiryo", 9.75F)
         Me.txtPaymentAgent.Name = "txtPaymentAgent"
@@ -353,33 +402,35 @@ Partial Class FrmAssetDetailEntry
         Me.txtGuarantor.Name = "txtGuarantor"
         Me.txtGuarantor.TabIndex = 13
         '
+        Me.txtUsageRestrictions.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtUsageRestrictions.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.txtUsageRestrictions.Multiline = True
+        Me.txtUsageRestrictions.Name = "txtUsageRestrictions"
+        Me.txtUsageRestrictions.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.txtUsageRestrictions.TabIndex = 11
+        '
         ' tblProperty - Add controls to layout
         '
-        ' Row 0: 物件名 (spans full width)
         Me.tblProperty.Controls.Add(Me.lblPropertyName, 0, 0)
         Me.tblProperty.Controls.Add(Me.txtPropertyName, 1, 0)
         Me.tblProperty.SetColumnSpan(Me.txtPropertyName, 5)
-        ' Row 1: 所在地 + 区画
         Me.tblProperty.Controls.Add(Me.lblLocation, 0, 1)
         Me.tblProperty.Controls.Add(Me.txtLocation, 1, 1)
         Me.tblProperty.SetColumnSpan(Me.txtLocation, 3)
         Me.tblProperty.Controls.Add(Me.lblSection, 4, 1)
         Me.tblProperty.Controls.Add(Me.txtSection, 5, 1)
-        ' Row 2: 面積 + 間取り + 構造・用途
         Me.tblProperty.Controls.Add(Me.lblArea, 0, 2)
         Me.tblProperty.Controls.Add(Me.txtArea, 1, 2)
         Me.tblProperty.Controls.Add(Me.lblLayout, 2, 2)
         Me.tblProperty.Controls.Add(Me.txtLayout, 3, 2)
         Me.tblProperty.Controls.Add(Me.lblStructure, 4, 2)
         Me.tblProperty.Controls.Add(Me.txtStructure, 5, 2)
-        ' Row 3: 耐用年数 + 竣工 + 築年数
         Me.tblProperty.Controls.Add(Me.lblUsefulLife, 0, 3)
         Me.tblProperty.Controls.Add(Me.numUsefulLife, 1, 3)
         Me.tblProperty.Controls.Add(Me.lblCompletion, 2, 3)
         Me.tblProperty.Controls.Add(Me.dtpCompletion, 3, 3)
         Me.tblProperty.Controls.Add(Me.lblBuildingAgeCaption, 4, 3)
         Me.tblProperty.Controls.Add(Me.lblBuildingAge, 5, 3)
-        ' Row 4: 貸主名 + 仲介会社 + 用途・制限 (rowspan=2)
         Me.tblProperty.Controls.Add(Me.lblLandlordName, 0, 4)
         Me.tblProperty.Controls.Add(Me.txtLandlordName, 1, 4)
         Me.tblProperty.Controls.Add(Me.lblBrokerCompany, 2, 4)
@@ -387,24 +438,145 @@ Partial Class FrmAssetDetailEntry
         Me.tblProperty.Controls.Add(Me.lblUsageRestrictions, 4, 4)
         Me.tblProperty.Controls.Add(Me.txtUsageRestrictions, 5, 4)
         Me.tblProperty.SetRowSpan(Me.txtUsageRestrictions, 2)
-        ' Row 5: 決済代行 + 連帯保証人
         Me.tblProperty.Controls.Add(Me.lblPaymentAgent, 0, 5)
         Me.tblProperty.Controls.Add(Me.txtPaymentAgent, 1, 5)
         Me.tblProperty.Controls.Add(Me.lblGuarantor, 2, 5)
         Me.tblProperty.Controls.Add(Me.txtGuarantor, 3, 5)
         '
+        ' grpInitialCost
+        '
+        Me.grpInitialCost.BackColor = System.Drawing.Color.White
+        Me.grpInitialCost.Controls.Add(Me.tblInitialCost)
+        Me.grpInitialCost.Dock = System.Windows.Forms.DockStyle.Top
+        Me.grpInitialCost.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
+        Me.grpInitialCost.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
+        Me.grpInitialCost.Location = New System.Drawing.Point(8, 8)
+        Me.grpInitialCost.Name = "grpInitialCost"
+        Me.grpInitialCost.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
+        Me.grpInitialCost.Size = New System.Drawing.Size(776, 220)
+        Me.grpInitialCost.TabIndex = 0
+        Me.grpInitialCost.TabStop = False
+        Me.grpInitialCost.Text = "初回金情報"
+        '
+        ' tblInitialCost
+        '
+        Me.tblInitialCost.ColumnCount = 4
+        Me.tblInitialCost.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120.0F))
+        Me.tblInitialCost.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0F))
+        Me.tblInitialCost.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120.0F))
+        Me.tblInitialCost.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0F))
+        Me.tblInitialCost.RowCount = 3
+        Me.tblInitialCost.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36.0F))
+        Me.tblInitialCost.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36.0F))
+        Me.tblInitialCost.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36.0F))
+        Me.tblInitialCost.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.tblInitialCost.Location = New System.Drawing.Point(6, 24)
+        Me.tblInitialCost.Name = "tblInitialCost"
+        Me.tblInitialCost.Padding = New System.Windows.Forms.Padding(4)
+        Me.tblInitialCost.Size = New System.Drawing.Size(764, 190)
+        Me.tblInitialCost.TabIndex = 0
+        '
+        ' Initial Cost Labels
+        '
+        '
+        Me.lblShikikin.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblShikikin.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.lblShikikin.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.lblShikikin.Name = "lblShikikin"
+        Me.lblShikikin.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.lblShikikin.Text = "敷金"
+        Me.lblShikikin.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        Me.lblHoshokin.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblHoshokin.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.lblHoshokin.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.lblHoshokin.Name = "lblHoshokin"
+        Me.lblHoshokin.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.lblHoshokin.Text = "保証金"
+        Me.lblHoshokin.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        Me.lblReikin.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblReikin.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.lblReikin.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.lblReikin.Name = "lblReikin"
+        Me.lblReikin.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.lblReikin.Text = "礼金"
+        Me.lblReikin.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        Me.lblBrokerFee.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblBrokerFee.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.lblBrokerFee.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.lblBrokerFee.Name = "lblBrokerFee"
+        Me.lblBrokerFee.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.lblBrokerFee.Text = "仲介手数料"
+        Me.lblBrokerFee.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        Me.lblPrepaidRent.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblPrepaidRent.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.lblPrepaidRent.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
+        Me.lblPrepaidRent.Name = "lblPrepaidRent"
+        Me.lblPrepaidRent.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.lblPrepaidRent.Text = "前払賃料"
+        Me.lblPrepaidRent.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        ' Initial Cost Input Controls
+        '
+        '
+        Me.txtShikikin.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtShikikin.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.txtShikikin.Name = "txtShikikin"
+        Me.txtShikikin.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.txtShikikin.TabIndex = 20
+        '
+        Me.txtHoshokin.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtHoshokin.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.txtHoshokin.Name = "txtHoshokin"
+        Me.txtHoshokin.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.txtHoshokin.TabIndex = 21
+        '
+        Me.txtReikin.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtReikin.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.txtReikin.Name = "txtReikin"
+        Me.txtReikin.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.txtReikin.TabIndex = 22
+        '
+        Me.txtBrokerFee.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtBrokerFee.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.txtBrokerFee.Name = "txtBrokerFee"
+        Me.txtBrokerFee.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.txtBrokerFee.TabIndex = 23
+        '
+        Me.txtPrepaidRent.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtPrepaidRent.Font = New System.Drawing.Font("Meiryo", 9.75F)
+        Me.txtPrepaidRent.Name = "txtPrepaidRent"
+        Me.txtPrepaidRent.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.txtPrepaidRent.TabIndex = 24
+        '
+        ' tblInitialCost - Add controls to layout
+        '
+        Me.tblInitialCost.Controls.Add(Me.lblShikikin, 0, 0)
+        Me.tblInitialCost.Controls.Add(Me.txtShikikin, 1, 0)
+        Me.tblInitialCost.Controls.Add(Me.lblHoshokin, 2, 0)
+        Me.tblInitialCost.Controls.Add(Me.txtHoshokin, 3, 0)
+        Me.tblInitialCost.Controls.Add(Me.lblReikin, 0, 1)
+        Me.tblInitialCost.Controls.Add(Me.txtReikin, 1, 1)
+        Me.tblInitialCost.Controls.Add(Me.lblBrokerFee, 2, 1)
+        Me.tblInitialCost.Controls.Add(Me.txtBrokerFee, 3, 1)
+        Me.tblInitialCost.Controls.Add(Me.lblPrepaidRent, 0, 2)
+        Me.tblInitialCost.Controls.Add(Me.txtPrepaidRent, 1, 2)
+        '
         ' grpEquipment
         '
         Me.grpEquipment.BackColor = System.Drawing.Color.White
         Me.grpEquipment.Controls.Add(Me.dgvEquipment)
-        Me.grpEquipment.Dock = System.Windows.Forms.DockStyle.Top
+        Me.grpEquipment.Dock = System.Windows.Forms.DockStyle.Fill
         Me.grpEquipment.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
         Me.grpEquipment.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
-        Me.grpEquipment.Location = New System.Drawing.Point(8, 268)
+        Me.grpEquipment.Location = New System.Drawing.Point(8, 8)
         Me.grpEquipment.Name = "grpEquipment"
         Me.grpEquipment.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
-        Me.grpEquipment.Size = New System.Drawing.Size(764, 200)
-        Me.grpEquipment.TabIndex = 1
+        Me.grpEquipment.Size = New System.Drawing.Size(776, 460)
+        Me.grpEquipment.TabIndex = 0
         Me.grpEquipment.TabStop = False
         Me.grpEquipment.Text = "付属設備"
         '
@@ -426,7 +598,8 @@ Partial Class FrmAssetDetailEntry
         Me.dgvEquipment.Location = New System.Drawing.Point(6, 24)
         Me.dgvEquipment.Name = "dgvEquipment"
         Me.dgvEquipment.RowHeadersVisible = False
-        Me.dgvEquipment.Size = New System.Drawing.Size(752, 170)
+        Me.dgvEquipment.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect
+        Me.dgvEquipment.Size = New System.Drawing.Size(764, 430)
         Me.dgvEquipment.TabIndex = 14
         Me.dgvEquipment.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         '
@@ -451,8 +624,8 @@ Partial Class FrmAssetDetailEntry
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0F, 12.0F)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(780, 540)
-        Me.Controls.Add(Me.pnlMain)
+        Me.ClientSize = New System.Drawing.Size(800, 560)
+        Me.Controls.Add(Me.tabControl)
         Me.Controls.Add(Me.pnlBottom)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
         Me.MaximizeBox = False
@@ -461,9 +634,15 @@ Partial Class FrmAssetDetailEntry
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "資産詳細入力"
         Me.pnlBottom.ResumeLayout(False)
-        Me.pnlMain.ResumeLayout(False)
+        Me.tabMonthlyDetail.ResumeLayout(False)
+        Me.tabInitialCost.ResumeLayout(False)
+        Me.tabAsset.ResumeLayout(False)
+        Me.tabControl.ResumeLayout(False)
         Me.grpEquipment.ResumeLayout(False)
         CType(Me.dgvEquipment, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.grpInitialCost.ResumeLayout(False)
+        Me.tblInitialCost.ResumeLayout(False)
+        Me.tblInitialCost.PerformLayout()
         Me.grpProperty.ResumeLayout(False)
         Me.tblProperty.ResumeLayout(False)
         Me.tblProperty.PerformLayout()
@@ -474,7 +653,10 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents pnlBottom As System.Windows.Forms.Panel
     Friend WithEvents btnSave As System.Windows.Forms.Button
     Friend WithEvents btnCancel As System.Windows.Forms.Button
-    Friend WithEvents pnlMain As System.Windows.Forms.Panel
+    Friend WithEvents tabControl As System.Windows.Forms.TabControl
+    Friend WithEvents tabAsset As System.Windows.Forms.TabPage
+    Friend WithEvents tabInitialCost As System.Windows.Forms.TabPage
+    Friend WithEvents tabMonthlyDetail As System.Windows.Forms.TabPage
     Friend WithEvents grpProperty As System.Windows.Forms.GroupBox
     Friend WithEvents tblProperty As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents lblPropertyName As System.Windows.Forms.Label
@@ -505,6 +687,18 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents txtPaymentAgent As System.Windows.Forms.TextBox
     Friend WithEvents lblGuarantor As System.Windows.Forms.Label
     Friend WithEvents txtGuarantor As System.Windows.Forms.TextBox
+    Friend WithEvents grpInitialCost As System.Windows.Forms.GroupBox
+    Friend WithEvents tblInitialCost As System.Windows.Forms.TableLayoutPanel
+    Friend WithEvents lblShikikin As System.Windows.Forms.Label
+    Friend WithEvents txtShikikin As System.Windows.Forms.TextBox
+    Friend WithEvents lblHoshokin As System.Windows.Forms.Label
+    Friend WithEvents txtHoshokin As System.Windows.Forms.TextBox
+    Friend WithEvents lblReikin As System.Windows.Forms.Label
+    Friend WithEvents txtReikin As System.Windows.Forms.TextBox
+    Friend WithEvents lblBrokerFee As System.Windows.Forms.Label
+    Friend WithEvents txtBrokerFee As System.Windows.Forms.TextBox
+    Friend WithEvents lblPrepaidRent As System.Windows.Forms.Label
+    Friend WithEvents txtPrepaidRent As System.Windows.Forms.TextBox
     Friend WithEvents grpEquipment As System.Windows.Forms.GroupBox
     Friend WithEvents dgvEquipment As System.Windows.Forms.DataGridView
     Friend WithEvents colEquipName As System.Windows.Forms.DataGridViewTextBoxColumn

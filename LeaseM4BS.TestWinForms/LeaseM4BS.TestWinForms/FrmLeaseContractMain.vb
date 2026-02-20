@@ -539,7 +539,7 @@ Public Class FrmLeaseContractMain
             .RowHeadersVisible = False,
             .BorderStyle = BorderStyle.None,
             .GridColor = CLR_BORDER,
-            .SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            .SelectionMode = DataGridViewSelectionMode.CellSelect,
             .ReadOnly = True,
             .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
             .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
