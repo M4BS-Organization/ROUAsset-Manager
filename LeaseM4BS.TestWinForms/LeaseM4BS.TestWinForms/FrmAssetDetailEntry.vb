@@ -16,6 +16,27 @@ Partial Public Class FrmAssetDetailEntry
         End Get
     End Property
 
+    Public ReadOnly Property AccountClass As String
+        Get
+            If cmbAccountClass.SelectedItem IsNot Nothing Then
+                Return cmbAccountClass.SelectedItem.ToString()
+            End If
+            Return ""
+        End Get
+    End Property
+
+    Public ReadOnly Property AssetNo As String
+        Get
+            Return txtAssetNo.Text
+        End Get
+    End Property
+
+    Public ReadOnly Property Quantity As Integer
+        Get
+            Return CInt(numQuantity.Value)
+        End Get
+    End Property
+
     Public ReadOnly Property CashPrice As String
         Get
             Return ""
@@ -29,6 +50,17 @@ Partial Public Class FrmAssetDetailEntry
     End Property
 
     Private Sub FrmAssetDetailEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ' 計上区分コンボボックスの初期化
+        cmbAccountClass.Items.AddRange(New String() {"オンバランス", "オフバランス"})
+        If cmbAccountClass.Items.Count > 0 Then
+            cmbAccountClass.SelectedIndex = 0
+        End If
+
+        ' 資産番号が設定済みなら表示
+        If AssetId > 0 Then
+            txtAssetNo.Text = AssetId.ToString()
+        End If
+
         If AssetId > 0 Then
             LoadAssetData()
         End If
@@ -64,6 +96,18 @@ Partial Public Class FrmAssetDetailEntry
                     "SELECT * FROM d_asset WHERE asset_id = @asset_id", params)
                 If dt.Rows.Count > 0 Then
                     Dim row As DataRow = dt.Rows(0)
+                    ' 新規3項目の読み込み
+                    Dim accountClassVal As String = db.SafeConvert(Of String)(row("account_class"), "")
+                    If Not String.IsNullOrEmpty(accountClassVal) Then
+                        Dim idx As Integer = cmbAccountClass.FindStringExact(accountClassVal)
+                        If idx >= 0 Then cmbAccountClass.SelectedIndex = idx
+                    End If
+                    txtAssetNo.Text = db.SafeConvert(Of String)(row("asset_no"), AssetId.ToString())
+                    Dim qty As Integer = db.SafeConvert(Of Integer)(row("quantity"), 1)
+                    If qty >= numQuantity.Minimum AndAlso qty <= numQuantity.Maximum Then
+                        numQuantity.Value = qty
+                    End If
+
                     txtPropertyName.Text = db.SafeConvert(Of String)(row("bukken_nm"), "")
                     txtLocation.Text = db.SafeConvert(Of String)(row("shozaichi"), "")
                     txtSection.Text = db.SafeConvert(Of String)(row("kukaku"), "")
@@ -105,6 +149,8 @@ Partial Public Class FrmAssetDetailEntry
     End Sub
 
     Private Sub ApplyReadOnlyMode()
+        cmbAccountClass.Enabled = False
+        numQuantity.Enabled = False
         txtPropertyName.ReadOnly = True
         txtLocation.ReadOnly = True
         txtSection.ReadOnly = True
@@ -180,6 +226,9 @@ Partial Public Class FrmAssetDetailEntry
                 db.BeginTransaction()
                 Try
                     Dim columnValues As New Dictionary(Of String, Object)()
+                    columnValues.Add("account_class", AccountClass)
+                    columnValues.Add("asset_no", txtAssetNo.Text)
+                    columnValues.Add("quantity", CInt(numQuantity.Value))
                     columnValues.Add("bukken_nm", txtPropertyName.Text)
                     columnValues.Add("shozaichi", txtLocation.Text)
                     columnValues.Add("kukaku", txtSection.Text)
