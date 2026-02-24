@@ -509,13 +509,12 @@ Public Class FrmLeaseContractMain
             .Text = "行削除",
             .Width = 70,
             .Height = 28,
-            .Dock = DockStyle.Right,
+            .Anchor = AnchorStyles.Right,
             .FlatStyle = FlatStyle.Flat,
             .BackColor = Color.FromArgb(108, 117, 125),
             .ForeColor = Color.White,
             .Font = FNT_LABEL,
-            .Cursor = Cursors.Hand,
-            .Margin = New Padding(4, 0, 8, 0)
+            .Cursor = Cursors.Hand
         }
         btnDeleteRow.FlatAppearance.BorderSize = 0
         AddHandler btnDeleteRow.Click, AddressOf OnDeleteRowClick
@@ -530,13 +529,13 @@ Public Class FrmLeaseContractMain
             .Padding = New Padding(8, 4, 0, 0)
         }
 
-        Dim pnlAssetBar As New Panel() With {
-            .Dock = DockStyle.Top,
-            .Height = 28,
-            .Padding = New Padding(8, 0, 8, 0)
-        }
-        pnlAssetBar.Controls.Add(lblAssetCount)
-        pnlAssetBar.Controls.Add(btnDeleteRow)
+        Dim rAssetBar As Integer = tblProp.RowCount
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.Controls.Add(lblAssetCount, 0, rAssetBar)
+        tblProp.SetColumnSpan(lblAssetCount, 4)
+        tblProp.Controls.Add(btnDeleteRow, 4, rAssetBar)
+        tblProp.SetColumnSpan(btnDeleteRow, 2)
+        tblProp.RowCount += 1
 
         dgvAssets = New DataGridView() With {
             .Dock = DockStyle.Fill,
@@ -603,7 +602,6 @@ Public Class FrmLeaseContractMain
         pnlGrid.Controls.Add(dgvAssets)
 
         grpProperty.Controls.Add(pnlGrid)
-        grpProperty.Controls.Add(pnlAssetBar)
         grpProperty.Controls.Add(tblProp)
 
         Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
