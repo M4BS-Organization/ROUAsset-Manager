@@ -561,28 +561,28 @@ Public Class FrmLeaseContractMain
             .MinimumWidth = 60, .SortMode = DataGridViewColumnSortMode.NotSortable
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 100, .MinimumWidth = 80
+            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 150, .MinimumWidth = 80
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "計上区分", .Name = "AccountClass", .Width = 120, .MinimumWidth = 90
+            .HeaderText = "計上区分", .Name = "AccountClass", .Width = 180, .MinimumWidth = 90
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "物件名称", .Name = "PropertyName", .Width = 250, .MinimumWidth = 150
+            .HeaderText = "物件名称", .Name = "PropertyName", .Width = 400, .MinimumWidth = 150
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "数量", .Name = "Quantity", .Width = 80, .MinimumWidth = 60
+            .HeaderText = "数量", .Name = "Quantity", .Width = 100, .MinimumWidth = 60
         })
         dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "中途解約", .Name = "EarlyTermination", .Width = 100, .MinimumWidth = 80
+            .HeaderText = "中途解約", .Name = "EarlyTermination", .Width = 150, .MinimumWidth = 80
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "現金購入価額", .Name = "CashPrice", .Width = 150, .MinimumWidth = 100,
+            .HeaderText = "現金購入価額", .Name = "CashPrice", .Width = 250, .MinimumWidth = 100,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "月額リース料", .Name = "MonthlyLease", .Width = 150, .MinimumWidth = 100,
+            .HeaderText = "月額リース料", .Name = "MonthlyLease", .Width = 200, .MinimumWidth = 100,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
