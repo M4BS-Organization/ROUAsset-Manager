@@ -509,13 +509,13 @@ Public Class FrmLeaseContractMain
             .Text = "行削除",
             .Width = 70,
             .Height = 28,
-            .Dock = DockStyle.Left,
+            .Dock = DockStyle.Right,
             .FlatStyle = FlatStyle.Flat,
-            .BackColor = Color.FromArgb(220, 53, 69),
+            .BackColor = Color.FromArgb(108, 117, 125),
             .ForeColor = Color.White,
             .Font = FNT_LABEL,
             .Cursor = Cursors.Hand,
-            .Margin = New Padding(8, 0, 4, 0)
+            .Margin = New Padding(4, 0, 8, 0)
         }
         btnDeleteRow.FlatAppearance.BorderSize = 0
         AddHandler btnDeleteRow.Click, AddressOf OnDeleteRowClick
@@ -540,7 +540,8 @@ Public Class FrmLeaseContractMain
         dgvAssets = New DataGridView() With {
             .Dock = DockStyle.Fill,
             .BackgroundColor = CLR_CARD,
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
+            .ScrollBars = ScrollBars.Both,
             .AllowUserToAddRows = False,
             .RowHeadersVisible = False,
             .BorderStyle = BorderStyle.None,
@@ -556,36 +557,36 @@ Public Class FrmLeaseContractMain
             .EnableHeadersVisualStyles = False
         }
         dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "", .Name = "DeleteCheck", .FillWeight = 5,
-            .MinimumWidth = 30, .SortMode = DataGridViewColumnSortMode.NotSortable
+            .HeaderText = "削除フラグ", .Name = "DeleteCheck", .Width = 80,
+            .MinimumWidth = 60, .SortMode = DataGridViewColumnSortMode.NotSortable
         })
-        dgvAssets.Columns.Add("AssetNo", "資産番号")
-        dgvAssets.Columns.Add("AccountClass", "計上区分")
-        dgvAssets.Columns.Add("PropertyName", "物件名称")
-        dgvAssets.Columns.Add("Quantity", "数量")
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 100, .MinimumWidth = 80
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "計上区分", .Name = "AccountClass", .Width = 120, .MinimumWidth = 90
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "物件名称", .Name = "PropertyName", .Width = 250, .MinimumWidth = 150
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "数量", .Name = "Quantity", .Width = 80, .MinimumWidth = 60
+        })
         dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "中途解約", .Name = "EarlyTermination"
+            .HeaderText = "中途解約", .Name = "EarlyTermination", .Width = 100, .MinimumWidth = 80
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "現金購入価額", .Name = "CashPrice",
+            .HeaderText = "現金購入価額", .Name = "CashPrice", .Width = 150, .MinimumWidth = 100,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "月額リース料", .Name = "MonthlyLease",
+            .HeaderText = "月額リース料", .Name = "MonthlyLease", .Width = 150, .MinimumWidth = 100,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
         })
-        dgvAssets.Columns("DeleteCheck").FillWeight = 5
-        dgvAssets.Columns("AssetNo").FillWeight = 10
-        dgvAssets.Columns("AccountClass").FillWeight = 12
-        dgvAssets.Columns("PropertyName").FillWeight = 25
-        dgvAssets.Columns("Quantity").FillWeight = 8
-        dgvAssets.Columns("EarlyTermination").FillWeight = 10
-        dgvAssets.Columns("CashPrice").FillWeight = 15
-        dgvAssets.Columns("MonthlyLease").FillWeight = 15
 
         dgvAssets.AllowUserToAddRows = True
         dgvAssets.ReadOnly = False
