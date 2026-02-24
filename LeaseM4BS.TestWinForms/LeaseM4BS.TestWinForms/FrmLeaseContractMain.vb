@@ -526,7 +526,7 @@ Public Class FrmLeaseContractMain
             .ForeColor = CLR_LABEL,
             .Height = 28,
             .TextAlign = ContentAlignment.MiddleLeft,
-            .Padding = New Padding(8, 4, 0, 0)
+            .Padding = New Padding(0, 4, 0, 0)
         }
 
         Dim rAssetBar As Integer = tblProp.RowCount
