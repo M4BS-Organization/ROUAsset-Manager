@@ -585,21 +585,21 @@ Public Class FrmLeaseContractMain
         Next
 
         Dim pnlBtnBar As New Panel() With {
-            .Dock = DockStyle.Bottom,
-            .Height = 30,
-            .Padding = New Padding(0, 2, 0, 0)
+            .Dock = DockStyle.Top,
+            .Height = 28,
+            .Padding = New Padding(0, 0, 0, 2)
         }
         btnDeleteRow.Dock = DockStyle.Right
         pnlBtnBar.Controls.Add(btnDeleteRow)
 
         Dim pnlGrid As New Panel() With {
-            .Dock = DockStyle.Top,
-            .Height = 210,
-            .Padding = New Padding(8, 0, 8, 0)
+            .Dock = DockStyle.Fill,
+            .Padding = New Padding(8, 0, 8, 8)
         }
         pnlGrid.Controls.Add(dgvAssets)
         pnlGrid.Controls.Add(pnlBtnBar)
 
+        grpProperty.Height = 300
         grpProperty.Controls.Add(pnlGrid)
         grpProperty.Controls.Add(lblAssetCount)
         grpProperty.Controls.Add(tblProp)
@@ -1783,25 +1783,30 @@ Public Class FrmLeaseContractMain
     End Sub
 
     Private Sub OnDeleteRowClick(sender As Object, e As EventArgs)
-        Dim rowsToDelete As New List(Of DataGridViewRow)()
+        Dim deleteCount As Integer = 0
         For Each row As DataGridViewRow In dgvAssets.Rows
             If row.IsNewRow Then Continue For
             If row.Cells("ColDeleteFlag").Value IsNot Nothing AndAlso
                CBool(row.Cells("ColDeleteFlag").Value) = True Then
-                rowsToDelete.Add(row)
+                deleteCount += 1
             End If
         Next
 
-        If rowsToDelete.Count = 0 Then
+        If deleteCount = 0 Then
             MessageBox.Show("削除する行を選択してください。", "確認",
                             MessageBoxButtons.OK, MessageBoxIcon.Information)
             Return
         End If
 
-        If MessageBox.Show(rowsToDelete.Count.ToString() & "件の行を削除します。よろしいですか？",
+        If MessageBox.Show(deleteCount.ToString() & "件の行を削除します。よろしいですか？",
                            "削除確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            For Each row As DataGridViewRow In rowsToDelete
-                dgvAssets.Rows.Remove(row)
+            For i As Integer = dgvAssets.Rows.Count - 1 To 0 Step -1
+                Dim row As DataGridViewRow = dgvAssets.Rows(i)
+                If row.IsNewRow Then Continue For
+                If row.Cells("ColDeleteFlag").Value IsNot Nothing AndAlso
+                   CBool(row.Cells("ColDeleteFlag").Value) = True Then
+                    dgvAssets.Rows.RemoveAt(i)
+                End If
             Next
             UpdateAssetCount()
         End If
