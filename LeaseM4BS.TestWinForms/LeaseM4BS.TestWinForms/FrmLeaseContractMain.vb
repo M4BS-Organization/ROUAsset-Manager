@@ -532,7 +532,8 @@ Public Class FrmLeaseContractMain
 
         Dim pnlAssetBar As New Panel() With {
             .Dock = DockStyle.Top,
-            .Height = 28
+            .Height = 28,
+            .Padding = New Padding(8, 0, 8, 0)
         }
         pnlAssetBar.Controls.Add(lblAssetCount)
         pnlAssetBar.Controls.Add(btnDeleteRow)
