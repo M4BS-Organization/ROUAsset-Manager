@@ -22,6 +22,7 @@ Partial Class FrmAssetDetailEntry
         Me.tabControl = New System.Windows.Forms.TabControl()
         Me.tabAsset = New System.Windows.Forms.TabPage()
         Me.tabInitialCost = New System.Windows.Forms.TabPage()
+        Me.tabMonthlyDetail = New System.Windows.Forms.TabPage()
         Me.grpProperty = New System.Windows.Forms.GroupBox()
         Me.tblProperty = New System.Windows.Forms.TableLayoutPanel()
         Me.lblPropertyName = New System.Windows.Forms.Label()
@@ -144,6 +145,7 @@ Partial Class FrmAssetDetailEntry
         '
         Me.tabControl.Controls.Add(Me.tabAsset)
         Me.tabControl.Controls.Add(Me.tabInitialCost)
+        Me.tabControl.Controls.Add(Me.tabMonthlyDetail)
         Me.tabControl.Dock = System.Windows.Forms.DockStyle.Fill
         Me.tabControl.Font = New System.Drawing.Font("Meiryo", 9.75F, System.Drawing.FontStyle.Bold)
         Me.tabControl.Location = New System.Drawing.Point(0, 0)
@@ -175,7 +177,18 @@ Partial Class FrmAssetDetailEntry
         Me.tabInitialCost.Padding = New System.Windows.Forms.Padding(8)
         Me.tabInitialCost.Size = New System.Drawing.Size(792, 696)
         Me.tabInitialCost.TabIndex = 1
-        Me.tabInitialCost.Text = "初回一時金"
+        Me.tabInitialCost.Text = "初回金"
+        '
+        ' tabMonthlyDetail
+        '
+        Me.tabMonthlyDetail.AutoScroll = True
+        Me.tabMonthlyDetail.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
+        Me.tabMonthlyDetail.Location = New System.Drawing.Point(4, 30)
+        Me.tabMonthlyDetail.Name = "tabMonthlyDetail"
+        Me.tabMonthlyDetail.Padding = New System.Windows.Forms.Padding(8)
+        Me.tabMonthlyDetail.Size = New System.Drawing.Size(792, 696)
+        Me.tabMonthlyDetail.TabIndex = 2
+        Me.tabMonthlyDetail.Text = "月次明細"
         '
         ' grpProperty
         '
@@ -659,7 +672,7 @@ Partial Class FrmAssetDetailEntry
         Me.grpInitialCost.Size = New System.Drawing.Size(776, 220)
         Me.grpInitialCost.TabIndex = 0
         Me.grpInitialCost.TabStop = False
-        Me.grpInitialCost.Text = "初回一時金情報"
+        Me.grpInitialCost.Text = "初回金情報"
         '
         ' tblInitialCost
         '
@@ -856,6 +869,7 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents txtAssetNo As System.Windows.Forms.TextBox
     Friend WithEvents lblQuantity As System.Windows.Forms.Label
     Friend WithEvents numQuantity As System.Windows.Forms.NumericUpDown
+    Friend WithEvents tabMonthlyDetail As System.Windows.Forms.TabPage
     Friend WithEvents grpInitialCost As System.Windows.Forms.GroupBox
     Friend WithEvents tblInitialCost As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents lblShikikin As System.Windows.Forms.Label
