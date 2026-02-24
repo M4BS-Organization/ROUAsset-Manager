@@ -62,7 +62,7 @@ Partial Public Class FrmAssetDetailEntry
 
     Private Sub FrmAssetDetailEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         ' 計上区分コンボボックスの初期化
-        cmbAccountClass.Items.AddRange(New String() {"オンバランス", "オフバランス"})
+        cmbAccountClass.Items.AddRange(New String() {"資産", "費用"})
         If cmbAccountClass.Items.Count > 0 Then
             cmbAccountClass.SelectedIndex = 0
         End If

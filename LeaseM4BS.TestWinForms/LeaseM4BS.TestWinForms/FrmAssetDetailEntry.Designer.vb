@@ -240,7 +240,7 @@ Partial Class FrmAssetDetailEntry
         Me.lblPropertyName.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
         Me.lblPropertyName.Name = "lblPropertyName"
         Me.lblPropertyName.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
-        Me.lblPropertyName.Text = "物件名"
+        Me.lblPropertyName.Text = "資産名"
         Me.lblPropertyName.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         Me.lblLocation.Dock = System.Windows.Forms.DockStyle.Fill

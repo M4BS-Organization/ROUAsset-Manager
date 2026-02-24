@@ -567,7 +567,7 @@ Public Class FrmLeaseContractMain
             .HeaderText = "計上区分", .Name = "AccountClass", .Width = 180, .MinimumWidth = 90
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "物件名称", .Name = "PropertyName", .Width = 400, .MinimumWidth = 150
+            .HeaderText = "資産名", .Name = "PropertyName", .Width = 400, .MinimumWidth = 150
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "数量", .Name = "Quantity", .Width = 100, .MinimumWidth = 60
@@ -655,12 +655,12 @@ Public Class FrmLeaseContractMain
         }
 
         AddSectionLabel(tblPeriod, "■ 更新規定")
-        AddFieldRow(tblPeriod, "更新予測回数", numRenewalCount, "更新時賃料", numRenewalRent)
-        AddFieldRow(tblPeriod, "更新行使可能性", cmbRenewalLikelihood, Nothing, Nothing)
+        AddFieldRow(tblPeriod, "更新予測回数", numRenewalCount, "更新行使可能性", cmbRenewalLikelihood)
+        AddFieldRow(tblPeriod, "更新時賃料", numRenewalRent, Nothing, Nothing)
 
         AddSectionLabel(tblPeriod, "■ 解約規定")
-        AddFieldRow(tblPeriod, "解約告知期間（月）", numCancelNoticePeriod, "解約違約金", numCancelPenalty)
-        AddFieldRow(tblPeriod, "解約行使可能性", cmbCancelLikelihood, Nothing, Nothing)
+        AddFieldRow(tblPeriod, "解約告知期間（月）", numCancelNoticePeriod, "解約行使可能性", cmbCancelLikelihood)
+        AddFieldRow(tblPeriod, "解約違約金", numCancelPenalty, Nothing, Nothing)
 
         AddSectionLabel(tblPeriod, "■ 購入オプション")
         AddFieldRow(tblPeriod, "購入オプション価額", numPurchasePrice, "購入行使可能性", cmbPurchaseLikelihood)
