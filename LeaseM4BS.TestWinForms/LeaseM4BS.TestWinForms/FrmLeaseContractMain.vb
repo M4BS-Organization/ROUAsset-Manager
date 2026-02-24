@@ -505,42 +505,33 @@ Public Class FrmLeaseContractMain
         tblProp.SetColumnSpan(btnAssetNew, 2)
         tblProp.RowCount += 1
 
-        btnDeleteRow = New Button() With {
-            .Text = "行削除",
-            .Width = 70,
-            .Height = 28,
-            .Dock = DockStyle.Left,
-            .FlatStyle = FlatStyle.Flat,
-            .BackColor = Color.FromArgb(220, 53, 69),
-            .ForeColor = Color.White,
-            .Font = FNT_LABEL,
-            .Cursor = Cursors.Hand,
-            .Margin = New Padding(8, 0, 4, 0)
-        }
-        btnDeleteRow.FlatAppearance.BorderSize = 0
-        AddHandler btnDeleteRow.Click, AddressOf OnDeleteRowClick
-
         lblAssetCount = New Label() With {
             .Text = "資産件数: 0件",
-            .Dock = DockStyle.Fill,
+            .Dock = DockStyle.Top,
             .Font = FNT_LABEL,
             .ForeColor = CLR_LABEL,
-            .Height = 28,
+            .Height = 24,
             .TextAlign = ContentAlignment.MiddleLeft,
             .Padding = New Padding(8, 4, 0, 0)
         }
 
-        Dim pnlAssetBar As New Panel() With {
-            .Dock = DockStyle.Top,
-            .Height = 28
+        btnDeleteRow = New Button() With {
+            .Text = "行削除",
+            .Size = New Size(80, 26),
+            .Anchor = AnchorStyles.Right Or AnchorStyles.Top,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(108, 117, 125),
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand
         }
-        pnlAssetBar.Controls.Add(lblAssetCount)
-        pnlAssetBar.Controls.Add(btnDeleteRow)
+        btnDeleteRow.FlatAppearance.BorderSize = 0
+        AddHandler btnDeleteRow.Click, AddressOf OnDeleteRowClick
 
         dgvAssets = New DataGridView() With {
             .Dock = DockStyle.Fill,
             .BackgroundColor = CLR_CARD,
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
             .AllowUserToAddRows = False,
             .RowHeadersVisible = False,
             .BorderStyle = BorderStyle.None,
@@ -556,36 +547,36 @@ Public Class FrmLeaseContractMain
             .EnableHeadersVisualStyles = False
         }
         dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "", .Name = "DeleteCheck", .FillWeight = 5,
-            .MinimumWidth = 30, .SortMode = DataGridViewColumnSortMode.NotSortable
+            .HeaderText = "削除", .Name = "ColDeleteFlag", .Width = 40,
+            .MinimumWidth = 40, .SortMode = DataGridViewColumnSortMode.NotSortable
         })
-        dgvAssets.Columns.Add("AssetNo", "資産番号")
-        dgvAssets.Columns.Add("AccountClass", "計上区分")
-        dgvAssets.Columns.Add("PropertyName", "物件名称")
-        dgvAssets.Columns.Add("Quantity", "数量")
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 80, .MinimumWidth = 60
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "計上区分", .Name = "AccountClass", .Width = 90, .MinimumWidth = 70
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "物件名称", .Name = "PropertyName", .Width = 200, .MinimumWidth = 120
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "数量", .Name = "Quantity", .Width = 60, .MinimumWidth = 50
+        })
         dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "中途解約", .Name = "EarlyTermination"
+            .HeaderText = "中途解約", .Name = "EarlyTermination", .Width = 80, .MinimumWidth = 60
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "現金購入価額", .Name = "CashPrice",
+            .HeaderText = "現金購入価額", .Name = "CashPrice", .Width = 120, .MinimumWidth = 80,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "月額リース料", .Name = "MonthlyLease",
+            .HeaderText = "月額リース料", .Name = "MonthlyLease", .Width = 120, .MinimumWidth = 80,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
         })
-        dgvAssets.Columns("DeleteCheck").FillWeight = 5
-        dgvAssets.Columns("AssetNo").FillWeight = 10
-        dgvAssets.Columns("AccountClass").FillWeight = 12
-        dgvAssets.Columns("PropertyName").FillWeight = 25
-        dgvAssets.Columns("Quantity").FillWeight = 8
-        dgvAssets.Columns("EarlyTermination").FillWeight = 10
-        dgvAssets.Columns("CashPrice").FillWeight = 15
-        dgvAssets.Columns("MonthlyLease").FillWeight = 15
 
         dgvAssets.AllowUserToAddRows = True
         dgvAssets.ReadOnly = False
@@ -593,15 +584,24 @@ Public Class FrmLeaseContractMain
             dgvAssets.Rows.Add()
         Next
 
-        Dim pnlGrid As New Panel()With {
+        Dim pnlBtnBar As New Panel() With {
+            .Dock = DockStyle.Bottom,
+            .Height = 30,
+            .Padding = New Padding(0, 2, 0, 0)
+        }
+        btnDeleteRow.Dock = DockStyle.Right
+        pnlBtnBar.Controls.Add(btnDeleteRow)
+
+        Dim pnlGrid As New Panel() With {
             .Dock = DockStyle.Top,
-            .Height = 180,
-            .Padding = New Padding(8, 0, 8, 8)
+            .Height = 210,
+            .Padding = New Padding(8, 0, 8, 0)
         }
         pnlGrid.Controls.Add(dgvAssets)
+        pnlGrid.Controls.Add(pnlBtnBar)
 
         grpProperty.Controls.Add(pnlGrid)
-        grpProperty.Controls.Add(pnlAssetBar)
+        grpProperty.Controls.Add(lblAssetCount)
         grpProperty.Controls.Add(tblProp)
 
         Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
@@ -1786,8 +1786,8 @@ Public Class FrmLeaseContractMain
         Dim rowsToDelete As New List(Of DataGridViewRow)()
         For Each row As DataGridViewRow In dgvAssets.Rows
             If row.IsNewRow Then Continue For
-            If row.Cells("DeleteCheck").Value IsNot Nothing AndAlso
-               CBool(row.Cells("DeleteCheck").Value) = True Then
+            If row.Cells("ColDeleteFlag").Value IsNot Nothing AndAlso
+               CBool(row.Cells("ColDeleteFlag").Value) = True Then
                 rowsToDelete.Add(row)
             End If
         Next
