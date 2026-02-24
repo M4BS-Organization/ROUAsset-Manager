@@ -532,6 +532,7 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Fill,
             .BackgroundColor = CLR_CARD,
             .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
+            .ScrollBars = ScrollBars.Both,
             .AllowUserToAddRows = False,
             .RowHeadersVisible = False,
             .BorderStyle = BorderStyle.None,
