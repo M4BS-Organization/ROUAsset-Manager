@@ -42,8 +42,6 @@ Public Class FrmLeaseContractMain
     Private lblContractClass As Label
     Private cmbMgmtDeptCode As ComboBox
     Private txtMgmtDeptName As TextBox
-    Private cmbCostDeptCode As ComboBox
-    Private txtCostDeptName As TextBox
     Private txtManagementNo As TextBox
     Private txtContractName As TextBox
     Private txtSupplier As TextBox
@@ -56,6 +54,7 @@ Public Class FrmLeaseContractMain
     Private btnAssetNew As Button
     Private dgvAssets As DataGridView
     Private lblAssetCount As Label
+    Private btnDeleteRow As Button
 
     Private dtpStartDate As DateTimePicker
     Private dtpEndDate As DateTimePicker
@@ -114,7 +113,7 @@ Public Class FrmLeaseContractMain
     Private lblJudgmentPreview As Label
 
     Public Sub New()
-        Me.Text = "新リース会計基準対応 不動産賃貸借・転貸管理システム"
+        Me.Text = "新リース会計対応 リース契約管理"
         Me.Size = New Size(1400, 950)
         Me.StartPosition = FormStartPosition.CenterScreen
         Me.Font = FNT_INPUT
@@ -338,15 +337,6 @@ Public Class FrmLeaseContractMain
         pnlMgmtDept.Controls.Add(cmbMgmtDeptCode, 0, 0)
         pnlMgmtDept.Controls.Add(txtMgmtDeptName, 1, 0)
 
-        Dim pnlCostDept As New TableLayoutPanel() With {
-            .Dock = DockStyle.Fill, .ColumnCount = 2, .RowCount = 1
-        }
-        pnlCostDept.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        pnlCostDept.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        cmbCostDeptCode = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDown}
-        txtCostDeptName = New TextBox() With {.Dock = DockStyle.Fill}
-        pnlCostDept.Controls.Add(cmbCostDeptCode, 0, 0)
-        pnlCostDept.Controls.Add(txtCostDeptName, 1, 0)
 
         dtpStartDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
         dtpEndDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
@@ -427,12 +417,6 @@ Public Class FrmLeaseContractMain
         tblBasic.SetColumnSpan(pnlMgmtDept, 7)
         tblBasic.RowCount += 1
 
-        r = tblBasic.RowCount
-        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("費用負担部署"), 0, r)
-        tblBasic.Controls.Add(pnlCostDept, 1, r)
-        tblBasic.SetColumnSpan(pnlCostDept, 7)
-        tblBasic.RowCount += 1
 
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
@@ -521,15 +505,37 @@ Public Class FrmLeaseContractMain
         tblProp.SetColumnSpan(btnAssetNew, 2)
         tblProp.RowCount += 1
 
+        btnDeleteRow = New Button() With {
+            .Text = "行削除",
+            .Width = 70,
+            .Height = 28,
+            .Dock = DockStyle.Left,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(220, 53, 69),
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand,
+            .Margin = New Padding(8, 0, 4, 0)
+        }
+        btnDeleteRow.FlatAppearance.BorderSize = 0
+        AddHandler btnDeleteRow.Click, AddressOf OnDeleteRowClick
+
         lblAssetCount = New Label() With {
             .Text = "資産件数: 0件",
-            .Dock = DockStyle.Top,
+            .Dock = DockStyle.Fill,
             .Font = FNT_LABEL,
             .ForeColor = CLR_LABEL,
-            .Height = 24,
+            .Height = 28,
             .TextAlign = ContentAlignment.MiddleLeft,
             .Padding = New Padding(8, 4, 0, 0)
         }
+
+        Dim pnlAssetBar As New Panel() With {
+            .Dock = DockStyle.Top,
+            .Height = 28
+        }
+        pnlAssetBar.Controls.Add(lblAssetCount)
+        pnlAssetBar.Controls.Add(btnDeleteRow)
 
         dgvAssets = New DataGridView() With {
             .Dock = DockStyle.Fill,
@@ -549,7 +555,11 @@ Public Class FrmLeaseContractMain
             },
             .EnableHeadersVisualStyles = False
         }
-        dgvAssets.Columns.Add("AssetNo", "資産No")
+        dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
+            .HeaderText = "", .Name = "DeleteCheck", .FillWeight = 5,
+            .MinimumWidth = 30, .SortMode = DataGridViewColumnSortMode.NotSortable
+        })
+        dgvAssets.Columns.Add("AssetNo", "資産番号")
         dgvAssets.Columns.Add("AccountClass", "計上区分")
         dgvAssets.Columns.Add("PropertyName", "物件名称")
         dgvAssets.Columns.Add("Quantity", "数量")
@@ -568,6 +578,7 @@ Public Class FrmLeaseContractMain
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
         })
+        dgvAssets.Columns("DeleteCheck").FillWeight = 5
         dgvAssets.Columns("AssetNo").FillWeight = 10
         dgvAssets.Columns("AccountClass").FillWeight = 12
         dgvAssets.Columns("PropertyName").FillWeight = 25
@@ -590,7 +601,7 @@ Public Class FrmLeaseContractMain
         pnlGrid.Controls.Add(dgvAssets)
 
         grpProperty.Controls.Add(pnlGrid)
-        grpProperty.Controls.Add(lblAssetCount)
+        grpProperty.Controls.Add(pnlAssetBar)
         grpProperty.Controls.Add(tblProp)
 
         Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
@@ -1747,6 +1758,7 @@ Public Class FrmLeaseContractMain
             row.Cells("MonthlyLease").Value = monthlyLease
         Else
             dgvAssets.Rows.Add(
+                False,
                 assetId.ToString(),
                 accountClass,
                 propertyName,
@@ -1768,6 +1780,31 @@ Public Class FrmLeaseContractMain
             End If
         Next
         lblAssetCount.Text = "資産件数: " & count.ToString() & "件"
+    End Sub
+
+    Private Sub OnDeleteRowClick(sender As Object, e As EventArgs)
+        Dim rowsToDelete As New List(Of DataGridViewRow)()
+        For Each row As DataGridViewRow In dgvAssets.Rows
+            If row.IsNewRow Then Continue For
+            If row.Cells("DeleteCheck").Value IsNot Nothing AndAlso
+               CBool(row.Cells("DeleteCheck").Value) = True Then
+                rowsToDelete.Add(row)
+            End If
+        Next
+
+        If rowsToDelete.Count = 0 Then
+            MessageBox.Show("削除する行を選択してください。", "確認",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
+        If MessageBox.Show(rowsToDelete.Count.ToString() & "件の行を削除します。よろしいですか？",
+                           "削除確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+            For Each row As DataGridViewRow In rowsToDelete
+                dgvAssets.Rows.Remove(row)
+            Next
+            UpdateAssetCount()
+        End If
     End Sub
 
 End Class
