@@ -1,6 +1,6 @@
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FrmAssetDetailEntry
-    Inherits System.Windows.Forms.Form
+    Inherits PopupBaseForm
 
     Private components As System.ComponentModel.IContainer
 
@@ -708,11 +708,12 @@ Partial Class FrmAssetDetailEntry
         Me.ClientSize = New System.Drawing.Size(800, 780)
         Me.Controls.Add(Me.tabControl)
         Me.Controls.Add(Me.pnlBottom)
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
+        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable
+        Me.MinimumSize = New System.Drawing.Size(600, 400)
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "FrmAssetDetailEntry"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "資産詳細入力"
         Me.pnlBottom.ResumeLayout(False)
         Me.tabInitialCost.ResumeLayout(False)

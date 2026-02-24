@@ -6,7 +6,6 @@ Imports LeaseM4BS.DataAccess
 Imports Npgsql
 
 Partial Public Class FrmAssetDetailEntry
-    Inherits Form
 
     Public Property AssetId As Integer = 0
     Public Property IsReadOnly As Boolean = False
