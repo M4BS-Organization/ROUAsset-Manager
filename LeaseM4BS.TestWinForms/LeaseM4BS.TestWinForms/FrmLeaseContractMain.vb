@@ -443,7 +443,7 @@ Public Class FrmLeaseContractMain
         Dim grpProperty As GroupBox = CreateSection("資産情報")
         Dim tblProp As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 6, .Padding = New Padding(8)
+            .ColumnCount = 6, .Padding = New Padding(8, 8, 8, 2)
         }
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
@@ -530,7 +530,7 @@ Public Class FrmLeaseContractMain
         }
 
         Dim rAssetBar As Integer = tblProp.RowCount
-        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
         tblProp.Controls.Add(lblAssetCount, 0, rAssetBar)
         tblProp.SetColumnSpan(lblAssetCount, 4)
         tblProp.Controls.Add(btnDeleteRow, 4, rAssetBar)
