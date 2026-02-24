@@ -604,7 +604,7 @@ Public Class FrmLeaseContractMain
         grpProperty.Controls.Add(pnlGrid)
         grpProperty.Controls.Add(tblProp)
 
-        Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
+        Dim grpPeriod As GroupBox = CreateSection("オプション")
         Dim tblPeriod As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 4, .Padding = New Padding(8)
@@ -654,7 +654,7 @@ Public Class FrmLeaseContractMain
             .ShowCheckBox = True, .Checked = False
         }
 
-        AddSectionLabel(tblPeriod, "■ 更新オプション")
+        AddSectionLabel(tblPeriod, "■ 更新規定")
         AddFieldRow(tblPeriod, "更新予測回数", numRenewalCount, "更新時賃料", numRenewalRent)
         AddFieldRow(tblPeriod, "更新行使可能性", cmbRenewalLikelihood, Nothing, Nothing)
 

@@ -283,7 +283,7 @@ Partial Class FrmAssetDetailEntry
         Me.lblCompletion.ForeColor = System.Drawing.Color.FromArgb(CType(73, Integer), CType(80, Integer), CType(87, Integer))
         Me.lblCompletion.Name = "lblCompletion"
         Me.lblCompletion.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
-        Me.lblCompletion.Text = "竪工"
+        Me.lblCompletion.Text = "竣工"
         Me.lblCompletion.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         Me.lblBuildingAgeCaption.Dock = System.Windows.Forms.DockStyle.Fill
@@ -489,7 +489,7 @@ Partial Class FrmAssetDetailEntry
         Me.tblProperty.Controls.Add(Me.txtLayout, 3, 3)
         Me.tblProperty.Controls.Add(Me.lblStructure, 4, 3)
         Me.tblProperty.Controls.Add(Me.txtStructure, 5, 3)
-        ' Row 4: 耐用年数 / 竪工 / 築年数
+        ' Row 4: 耐用年数 / 竣工 / 築年数
         Me.tblProperty.Controls.Add(Me.lblUsefulLife, 0, 4)
         Me.tblProperty.Controls.Add(Me.numUsefulLife, 1, 4)
         Me.tblProperty.Controls.Add(Me.lblCompletion, 2, 4)
