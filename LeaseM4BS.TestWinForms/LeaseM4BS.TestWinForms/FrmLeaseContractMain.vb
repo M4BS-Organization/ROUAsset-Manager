@@ -585,25 +585,22 @@ Public Class FrmLeaseContractMain
             dgvAssets.Rows.Add()
         Next
 
-        Dim pnlBtnBar As New Panel() With {
-            .Dock = DockStyle.Top,
-            .Height = 28,
-            .Padding = New Padding(0, 0, 0, 2)
-        }
-        btnDeleteRow.Dock = DockStyle.Right
-        pnlBtnBar.Controls.Add(btnDeleteRow)
-
         Dim pnlGrid As New Panel() With {
             .Dock = DockStyle.Fill,
-            .Padding = New Padding(8, 0, 8, 8)
+            .Padding = New Padding(8, 0, 8, 8),
+            .MinimumSize = New Size(0, 160)
         }
         pnlGrid.Controls.Add(dgvAssets)
-        pnlGrid.Controls.Add(pnlBtnBar)
 
         grpProperty.Height = 300
         grpProperty.Controls.Add(pnlGrid)
         grpProperty.Controls.Add(lblAssetCount)
         grpProperty.Controls.Add(tblProp)
+
+        btnDeleteRow.Anchor = AnchorStyles.Top Or AnchorStyles.Right
+        btnDeleteRow.Location = New Point(grpProperty.Width - btnDeleteRow.Width - 16, lblAssetCount.Bottom)
+        grpProperty.Controls.Add(btnDeleteRow)
+        btnDeleteRow.BringToFront()
 
         Dim grpPeriod As GroupBox = CreateSection("期間・オプション・解約規定")
         Dim tblPeriod As New TableLayoutPanel() With {
