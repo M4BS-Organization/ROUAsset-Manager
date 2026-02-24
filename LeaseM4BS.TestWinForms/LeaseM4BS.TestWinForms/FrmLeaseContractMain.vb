@@ -132,7 +132,7 @@ Public Class FrmLeaseContractMain
     Private _boldFont As Font
     Private _regularFont As Font
     Private _font11Bold As Font
-    Private _font16Bold As Font
+    Private _font18Bold As Font
     Private _fontResultBadge As Font
     Private _fontResultReason As Font
     Private _prevExemptEligible As Boolean = False
@@ -157,7 +157,7 @@ Public Class FrmLeaseContractMain
         _boldFont = New Font("Meiryo", 9.0F, FontStyle.Bold)
         _regularFont = New Font("Meiryo", 9.0F, FontStyle.Regular)
         _font11Bold = New Font("Meiryo", 11.0F, FontStyle.Bold)
-        _font16Bold = New Font("Meiryo", 18.0F, FontStyle.Bold)
+        _font18Bold = New Font("Meiryo", 18.0F, FontStyle.Bold)
         _fontResultBadge = New Font("Meiryo", 9.0F, FontStyle.Bold)
         _fontResultReason = New Font("Meiryo", 9.0F)
 
@@ -1277,7 +1277,7 @@ Public Class FrmLeaseContractMain
         Dim flowResultTop As New FlowLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .WrapContents = False}
         lblResultText = New Label() With {
             .Text = "---", .AutoSize = True,
-            .Font = _font16Bold,
+            .Font = _font18Bold,
             .ForeColor = CLR_HEADER
         }
         lblResultBadge = New Label() With {
@@ -1484,6 +1484,7 @@ Public Class FrmLeaseContractMain
             Dim pvValue As Double
             Dim r As Double = CDbl(discountRate) / 12.0 / 100.0
             If r > 0 Then
+                ' 期末払い（Ordinary Annuity）前提の年金現価係数を使用
                 pvValue = CDbl(monthlyRent) * ((1.0 - Math.Pow(1.0 + r, -months)) / r)
             Else
                 pvValue = CDbl(monthlyRent) * months
@@ -1520,15 +1521,7 @@ Public Class FrmLeaseContractMain
 
         chkApplyExemption.Enabled = False
 
-        If exemptEligible Then
-            If Not _prevExemptEligible Then
-                chkApplyExemption.Checked = True
-            End If
-        Else
-            chkApplyExemption.Checked = False
-        End If
-
-        _prevExemptEligible = exemptEligible
+        chkApplyExemption.Checked = exemptEligible
 
         AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
 
@@ -1698,10 +1691,13 @@ Public Class FrmLeaseContractMain
 
     Protected Overrides Sub Dispose(disposing As Boolean)
         If disposing Then
+            FNT_LABEL?.Dispose()
+            FNT_INPUT?.Dispose()
+            FNT_SECTION?.Dispose()
             _boldFont?.Dispose()
             _regularFont?.Dispose()
             _font11Bold?.Dispose()
-            _font16Bold?.Dispose()
+            _font18Bold?.Dispose()
             _fontResultBadge?.Dispose()
             _fontResultReason?.Dispose()
             _tooltipProvider?.Dispose()
