@@ -1164,7 +1164,7 @@ Public Class FrmLeaseContractMain
         Dim grpExempt As GroupBox = CreateSection("期間・免除規定判定")
         Dim tlpExempt As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .RowCount = 9, .Padding = New Padding(8)
+            .ColumnCount = 4, .Padding = New Padding(8)
         }
         tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
         tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
