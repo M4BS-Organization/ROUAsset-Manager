@@ -93,22 +93,38 @@ Public Class FrmLeaseContractMain
     Private txtSubleaseArea As TextBox
     Private dgvSubleaseIncome As DataGridView
 
-    Private chkSpecificAsset As CheckBox
+    Private grpQ1 As GroupBox, rbQ1Yes As RadioButton, rbQ1No As RadioButton
+    Private grpQ2 As GroupBox, rbQ2Yes As RadioButton, rbQ2No As RadioButton
+    Private grpQ3 As GroupBox, rbQ3Yes As RadioButton, rbQ3No As RadioButton
+    Private grpQ4 As GroupBox, rbQ4Yes As RadioButton, rbQ4No As RadioButton
+    Private dtpJudgeStart As DateTimePicker
+    Private dtpJudgeEnd As DateTimePicker
+    Private lblTermMonths As Label
+    Private lblDateError As Label
+    Private chkExtOption As CheckBox
+    Private cboExtCertainty As ComboBox
+    Private numExtMonths As NumericUpDown
+    Private chkTerminateOption As CheckBox
+    Private cboTerminateCertainty As ComboBox
+    Private lblShortTermResult As Label
+    Private numAssetValue As NumericUpDown
+    Private lblLowValueResult As Label
+    Private chkApplyExemption As CheckBox
+    Private chkServiceComponent As CheckBox
     Private chkOwnershipTransfer As CheckBox
-    Private chkBargainPurchase As CheckBox
-    Private chkSpecializedAsset As CheckBox
-    Private chkShortTerm As CheckBox
-    Private chkLowValue As CheckBox
-    Private lblPeriodRatio As Label
-    Private lblPeriodRatioCalc As Label
-    Private lblPVRatio As Label
-    Private lblPVRatioCalc As Label
-    Private lblJudgmentResult As Label
-    Private txtJudgmentRationale As TextBox
-    Private btnManualOverride As Button
-    Private txtOverrideReason As TextBox
-    Private _isManualOverride As Boolean = False
-    Private cmbManualResult As ComboBox
+    Private numDiscountRate As NumericUpDown
+    Private numMonthlyRentJudge As NumericUpDown
+    Private lblResultText As Label
+    Private lblResultBadge As Label
+    Private lblResultReason As Label
+    Private Const LOW_VALUE_THRESHOLD As Decimal = 3000000D
+    Private _boldFont As Font
+    Private _regularFont As Font
+    Private _font11Bold As Font
+    Private _font18Bold As Font
+    Private _fontResultBadge As Font
+    Private _fontResultReason As Font
+    Private _prevExemptEligible As Boolean = False
 
     Private lblJudgmentPreview As Label
 
@@ -126,6 +142,13 @@ Public Class FrmLeaseContractMain
             .ReshowDelay = 200,
             .ShowAlways = True
         }
+
+        _boldFont = New Font("Meiryo", 9.0F, FontStyle.Bold)
+        _regularFont = New Font("Meiryo", 9.0F, FontStyle.Regular)
+        _font11Bold = New Font("Meiryo", 11.0F, FontStyle.Bold)
+        _font18Bold = New Font("Meiryo", 18.0F, FontStyle.Bold)
+        _fontResultBadge = New Font("Meiryo", 9.0F, FontStyle.Bold)
+        _fontResultReason = New Font("Meiryo", 9.0F)
 
         BuildUI()
 
@@ -238,7 +261,7 @@ Public Class FrmLeaseContractMain
         InitTabInitialCost()
         InitTabAccounting()
         InitTabSublease()
-        InitTabJudgment()
+        InitTabJudge_Pro()
 
         tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
 
@@ -1071,236 +1094,244 @@ Public Class FrmLeaseContractMain
         pgSublease.Controls.Add(scroll)
     End Sub
 
-    Private Sub InitTabJudgment()
+    Private Sub InitTabJudge_Pro()
+        pgJudgment.BackColor = CLR_BG
+        pgJudgment.Padding = New Padding(6)
+
         Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(6)}
 
         Dim mainTbl As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 4
-        }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-
-        Dim grpCriteria As GroupBox = CreateSection("判定基準チェックリスト")
-        Dim tblCriteria As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 2, .Padding = New Padding(8)
-        }
-        tblCriteria.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblCriteria.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        Dim pnlApplicability As New Panel() With {.Dock = DockStyle.Fill, .AutoSize = True}
-        Dim lblAppTitle As New Label() With {
-            .Text = "■ 該当性判定", .Dock = DockStyle.Top,
-            .Font = FNT_SECTION, .ForeColor = CLR_HEADER, .Height = 24
-        }
-        chkSpecificAsset = New CheckBox() With {
-            .Text = "特定資産等に該当", .AutoSize = True,
-            .Dock = DockStyle.Top, .Padding = New Padding(10, 2, 0, 2)
-        }
-        _tooltipProvider.SetToolTip(chkSpecificAsset, "リース対象が特定の資産に該当するかを判定")
-        chkShortTerm = New CheckBox() With {
-            .Text = "短期リース（12ヶ月以内）", .AutoSize = True,
-            .Dock = DockStyle.Top, .Padding = New Padding(10, 2, 0, 2)
-        }
-        chkLowValue = New CheckBox() With {
-            .Text = "少額リース", .AutoSize = True,
-            .Dock = DockStyle.Top, .Padding = New Padding(10, 2, 0, 2)
-        }
-        pnlApplicability.Controls.Add(chkLowValue)
-        pnlApplicability.Controls.Add(chkShortTerm)
-        pnlApplicability.Controls.Add(chkSpecificAsset)
-        pnlApplicability.Controls.Add(lblAppTitle)
-
-        Dim pnlClassification As New Panel() With {.Dock = DockStyle.Fill, .AutoSize = True}
-        Dim lblClsTitle As New Label() With {
-            .Text = "■ 分類判定", .Dock = DockStyle.Top,
-            .Font = FNT_SECTION, .ForeColor = CLR_HEADER, .Height = 24
-        }
-        chkOwnershipTransfer = New CheckBox() With {
-            .Text = "所有権移転条項あり", .AutoSize = True,
-            .Dock = DockStyle.Top, .Padding = New Padding(10, 2, 0, 2)
-        }
-        chkBargainPurchase = New CheckBox() With {
-            .Text = "割安購入選択権あり", .AutoSize = True,
-            .Dock = DockStyle.Top, .Padding = New Padding(10, 2, 0, 2)
-        }
-        chkSpecializedAsset = New CheckBox() With {
-            .Text = "借手専用仕様（特殊資産）", .AutoSize = True,
-            .Dock = DockStyle.Top, .Padding = New Padding(10, 2, 0, 2)
-        }
-        pnlClassification.Controls.Add(chkSpecializedAsset)
-        pnlClassification.Controls.Add(chkBargainPurchase)
-        pnlClassification.Controls.Add(chkOwnershipTransfer)
-        pnlClassification.Controls.Add(lblClsTitle)
-
-        AddHandler chkSpecificAsset.CheckedChanged, Sub(s, e) RecalcAll()
-        AddHandler chkShortTerm.CheckedChanged, Sub(s, e) RecalcAll()
-        AddHandler chkLowValue.CheckedChanged, Sub(s, e) RecalcAll()
-        AddHandler chkOwnershipTransfer.CheckedChanged, Sub(s, e) RecalcAll()
-        AddHandler chkBargainPurchase.CheckedChanged, Sub(s, e) RecalcAll()
-        AddHandler chkSpecializedAsset.CheckedChanged, Sub(s, e) RecalcAll()
-
-        tblCriteria.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        tblCriteria.Controls.Add(pnlApplicability, 0, 0)
-        tblCriteria.Controls.Add(pnlClassification, 1, 0)
-        grpCriteria.Controls.Add(tblCriteria)
-
-        Dim grpIndicators As GroupBox = CreateSection("判定指標")
-        Dim tblInd As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 2, .Padding = New Padding(8)
-        }
-        tblInd.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblInd.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        Dim pnlPeriod As New Panel() With {
-            .Dock = DockStyle.Fill, .AutoSize = True,
-            .BackColor = CLR_CARD, .Padding = New Padding(10)
-        }
-        Dim lblPeriodTitle As New Label() With {
-            .Text = "リース期間割合", .Dock = DockStyle.Top,
-            .Font = FNT_SECTION, .ForeColor = CLR_HEADER, .Height = 24
-        }
-        lblPeriodRatio = New Label() With {
-            .Text = "--.--%", .Dock = DockStyle.Top,
-            .Font = New Font("Meiryo", 22.0F, FontStyle.Bold),
-            .ForeColor = CLR_HEADER, .Height = 40,
-            .TextAlign = ContentAlignment.MiddleCenter
-        }
-        lblPeriodRatioCalc = New Label() With {
-            .Text = "リース期間 / 経済的耐用年数 = --- / --- (基準: 75%以上)",
             .Dock = DockStyle.Top,
-            .Font = New Font("Meiryo", 8.5F), .ForeColor = Color.Gray,
-            .Height = 20, .TextAlign = ContentAlignment.MiddleCenter
+            .AutoSize = True,
+            .ColumnCount = 1,
+            .RowCount = 3
         }
-        _tooltipProvider.SetToolTip(lblPeriodRatio, "リース期間(月) / (経済的耐用年数(年)*12) * 100。75%以上でFL判定")
-        pnlPeriod.Controls.Add(lblPeriodRatioCalc)
-        pnlPeriod.Controls.Add(lblPeriodRatio)
-        pnlPeriod.Controls.Add(lblPeriodTitle)
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
-        Dim pnlPV As New Panel() With {
-            .Dock = DockStyle.Fill, .AutoSize = True,
-            .BackColor = CLR_CARD, .Padding = New Padding(10)
+        Dim grpIdent As GroupBox = CreateSection("識別判定")
+        Dim tlpIdent As New TableLayoutPanel() With {
+            .Dock = DockStyle.Top, .AutoSize = True,
+            .ColumnCount = 4, .Padding = New Padding(8)
         }
-        Dim lblPVTitle As New Label() With {
-            .Text = "現在価値割合", .Dock = DockStyle.Top,
-            .Font = FNT_SECTION, .ForeColor = CLR_HEADER, .Height = 24
-        }
-        lblPVRatio = New Label() With {
-            .Text = "--.--%", .Dock = DockStyle.Top,
-            .Font = New Font("Meiryo", 22.0F, FontStyle.Bold),
-            .ForeColor = CLR_HEADER, .Height = 40,
-            .TextAlign = ContentAlignment.MiddleCenter
-        }
-        lblPVRatioCalc = New Label() With {
-            .Text = "(初期直接費用 + 月額PV合計) / 公正価値 (基準: 90%以上)",
-            .Dock = DockStyle.Top,
-            .Font = New Font("Meiryo", 8.5F), .ForeColor = Color.Gray,
-            .Height = 20, .TextAlign = ContentAlignment.MiddleCenter
-        }
-        _tooltipProvider.SetToolTip(lblPVRatio, "(初期直接費用 + 月額合計の現在価値) / 公正価値 * 100。90%以上でFL判定")
-        pnlPV.Controls.Add(lblPVRatioCalc)
-        pnlPV.Controls.Add(lblPVRatio)
-        pnlPV.Controls.Add(lblPVTitle)
+        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
+        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
+        tlpIdent.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
 
-        tblInd.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        tblInd.Controls.Add(pnlPeriod, 0, 0)
-        tblInd.Controls.Add(pnlPV, 1, 0)
-        grpIndicators.Controls.Add(tblInd)
+        grpQ1 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True, .BackColor = CLR_CARD}
+        Dim flowQ1 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        rbQ1Yes = New RadioButton() With {.Text = "あり (特定されている)", .AutoSize = True, .Font = FNT_INPUT}
+        rbQ1No = New RadioButton() With {.Text = "なし", .AutoSize = True, .Font = FNT_INPUT}
+        AddHandler rbQ1Yes.CheckedChanged, AddressOf OnJudgeTrigger
+        AddHandler rbQ1No.CheckedChanged, AddressOf OnJudgeTrigger
+        flowQ1.Controls.AddRange({rbQ1Yes, rbQ1No})
+        grpQ1.Controls.Add(flowQ1)
+        _tooltipProvider.SetToolTip(grpQ1, "リース対象の資産が契約において特定されているか")
+
+        Dim rQ1 As Integer = tlpIdent.RowCount
+        tlpIdent.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        tlpIdent.Controls.Add(CreateFieldLabel("資産の特定"), 0, rQ1)
+        tlpIdent.Controls.Add(grpQ1, 1, rQ1)
+        tlpIdent.SetColumnSpan(grpQ1, 3)
+        tlpIdent.RowCount += 1
+
+        grpQ2 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True, .BackColor = CLR_CARD}
+        Dim flowQ2 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        rbQ2Yes = New RadioButton() With {.Text = "あり (サプライヤーの権利)", .AutoSize = True, .Font = FNT_INPUT}
+        rbQ2No = New RadioButton() With {.Text = "なし", .AutoSize = True, .Checked = True, .Font = FNT_INPUT}
+        AddHandler rbQ2Yes.CheckedChanged, AddressOf OnJudgeTrigger
+        AddHandler rbQ2No.CheckedChanged, AddressOf OnJudgeTrigger
+        flowQ2.Controls.AddRange({rbQ2Yes, rbQ2No})
+        grpQ2.Controls.Add(flowQ2)
+        _tooltipProvider.SetToolTip(grpQ2, "サプライヤーが実質的な代替権を有しているか")
+
+        Dim rQ2 As Integer = tlpIdent.RowCount
+        tlpIdent.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        tlpIdent.Controls.Add(CreateFieldLabel("実質的代替権"), 0, rQ2)
+        tlpIdent.Controls.Add(grpQ2, 1, rQ2)
+        tlpIdent.SetColumnSpan(grpQ2, 3)
+        tlpIdent.RowCount += 1
+
+        grpQ3 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True, .BackColor = CLR_CARD}
+        Dim flowQ3 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        rbQ3Yes = New RadioButton() With {.Text = "あり", .AutoSize = True, .Checked = True, .Font = FNT_INPUT}
+        rbQ3No = New RadioButton() With {.Text = "なし", .AutoSize = True, .Font = FNT_INPUT}
+        AddHandler rbQ3Yes.CheckedChanged, AddressOf OnJudgeTrigger
+        AddHandler rbQ3No.CheckedChanged, AddressOf OnJudgeTrigger
+        flowQ3.Controls.AddRange({rbQ3Yes, rbQ3No})
+        grpQ3.Controls.Add(flowQ3)
+        _tooltipProvider.SetToolTip(grpQ3, "借手が使用から経済的利益のほぼすべてを得る権利を有しているか")
+
+        grpQ4 = New GroupBox() With {.Dock = DockStyle.Fill, .FlatStyle = FlatStyle.Flat, .Text = "", .Margin = New Padding(0), .Padding = New Padding(4, 0, 0, 5), .AutoSize = True, .BackColor = CLR_CARD}
+        Dim flowQ4 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        rbQ4Yes = New RadioButton() With {.Text = "あり", .AutoSize = True, .Checked = True, .Font = FNT_INPUT}
+        rbQ4No = New RadioButton() With {.Text = "なし", .AutoSize = True, .Font = FNT_INPUT}
+        AddHandler rbQ4Yes.CheckedChanged, AddressOf OnJudgeTrigger
+        AddHandler rbQ4No.CheckedChanged, AddressOf OnJudgeTrigger
+        flowQ4.Controls.AddRange({rbQ4Yes, rbQ4No})
+        grpQ4.Controls.Add(flowQ4)
+        _tooltipProvider.SetToolTip(grpQ4, "借手が資産の使用方法を指図する権利を有しているか")
+
+        Dim rQ34 As Integer = tlpIdent.RowCount
+        tlpIdent.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        tlpIdent.Controls.Add(CreateFieldLabel("経済的利益"), 0, rQ34)
+        tlpIdent.Controls.Add(grpQ3, 1, rQ34)
+        tlpIdent.Controls.Add(CreateFieldLabel("使用指図権"), 2, rQ34)
+        tlpIdent.Controls.Add(grpQ4, 3, rQ34)
+        tlpIdent.RowCount += 1
+
+        grpIdent.Controls.Add(tlpIdent)
+
+        Dim grpExempt As GroupBox = CreateSection("期間・免除規定判定")
+        Dim tlpExempt As New TableLayoutPanel() With {
+            .Dock = DockStyle.Top, .AutoSize = True,
+            .ColumnCount = 4, .Padding = New Padding(8)
+        }
+        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
+        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
+        tlpExempt.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+
+        dtpJudgeStart = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2024, 7, 24), .Font = FNT_INPUT}
+        AddHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
+        dtpJudgeEnd = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Value = New DateTime(2026, 7, 23), .Font = FNT_INPUT}
+        AddHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
+        _tooltipProvider.SetToolTip(dtpJudgeStart, "リース開始日")
+        _tooltipProvider.SetToolTip(dtpJudgeEnd, "リース終了日")
+        AddFieldRow(tlpExempt, "開始日", dtpJudgeStart, "終了日", dtpJudgeEnd)
+
+        Dim flowTerm As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        lblTermMonths = New Label() With {.Text = "24", .Font = _font11Bold, .AutoSize = True, .ForeColor = CLR_HEADER}
+        Dim lblMonthUnit As New Label() With {.Text = " ヶ月", .AutoSize = True, .Padding = New Padding(0, 4, 0, 0), .Font = FNT_INPUT}
+        lblDateError = New Label() With {.Text = "", .ForeColor = Color.FromArgb(220, 53, 69), .Font = FNT_LABEL, .AutoSize = True, .Padding = New Padding(5, 4, 0, 0)}
+        flowTerm.Controls.AddRange({lblTermMonths, lblMonthUnit, lblDateError})
+        lblShortTermResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
+        AddFieldRow(tlpExempt, "見積期間", flowTerm, "短期判定", lblShortTermResult)
+
+        Dim flowExt As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        chkExtOption = New CheckBox() With {.Text = "あり", .AutoSize = True, .Font = FNT_INPUT}
+        cboExtCertainty = New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 130, .Enabled = False, .Font = FNT_INPUT}
+        cboExtCertainty.Items.AddRange({"低い(行使しない)", "高い(行使する)"})
+        cboExtCertainty.SelectedIndex = 0
+        AddHandler chkExtOption.CheckedChanged, AddressOf OnExtOptionChanged
+        AddHandler cboExtCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
+        flowExt.Controls.AddRange({chkExtOption, cboExtCertainty})
+        numExtMonths = New NumericUpDown() With {.Dock = DockStyle.Fill, .Minimum = 0, .Maximum = 600, .Value = 0, .Enabled = False, .Font = FNT_INPUT, .TextAlign = HorizontalAlignment.Right}
+        AddHandler numExtMonths.ValueChanged, AddressOf OnJudgeTrigger
+        _tooltipProvider.SetToolTip(chkExtOption, "更新・延長オプションの有無")
+        AddFieldRow(tlpExempt, "延長OP", flowExt, "延長期間", numExtMonths)
+
+        Dim flowTerm2 As New FlowLayoutPanel() With {.Dock = DockStyle.Fill, .AutoSize = True, .WrapContents = False}
+        chkTerminateOption = New CheckBox() With {.Text = "あり", .AutoSize = True, .Font = FNT_INPUT}
+        cboTerminateCertainty = New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 160, .Enabled = False, .Font = FNT_INPUT}
+        cboTerminateCertainty.Items.AddRange({"行使しない(期間短縮なし)", "行使する(期間短縮)"})
+        cboTerminateCertainty.SelectedIndex = 0
+        AddHandler chkTerminateOption.CheckedChanged, AddressOf OnTerminateOptionChanged
+        AddHandler cboTerminateCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
+        flowTerm2.Controls.AddRange({chkTerminateOption, cboTerminateCertainty})
+        _tooltipProvider.SetToolTip(chkTerminateOption, "中途解約オプションの有無")
+
+        Dim rTerminate As Integer = tlpExempt.RowCount
+        tlpExempt.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tlpExempt.Controls.Add(CreateFieldLabel("解約OP"), 0, rTerminate)
+        tlpExempt.Controls.Add(flowTerm2, 1, rTerminate)
+        tlpExempt.SetColumnSpan(flowTerm2, 3)
+        tlpExempt.RowCount += 1
+
+        numAssetValue = New NumericUpDown() With {.Maximum = 9999999999D, .ThousandsSeparator = True, .Dock = DockStyle.Fill, .TextAlign = HorizontalAlignment.Right, .Font = FNT_INPUT}
+        AddHandler numAssetValue.ValueChanged, AddressOf OnJudgeTrigger
+        lblLowValueResult = New Label() With {.Text = "-", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
+        _tooltipProvider.SetToolTip(numAssetValue, "リース対象資産の取得価額（300万円以下で少額リース免除の対象）")
+        AddFieldRow(tlpExempt, "取得価額", numAssetValue, "少額判定", lblLowValueResult)
+
+        chkApplyExemption = New CheckBox() With {.Text = "免除規定を適用する (オフバランス処理)", .AutoSize = True, .Enabled = False, .Dock = DockStyle.Fill, .Font = FNT_INPUT}
+        AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+
+        Dim rExempt As Integer = tlpExempt.RowCount
+        tlpExempt.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tlpExempt.Controls.Add(CreateFieldLabel("免除規定"), 0, rExempt)
+        tlpExempt.Controls.Add(chkApplyExemption, 1, rExempt)
+        tlpExempt.SetColumnSpan(chkApplyExemption, 3)
+        tlpExempt.RowCount += 1
+
+        AddSectionLabel(tlpExempt, "■ 会計処理オプション")
+
+        chkServiceComponent = New CheckBox() With {.Text = "非リース構成要素を分離せず、リース料として結合する（実務的便法）", .AutoSize = True, .Dock = DockStyle.Fill, .Font = FNT_INPUT}
+        AddHandler chkServiceComponent.CheckedChanged, AddressOf OnJudgeTrigger
+
+        Dim rService As Integer = tlpExempt.RowCount
+        tlpExempt.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tlpExempt.Controls.Add(CreateFieldLabel("構成要素"), 0, rService)
+        tlpExempt.Controls.Add(chkServiceComponent, 1, rService)
+        tlpExempt.SetColumnSpan(chkServiceComponent, 3)
+        tlpExempt.RowCount += 1
+
+        chkOwnershipTransfer = New CheckBox() With {.Text = "所有権移転条項あり（または割安購入選択権あり）", .AutoSize = True, .Dock = DockStyle.Fill, .Font = FNT_INPUT}
+        AddHandler chkOwnershipTransfer.CheckedChanged, AddressOf OnJudgeTrigger
+
+        Dim rOwnership As Integer = tlpExempt.RowCount
+        tlpExempt.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tlpExempt.Controls.Add(CreateFieldLabel("所有権移転"), 0, rOwnership)
+        tlpExempt.Controls.Add(chkOwnershipTransfer, 1, rOwnership)
+        tlpExempt.SetColumnSpan(chkOwnershipTransfer, 3)
+        tlpExempt.RowCount += 1
+
+        numMonthlyRentJudge = New NumericUpDown() With {.Maximum = 9900000000D, .Minimum = 0D, .Value = 0D, .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right, .Width = 120, .Font = FNT_INPUT}
+        AddHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
+        _tooltipProvider.SetToolTip(numMonthlyRentJudge, "月額リース料（入力時はPVベースで少額判定を行います）")
+        AddFieldRow(tlpExempt, "月額リース料", numMonthlyRentJudge, Nothing, Nothing)
+
+        numDiscountRate = New NumericUpDown() With {.DecimalPlaces = 2, .Increment = 0.01D, .Maximum = 20D, .Minimum = 0D, .Value = 0D, .TextAlign = HorizontalAlignment.Right, .Width = 100, .Font = FNT_INPUT}
+        AddHandler numDiscountRate.ValueChanged, AddressOf OnJudgeTrigger
+        _tooltipProvider.SetToolTip(numDiscountRate, "年利割引率（Tab4のスケジュール計算で使用）")
+        AddFieldRow(tlpExempt, "割引率(%)", numDiscountRate, Nothing, Nothing)
+
+        grpExempt.Controls.Add(tlpExempt)
 
         Dim grpResult As GroupBox = CreateSection("判定結果")
         grpResult.BackColor = Color.FromArgb(240, 248, 255)
-        Dim tblResult As New TableLayoutPanel() With {
+        Dim tlpResult As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 1, .Padding = New Padding(10)
         }
 
-        lblJudgmentResult = New Label() With {
-            .Text = "---", .Dock = DockStyle.Top,
-            .Font = New Font("Meiryo", 18.0F, FontStyle.Bold),
-            .ForeColor = CLR_HEADER, .Height = 50,
-            .TextAlign = ContentAlignment.MiddleCenter,
-            .BackColor = CLR_CARD
+        Dim flowResultTop As New FlowLayoutPanel() With {.Dock = DockStyle.Top, .AutoSize = True, .WrapContents = False}
+        lblResultText = New Label() With {
+            .Text = "---", .AutoSize = True,
+            .Font = _font18Bold,
+            .ForeColor = CLR_HEADER
         }
-
-        txtJudgmentRationale = New TextBox() With {
-            .Dock = DockStyle.Top, .Multiline = True,
-            .ReadOnly = True, .BackColor = CLR_READONLY,
-            .ScrollBars = ScrollBars.Vertical,
-            .Height = 80, .Font = New Font("Meiryo", 9.0F)
+        lblResultBadge = New Label() With {
+            .Text = "---", .AutoSize = True,
+            .ForeColor = Color.White,
+            .BackColor = Color.FromArgb(204, 204, 204),
+            .Padding = New Padding(6, 3, 6, 3),
+            .Margin = New Padding(15, 8, 0, 0),
+            .Font = _fontResultBadge
         }
-        _tooltipProvider.SetToolTip(txtJudgmentRationale, "判定根拠は入力値から自動生成されます。監査証跡としてご利用ください")
+        flowResultTop.Controls.AddRange({lblResultText, lblResultBadge})
 
-        tblResult.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        tblResult.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        tblResult.Controls.Add(lblJudgmentResult, 0, 0)
-        tblResult.Controls.Add(txtJudgmentRationale, 0, 1)
-        grpResult.Controls.Add(tblResult)
-
-        Dim grpOverride As GroupBox = CreateSection("手動変更")
-        Dim tblOverride As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 3, .Padding = New Padding(8)
+        lblResultReason = New Label() With {
+            .Text = "判定条件を入力してください。",
+            .AutoSize = True,
+            .ForeColor = Color.Gray,
+            .Font = _fontResultReason,
+            .Dock = DockStyle.Top,
+            .Padding = New Padding(0, 4, 0, 0)
         }
-        tblOverride.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
-        tblOverride.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 200.0F))
-        tblOverride.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        _tooltipProvider.SetToolTip(lblResultReason, "判定根拠は入力値から自動生成されます")
 
-        btnManualOverride = New Button() With {
-            .Text = "手動で変更",
-            .Width = 120, .Height = 28,
-            .FlatStyle = FlatStyle.Flat,
-            .BackColor = Color.FromArgb(255, 193, 7),
-            .ForeColor = Color.Black,
-            .Font = FNT_LABEL,
-            .Cursor = Cursors.Hand
-        }
-        btnManualOverride.FlatAppearance.BorderSize = 0
+        tlpResult.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        tlpResult.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        tlpResult.Controls.Add(flowResultTop, 0, 0)
+        tlpResult.Controls.Add(lblResultReason, 0, 1)
+        grpResult.Controls.Add(tlpResult)
 
-        cmbManualResult = New ComboBox() With {
-            .Dock = DockStyle.Fill,
-            .DropDownStyle = ComboBoxStyle.DropDownList,
-            .Enabled = False
-        }
-        cmbManualResult.Items.AddRange({
-            "ファイナンス・リース（所有権移転）",
-            "ファイナンス・リース（所有権移転外）",
-            "オペレーティング・リース",
-            "短期リース免除",
-            "少額リース免除"
-        })
-
-        txtOverrideReason = New TextBox() With {.Dock = DockStyle.Fill, .Enabled = False}
-
-        AddHandler btnManualOverride.Click, Sub(s, e)
-                                                _isManualOverride = Not _isManualOverride
-                                                cmbManualResult.Enabled = _isManualOverride
-                                                txtOverrideReason.Enabled = _isManualOverride
-                                                If _isManualOverride Then
-                                                    btnManualOverride.Text = "自動判定に戻す"
-                                                    btnManualOverride.BackColor = Color.FromArgb(108, 117, 125)
-                                                    btnManualOverride.ForeColor = Color.White
-                                                Else
-                                                    btnManualOverride.Text = "手動で変更"
-                                                    btnManualOverride.BackColor = Color.FromArgb(255, 193, 7)
-                                                    btnManualOverride.ForeColor = Color.Black
-                                                    RecalcAll()
-                                                End If
-                                            End Sub
-
-        tblOverride.RowStyles.Add(New RowStyle(SizeType.Absolute, 34.0F))
-        tblOverride.Controls.Add(btnManualOverride, 0, 0)
-        tblOverride.Controls.Add(cmbManualResult, 1, 0)
-        tblOverride.Controls.Add(txtOverrideReason, 2, 0)
-        grpOverride.Controls.Add(tblOverride)
-
-        mainTbl.Controls.Add(grpCriteria, 0, 0)
-        mainTbl.Controls.Add(grpIndicators, 0, 1)
+        mainTbl.Controls.Add(grpIdent, 0, 0)
+        mainTbl.Controls.Add(grpExempt, 0, 1)
         mainTbl.Controls.Add(grpResult, 0, 2)
-        mainTbl.Controls.Add(grpOverride, 0, 3)
 
         scroll.Controls.Add(mainTbl)
         pgJudgment.Controls.Add(scroll)
@@ -1313,9 +1344,7 @@ Public Class FrmLeaseContractMain
         UpdateAppliedRate()
         CalcMonthlyTotals()
 
-        If Not _isManualOverride Then
-            CalcJudgment()
-        End If
+        RecalcJudge()
     End Sub
 
     Private Sub CalcLeaseMonths()
@@ -1377,174 +1406,181 @@ Public Class FrmLeaseContractMain
         lblMonthlyTotalIncTax.Text = String.Format("税込: {0:N0}", totalIncTax)
     End Sub
 
-    Private Sub CalcJudgment()
+    Private Sub OnExtOptionChanged(sender As Object, e As EventArgs)
         If Not _isLoaded Then Return
-
-        Dim rationale As New System.Text.StringBuilder()
-        Dim result As String = ""
-
-        If chkShortTerm.Checked Then
-            result = "短期リース免除"
-            rationale.AppendLine("- 短期リース（12ヶ月以内）に該当するため、認識免除を適用")
-            UpdateJudgmentDisplay(result, rationale.ToString())
-            Return
+        Dim isDisabled As Boolean = Not chkExtOption.Checked
+        cboExtCertainty.Enabled = Not isDisabled
+        numExtMonths.Enabled = Not isDisabled
+        If isDisabled Then
+            RemoveHandler numExtMonths.ValueChanged, AddressOf OnJudgeTrigger
+            numExtMonths.Value = 0
+            AddHandler numExtMonths.ValueChanged, AddressOf OnJudgeTrigger
         End If
-
-        If chkLowValue.Checked Then
-            result = "少額リース免除"
-            rationale.AppendLine("- 少額リースに該当するため、認識免除を適用")
-            UpdateJudgmentDisplay(result, rationale.ToString())
-            Return
-        End If
-
-        Dim leaseMonths As Integer = GetLeaseMonths()
-        Dim economicLifeMonths As Integer = CInt(numEconomicLife.Value) * 12
-        Dim periodRatio As Double = 0
-        If economicLifeMonths > 0 Then
-            periodRatio = (leaseMonths / CDbl(economicLifeMonths)) * 100.0
-        End If
-
-        lblPeriodRatio.Text = String.Format("{0:F1}%", periodRatio)
-        lblPeriodRatioCalc.Text = String.Format(
-            "{0}ヶ月 / {1}ヶ月 = {2:F1}% (基準: 75%以上)",
-            leaseMonths, economicLifeMonths, periodRatio)
-        _tooltipProvider.SetToolTip(lblPeriodRatio,
-            String.Format("リース期間{0}ヶ月 / 経済的耐用年数{1}年({2}ヶ月) = {3:F1}%",
-                leaseMonths, numEconomicLife.Value, economicLifeMonths, periodRatio))
-
-        If periodRatio >= 75.0 Then
-            lblPeriodRatio.ForeColor = CLR_ACCENT
-        Else
-            lblPeriodRatio.ForeColor = CLR_HEADER
-        End If
-
-        Dim monthlyExTax As Decimal = GetMonthlyTotalExTax()
-        Dim appliedRate As Double = GetAppliedRate()
-        Dim monthlyRate As Double = appliedRate / 100.0 / 12.0
-        Dim pvMonthly As Double = 0
-        If monthlyRate > 0 AndAlso leaseMonths > 0 Then
-            pvMonthly = CDbl(monthlyExTax) * ((1 - Math.Pow(1 + monthlyRate, -leaseMonths)) / monthlyRate)
-        ElseIf leaseMonths > 0 Then
-            pvMonthly = CDbl(monthlyExTax) * leaseMonths
-        End If
-
-        Dim initialDirect As Double = CDbl(numInitialDirectCost.Value)
-        Dim totalPV As Double = initialDirect + pvMonthly
-        Dim fairValue As Double = CDbl(numFairValue.Value)
-        Dim pvRatio As Double = 0
-        If fairValue > 0 Then
-            pvRatio = (totalPV / fairValue) * 100.0
-        End If
-
-        lblPVRatio.Text = String.Format("{0:F1}%", pvRatio)
-        lblPVRatioCalc.Text = String.Format(
-            "({0:N0} + {1:N0}) / {2:N0} = {3:F1}% (基準: 90%以上)",
-            initialDirect, pvMonthly, fairValue, pvRatio)
-        _tooltipProvider.SetToolTip(lblPVRatio,
-            String.Format("初期直接費用{0:N0} + 月額PV{1:N0}(利率{2:F2}%,{3}ヶ月) = {4:N0} / 公正価値{5:N0} = {6:F1}%",
-                initialDirect, pvMonthly, appliedRate, leaseMonths, totalPV, fairValue, pvRatio))
-
-        If pvRatio >= 90.0 Then
-            lblPVRatio.ForeColor = CLR_ACCENT
-        Else
-            lblPVRatio.ForeColor = CLR_HEADER
-        End If
-
-        Dim isFL As Boolean = False
-
-        If chkOwnershipTransfer.Checked Then
-            rationale.AppendLine("- 所有権移転条項あり → ファイナンス・リース（所有権移転）")
-            result = "ファイナンス・リース（所有権移転）"
-            isFL = True
-        End If
-
-        If chkBargainPurchase.Checked Then
-            rationale.AppendLine("- 割安購入選択権あり → ファイナンス・リース（所有権移転）")
-            If result = "" Then result = "ファイナンス・リース（所有権移転）"
-            isFL = True
-        End If
-
-        If chkSpecializedAsset.Checked Then
-            rationale.AppendLine("- 借手専用仕様の資産 → ファイナンス・リース（所有権移転外）")
-            If result = "" Then result = "ファイナンス・リース（所有権移転外）"
-            isFL = True
-        End If
-
-        If periodRatio >= 75.0 Then
-            rationale.AppendLine(
-                String.Format("- リース期間割合 {0:F1}% >= 75% → ファイナンス・リース該当", periodRatio))
-            If result = "" Then result = "ファイナンス・リース（所有権移転外）"
-            isFL = True
-        End If
-
-        If pvRatio >= 90.0 Then
-            rationale.AppendLine(
-                String.Format("- 現在価値割合 {0:F1}% >= 90% → ファイナンス・リース該当", pvRatio))
-            If result = "" Then result = "ファイナンス・リース（所有権移転外）"
-            isFL = True
-        End If
-
-        If Not isFL Then
-            result = "オペレーティング・リース"
-            rationale.AppendLine("- 上記いずれの基準にも該当しないため、オペレーティング・リースと判定")
-            rationale.AppendLine(String.Format("  リース期間割合: {0:F1}% (< 75%)", periodRatio))
-            rationale.AppendLine(String.Format("  現在価値割合: {0:F1}% (< 90%)", pvRatio))
-        End If
-
-        UpdateJudgmentDisplay(result, rationale.ToString())
+        RecalcJudge()
     End Sub
 
-    Private Sub UpdateJudgmentDisplay(result As String, rationale As String)
-        lblJudgmentResult.Text = result
-        txtJudgmentRationale.Text = rationale.TrimEnd()
-
-        If result.Contains("ファイナンス") Then
-            lblJudgmentResult.ForeColor = Color.FromArgb(220, 53, 69)
-            lblJudgmentResult.BackColor = Color.FromArgb(255, 240, 240)
-        ElseIf result.Contains("免除") Then
-            lblJudgmentResult.ForeColor = Color.FromArgb(23, 162, 184)
-            lblJudgmentResult.BackColor = Color.FromArgb(230, 248, 255)
-        Else
-            lblJudgmentResult.ForeColor = CLR_ACCENT
-            lblJudgmentResult.BackColor = Color.FromArgb(235, 255, 240)
+    Private Sub OnTerminateOptionChanged(sender As Object, e As EventArgs)
+        If Not _isLoaded Then Return
+        cboTerminateCertainty.Enabled = chkTerminateOption.Checked
+        If Not chkTerminateOption.Checked Then
+            RemoveHandler cboTerminateCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
+            cboTerminateCertainty.SelectedIndex = 0
+            AddHandler cboTerminateCertainty.SelectedIndexChanged, AddressOf OnJudgeTrigger
         End If
-
-        lblContractClass.Text = result
-        lblJudgmentPreview.Text = "リース判定: " & result
+        RecalcJudge()
     End Sub
 
-    Private Function GetLeaseMonths() As Integer
-        Try
-            Dim txt As String = lblLeaseMonths.Text.Replace("ヶ月", "").Replace("---", "0")
-            Return CInt(txt)
-        Catch ex As Exception
-            Return 0
-        End Try
-    End Function
+    Private Sub OnJudgeTrigger(sender As Object, e As EventArgs)
+        If Not _isLoaded Then Return
+        RecalcJudge()
+    End Sub
 
-    Private Function GetMonthlyTotalExTax() As Decimal
-        Dim total As Decimal = 0
-        For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
-            If row.IsNewRow Then Continue For
-            Try
-                Dim val As Decimal = 0
-                If row.Cells("MAmountExTax").Value IsNot Nothing Then
-                    Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString().Replace(",", ""), val)
+    Private Sub RecalcJudge()
+        If lblResultText Is Nothing Then Return
+
+        Dim q1Yes As Boolean = rbQ1Yes.Checked
+        Dim q2No As Boolean = rbQ2No.Checked
+        Dim q3Yes As Boolean = rbQ3Yes.Checked
+        Dim q4Yes As Boolean = rbQ4Yes.Checked
+
+        Dim startDt As DateTime = dtpJudgeStart.Value.Date
+        Dim endDt As DateTime = dtpJudgeEnd.Value.Date
+        Dim assetVal As Decimal = numAssetValue.Value
+
+        Dim hasExt As Boolean = chkExtOption.Checked
+        Dim isExtCertain As Boolean = (cboExtCertainty.SelectedIndex = 1)
+        Dim extMonths As Integer = CInt(numExtMonths.Value)
+
+        Dim isLease As Boolean = (q1Yes AndAlso q2No AndAlso q3Yes AndAlso q4Yes)
+
+        Dim months As Integer = 0
+        Dim isValidDate As Boolean = True
+
+        If endDt < startDt Then
+            months = 0
+            lblDateError.Text = "終了日が開始日より前です"
+            isValidDate = False
+        Else
+            lblDateError.Text = ""
+            months = (endDt.Year - startDt.Year) * 12 + (endDt.Month - startDt.Month)
+            Dim tempDate As DateTime = startDt.AddMonths(months)
+            If endDt < tempDate.AddDays(-1) Then
+                months -= 1
+            End If
+            If hasExt AndAlso isExtCertain Then
+                months += extMonths
+            End If
+        End If
+
+        lblTermMonths.Text = months.ToString()
+
+        Dim isShortTerm As Boolean = (isValidDate AndAlso months > 0 AndAlso months <= 12)
+        If isShortTerm Then
+            lblShortTermResult.Text = "該当 (12ヶ月以内)"
+            lblShortTermResult.ForeColor = Color.FromArgb(0, 123, 255)
+            lblShortTermResult.Font = _boldFont
+        Else
+            lblShortTermResult.Text = "非該当"
+            lblShortTermResult.ForeColor = CLR_TEXT
+            lblShortTermResult.Font = _regularFont
+        End If
+
+        Dim monthlyRent As Decimal = numMonthlyRentJudge.Value
+        Dim discountRate As Decimal = numDiscountRate.Value
+        Dim isLowValue As Boolean = False
+
+        If monthlyRent > 0 AndAlso months > 0 Then
+            Dim pvValue As Double
+            Dim r As Double = CDbl(discountRate) / 12.0 / 100.0
+            If r > 0 Then
+                ' 期末払い（Ordinary Annuity）前提の年金現価係数を使用
+                pvValue = CDbl(monthlyRent) * ((1.0 - Math.Pow(1.0 + r, -months)) / r)
+            Else
+                pvValue = CDbl(monthlyRent) * months
+            End If
+            isLowValue = (pvValue <= CDbl(LOW_VALUE_THRESHOLD))
+            If isLowValue Then
+                lblLowValueResult.Text = String.Format("該当 (PV: ¥{0:N0})", pvValue)
+                lblLowValueResult.ForeColor = Color.FromArgb(0, 123, 255)
+                lblLowValueResult.Font = _boldFont
+            Else
+                lblLowValueResult.Text = String.Format("非該当 (PV: ¥{0:N0})", pvValue)
+                lblLowValueResult.ForeColor = CLR_TEXT
+                lblLowValueResult.Font = _regularFont
+            End If
+        ElseIf assetVal > 0 Then
+            isLowValue = (assetVal <= LOW_VALUE_THRESHOLD)
+            If isLowValue Then
+                lblLowValueResult.Text = "該当 (基準額以下)"
+                lblLowValueResult.ForeColor = Color.FromArgb(0, 123, 255)
+                lblLowValueResult.Font = _boldFont
+            Else
+                lblLowValueResult.Text = "非該当"
+                lblLowValueResult.ForeColor = CLR_TEXT
+                lblLowValueResult.Font = _regularFont
+            End If
+        Else
+            lblLowValueResult.Text = "-"
+            lblLowValueResult.ForeColor = CLR_TEXT
+        End If
+
+        Dim exemptEligible As Boolean = (isShortTerm OrElse isLowValue)
+
+        RemoveHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+
+        chkApplyExemption.Enabled = False
+
+        chkApplyExemption.Checked = exemptEligible
+
+        AddHandler chkApplyExemption.CheckedChanged, AddressOf OnJudgeTrigger
+
+        lblResultText.ForeColor = CLR_HEADER
+        lblResultBadge.BackColor = Color.FromArgb(204, 204, 204)
+
+        Dim reasonParts As New List(Of String)
+
+        If Not isLease Then
+            lblResultText.Text = "対象外"
+            lblResultBadge.Text = "リース資産計上不要"
+            reasonParts.Add("識別判定の条件を満たさないため、通常の賃貸借処理（オフバランス）となります。")
+        Else
+            If chkApplyExemption.Checked Then
+                lblResultText.Text = "オフバランス処理"
+                lblResultText.ForeColor = Color.FromArgb(23, 162, 184)
+                lblResultBadge.Text = "免除規定適用"
+                lblResultBadge.BackColor = Color.FromArgb(23, 162, 184)
+                reasonParts.Add("短期または少額資産の免除規定を適用し、賃貸借処理として処理します。")
+            Else
+                lblResultText.Text = "オンバランス処理"
+                lblResultText.ForeColor = Color.FromArgb(220, 53, 69)
+                lblResultBadge.Text = "資産計上必須"
+                lblResultBadge.BackColor = CLR_ACCENT
+                reasonParts.Add("使用権資産およびリース負債の計上が必要です。")
+            End If
+
+            If chkTerminateOption.Checked AndAlso cboTerminateCertainty.SelectedIndex = 1 Then
+                ' ※ 本システムでは期間の自動減算は行わず、ユーザーに通知する仕様としている。
+                '    (ユーザーは終了日を変更するか、判定結果を見て運用で対応する想定)
+                reasonParts.Add("※解約オプションの行使が見込まれるため、期間短縮を考慮する必要があります")
+            End If
+
+            If chkServiceComponent.Checked Then
+                reasonParts.Add("※実務的便法を適用し、非リース構成要素を含めた金額で資産計上します")
+            End If
+
+            If Not chkApplyExemption.Checked Then
+                If chkOwnershipTransfer.Checked Then
+                    reasonParts.Add("※所有権移転リースとして、経済的耐用年数に基づき償却計算を行います。")
+                Else
+                    reasonParts.Add("※所有権移転外リースとして、リース期間に基づき償却計算を行います。")
                 End If
-                total += val
-            Catch ex As Exception
-            End Try
-        Next
-        Return total
-    End Function
-
-    Private Function GetAppliedRate() As Double
-        If numImplicitRate.Value > 0 Then
-            Return CDbl(numImplicitRate.Value)
-        Else
-            Return CDbl(numIBR.Value)
+            End If
         End If
-    End Function
+
+        lblResultReason.Text = String.Join(vbCrLf, reasonParts)
+        lblContractClass.Text = lblResultText.Text
+        lblJudgmentPreview.Text = "リース判定: " & lblResultText.Text
+    End Sub
 
     Private Sub OnInitialCostChanged(sender As Object, e As DataGridViewCellEventArgs)
         If Not _isLoaded Then Return
@@ -1805,6 +1841,22 @@ Public Class FrmLeaseContractMain
             Next
             UpdateAssetCount()
         End If
+    End Sub
+
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        If disposing Then
+            FNT_LABEL?.Dispose()
+            FNT_INPUT?.Dispose()
+            FNT_SECTION?.Dispose()
+            _boldFont?.Dispose()
+            _regularFont?.Dispose()
+            _font11Bold?.Dispose()
+            _font18Bold?.Dispose()
+            _fontResultBadge?.Dispose()
+            _fontResultReason?.Dispose()
+            _tooltipProvider?.Dispose()
+        End If
+        MyBase.Dispose(disposing)
     End Sub
 
 End Class
