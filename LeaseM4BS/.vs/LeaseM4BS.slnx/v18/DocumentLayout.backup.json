@@ -1,0 +1,105 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\va03\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\frmbuknlist.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\va03\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\formhelper.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\va03\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\frmbuknentry.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\va03\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\frmbuknentry.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{77A9AE2A-E73B-468C-BCCE-841079F4724C}|..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms.vbproj|c:\\users\\va03\\source\\repos\\leasem4bs.testwinforms\\leasem4bs.testwinforms\\form_f_flx_idolst.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FrmBuknList.vb [\u30C7\u30B6\u30A4\u30F3]",
+              "DocumentMoniker": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknList.vb",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknList.vb",
+              "ToolTip": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknList.vb [\u30C7\u30B6\u30A4\u30F3]",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknList.vb [\u30C7\u30B6\u30A4\u30F3]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-02-25T12:40:41.363Z",
+              "EditorCaption": " [\u30C7\u30B6\u30A4\u30F3]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FormHelper.vb",
+              "DocumentMoniker": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FormHelper.vb",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FormHelper.vb",
+              "ToolTip": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FormHelper.vb",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FormHelper.vb",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-02-20T00:08:36.104Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "FrmBuknEntry.vb",
+              "DocumentMoniker": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb",
+              "ToolTip": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb",
+              "ViewState": "AgIAAHIAAAAAAAAAAAAYwDMBAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-02-20T00:51:23.812Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "FrmBuknEntry.vb [\u30C7\u30B6\u30A4\u30F3]",
+              "DocumentMoniker": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb",
+              "ToolTip": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb [\u30C7\u30B6\u30A4\u30F3]",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\FrmBuknEntry.vb [\u30C7\u30B6\u30A4\u30F3]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-02-20T00:51:21.898Z",
+              "EditorCaption": " [\u30C7\u30B6\u30A4\u30F3]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Form_f_flx_IDOLST.vb",
+              "DocumentMoniker": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\Form_f_flx_IDOLST.vb",
+              "RelativeDocumentMoniker": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\Form_f_flx_IDOLST.vb",
+              "ToolTip": "C:\\Users\\VA03\\source\\repos\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\Form_f_flx_IDOLST.vb",
+              "RelativeToolTip": "..\\LeaseM4BS.TestWinForms\\LeaseM4BS.TestWinForms\\Form_f_flx_IDOLST.vb",
+              "ViewState": "AgIAAI8AAAAAAAAAAAAqwI4AAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-02-18T13:00:33.545Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

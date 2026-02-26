@@ -1,0 +1,2 @@
+﻿Public Class Form_f_CHUKI_YOUSHIKI
+End Class
