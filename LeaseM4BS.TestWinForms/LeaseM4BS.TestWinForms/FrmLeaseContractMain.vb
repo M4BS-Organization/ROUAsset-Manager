@@ -360,7 +360,6 @@ Public Class FrmLeaseContractMain
         pnlMgmtDept.Controls.Add(cmbMgmtDeptCode, 0, 0)
         pnlMgmtDept.Controls.Add(txtMgmtDeptName, 1, 0)
 
-
         dtpStartDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
         dtpEndDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
         numFreePeriod = New NumericUpDown() With {
@@ -439,7 +438,6 @@ Public Class FrmLeaseContractMain
         tblBasic.Controls.Add(pnlMgmtDept, 1, r)
         tblBasic.SetColumnSpan(pnlMgmtDept, 7)
         tblBasic.RowCount += 1
-
 
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
@@ -1364,7 +1362,6 @@ Public Class FrmLeaseContractMain
             lblLeaseMonths.Text = "---ヶ月"
         End Try
     End Sub
-
 
     Private Sub UpdateAppliedRate()
         If Not _isLoaded Then Return
