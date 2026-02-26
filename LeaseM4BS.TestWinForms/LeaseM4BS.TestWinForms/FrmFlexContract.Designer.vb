@@ -19,7 +19,7 @@ Partial Class FrmFlexContract
         Me.pnlSearch = New System.Windows.Forms.Panel()
         Me.tblSearch = New System.Windows.Forms.TableLayoutPanel()
         Me.lblUser = New System.Windows.Forms.Label()
-        Me.txtUser = New System.Windows.Forms.TextBox()
+        Me.cboUser = New System.Windows.Forms.ComboBox()
         Me.lblContractNo = New System.Windows.Forms.Label()
         Me.txtContractNo = New System.Windows.Forms.TextBox()
         Me.btnSearch = New System.Windows.Forms.Button()
@@ -75,7 +75,7 @@ Partial Class FrmFlexContract
         Me.tblSearch.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 200.0F))
         Me.tblSearch.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100.0F))
         Me.tblSearch.Controls.Add(Me.lblUser, 0, 0)
-        Me.tblSearch.Controls.Add(Me.txtUser, 1, 0)
+        Me.tblSearch.Controls.Add(Me.cboUser, 1, 0)
         Me.tblSearch.Controls.Add(Me.lblContractNo, 2, 0)
         Me.tblSearch.Controls.Add(Me.txtContractNo, 3, 0)
         Me.tblSearch.Controls.Add(Me.btnSearch, 4, 0)
@@ -97,17 +97,19 @@ Partial Class FrmFlexContract
         Me.lblUser.Padding = New System.Windows.Forms.Padding(0, 0, 4, 0)
         Me.lblUser.Size = New System.Drawing.Size(74, 34)
         Me.lblUser.TabIndex = 0
-        Me.lblUser.Text = "ユーザー"
+        Me.lblUser.Text = "利用者"
         Me.lblUser.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
-        ' txtUser
+        ' cboUser
         '
-        Me.txtUser.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtUser.Font = New System.Drawing.Font("Meiryo", 9.75F, System.Drawing.FontStyle.Regular)
-        Me.txtUser.Location = New System.Drawing.Point(83, 5)
-        Me.txtUser.Name = "txtUser"
-        Me.txtUser.Size = New System.Drawing.Size(194, 24)
-        Me.txtUser.TabIndex = 1
+        Me.cboUser.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.cboUser.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cboUser.Font = New System.Drawing.Font("Meiryo", 9.75F, System.Drawing.FontStyle.Regular)
+        Me.cboUser.Items.AddRange(New Object() {"総務", "経理"})
+        Me.cboUser.Location = New System.Drawing.Point(83, 5)
+        Me.cboUser.Name = "cboUser"
+        Me.cboUser.Size = New System.Drawing.Size(194, 24)
+        Me.cboUser.TabIndex = 1
         '
         ' lblContractNo
         '
@@ -154,11 +156,11 @@ Partial Class FrmFlexContract
         Me.grpContractFlex.Dock = System.Windows.Forms.DockStyle.Fill
         Me.grpContractFlex.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
         Me.grpContractFlex.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
-        Me.grpContractFlex.Location = New System.Drawing.Point(0, 50)
-        Me.grpContractFlex.Margin = New System.Windows.Forms.Padding(0, 0, 0, 8)
+        Me.grpContractFlex.Location = New System.Drawing.Point(8, 58)
+        Me.grpContractFlex.Margin = New System.Windows.Forms.Padding(8, 8, 8, 8)
         Me.grpContractFlex.Name = "grpContractFlex"
-        Me.grpContractFlex.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
-        Me.grpContractFlex.Size = New System.Drawing.Size(1200, 550)
+        Me.grpContractFlex.Padding = New System.Windows.Forms.Padding(10, 16, 10, 10)
+        Me.grpContractFlex.Size = New System.Drawing.Size(1184, 534)
         Me.grpContractFlex.TabIndex = 1
         Me.grpContractFlex.TabStop = False
         Me.grpContractFlex.Text = "契約書フレックス"
@@ -238,7 +240,7 @@ Partial Class FrmFlexContract
         Me.dgvContractList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.None
         Me.dgvContractList.BackgroundColor = System.Drawing.Color.White
         Me.dgvContractList.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.dgvContractList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal
+        Me.dgvContractList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Single
         Me.dgvContractList.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single
         Me.dgvContractList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvContractList.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {
@@ -395,6 +397,7 @@ Partial Class FrmFlexContract
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0F, 15.0F)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
+        Me.Padding = New System.Windows.Forms.Padding(8, 0, 8, 8)
         Me.Controls.Add(Me.grpContractFlex)
         Me.Controls.Add(Me.pnlSearch)
         Me.Name = "FrmFlexContract"
@@ -412,7 +415,7 @@ Partial Class FrmFlexContract
     Friend WithEvents pnlSearch As System.Windows.Forms.Panel
     Friend WithEvents tblSearch As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents lblUser As System.Windows.Forms.Label
-    Friend WithEvents txtUser As System.Windows.Forms.TextBox
+    Friend WithEvents cboUser As System.Windows.Forms.ComboBox
     Friend WithEvents lblContractNo As System.Windows.Forms.Label
     Friend WithEvents txtContractNo As System.Windows.Forms.TextBox
     Friend WithEvents btnSearch As System.Windows.Forms.Button

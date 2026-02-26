@@ -113,7 +113,7 @@ Partial Public Class FrmFlexContract
     ''' </summary>
     Private Sub SearchContracts()
         Try
-            Dim userFilter As String = txtUser.Text.Trim()
+            Dim userFilter As String = If(cboUser.SelectedItem IsNot Nothing, cboUser.SelectedItem.ToString(), "")
             Dim contractNoFilter As String = txtContractNo.Text.Trim()
 
             Using db As New CrudHelper()
