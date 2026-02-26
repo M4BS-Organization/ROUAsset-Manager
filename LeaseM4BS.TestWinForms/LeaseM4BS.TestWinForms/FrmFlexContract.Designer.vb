@@ -243,6 +243,7 @@ Partial Class FrmFlexContract
         Me.dgvContractList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Single
         Me.dgvContractList.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single
         Me.dgvContractList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvContractList.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single
         Me.dgvContractList.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {
             Me.colMgmtUnit, Me.colContractType, Me.colAccountTarget, Me.colPayee,
             Me.colContractNo, Me.colOwnMgmt, Me.colApprovalNo, Me.colReleaseCount,
@@ -251,7 +252,7 @@ Partial Class FrmFlexContract
             Me.colConsistency})
         Me.dgvContractList.Dock = System.Windows.Forms.DockStyle.Fill
         Me.dgvContractList.EnableHeadersVisualStyles = False
-        Me.dgvContractList.GridColor = System.Drawing.Color.FromArgb(CType(222, Integer), CType(226, Integer), CType(230, Integer))
+        Me.dgvContractList.GridColor = System.Drawing.Color.FromArgb(CType(180, Integer), CType(180, Integer), CType(180, Integer))
         Me.dgvContractList.Location = New System.Drawing.Point(6, 60)
         Me.dgvContractList.MultiSelect = False
         Me.dgvContractList.Name = "dgvContractList"
