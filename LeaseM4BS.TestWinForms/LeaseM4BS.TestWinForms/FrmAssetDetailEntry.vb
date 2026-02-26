@@ -412,7 +412,7 @@ Partial Public Class FrmAssetDetailEntry
                     If usefulLife >= numUsefulLife.Minimum AndAlso usefulLife <= numUsefulLife.Maximum Then
                         numUsefulLife.Value = usefulLife
                     End If
-                    If row("shunko_dt") IsNot DBNull.Value Then
+                    If row("shunko_dt") IsNot Nothing AndAlso Not IsDBNull(row("shunko_dt")) Then
                         dtpCompletion.Checked = True
                         dtpCompletion.Value = CDate(row("shunko_dt"))
                     Else

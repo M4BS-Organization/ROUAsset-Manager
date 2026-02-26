@@ -1,6 +1,9 @@
 -- d_asset: 資産情報テーブル
 CREATE TABLE IF NOT EXISTS d_asset (
     asset_id      SERIAL PRIMARY KEY,
+    account_class VARCHAR(50),
+    asset_no      VARCHAR(50),
+    quantity      INTEGER DEFAULT 1,
     bukken_nm     VARCHAR(200),
     shozaichi     VARCHAR(500),
     kukaku        VARCHAR(100),
