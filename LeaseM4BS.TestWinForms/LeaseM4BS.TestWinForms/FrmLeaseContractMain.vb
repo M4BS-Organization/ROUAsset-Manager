@@ -1794,7 +1794,7 @@ Public Class FrmLeaseContractMain
             frm.InitAssetNo = String.Format("ASSET-{0:D4}", _assetCounter)
             If frm.ShowDialog(Me) = DialogResult.OK Then
                 AddAssetRow(
-                    frm.AssetId,
+                    frm.AssetNo,
                     frm.AccountClass,
                     frm.PropertyName,
                     frm.Quantity.ToString(),
@@ -1805,7 +1805,7 @@ Public Class FrmLeaseContractMain
         End Using
     End Sub
 
-    Private Sub AddAssetRow(assetId As Integer, accountClass As String,
+    Private Sub AddAssetRow(assetNo As String, accountClass As String,
                             propertyName As String, quantity As String,
                             earlyTermination As Boolean,
                             cashPrice As String, monthlyLease As String)
@@ -1822,7 +1822,7 @@ Public Class FrmLeaseContractMain
 
         If emptyRowIndex >= 0 Then
             Dim row As DataGridViewRow = dgvAssets.Rows(emptyRowIndex)
-            row.Cells("AssetNo").Value = assetId.ToString()
+            row.Cells("AssetNo").Value = assetNo
             row.Cells("AccountClass").Value = accountClass
             row.Cells("PropertyName").Value = propertyName
             row.Cells("Quantity").Value = quantity
@@ -1832,7 +1832,7 @@ Public Class FrmLeaseContractMain
         Else
             dgvAssets.Rows.Add(
                 False,
-                assetId.ToString(),
+                assetNo,
                 accountClass,
                 propertyName,
                 quantity,

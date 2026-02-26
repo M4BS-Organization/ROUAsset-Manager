@@ -26,31 +26,48 @@ Partial Public Class FrmAssetDetailEntry
     Private numIBR As NumericUpDown
     Private lblAppliedRate As Label
 
-    Public ReadOnly Property PropertyName As String
+    Public Property PropertyName As String
         Get
             Return txtPropertyName.Text
         End Get
+        Set(value As String)
+            txtPropertyName.Text = value
+        End Set
     End Property
 
-    Public ReadOnly Property AccountClass As String
+    Public Property AccountClass As String
         Get
             If cmbAccountClass.SelectedItem IsNot Nothing Then
                 Return cmbAccountClass.SelectedItem.ToString()
             End If
             Return ""
         End Get
+        Set(value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                Dim idx As Integer = cmbAccountClass.FindStringExact(value)
+                If idx >= 0 Then cmbAccountClass.SelectedIndex = idx
+            End If
+        End Set
     End Property
 
-    Public ReadOnly Property AssetNo As String
+    Public Property AssetNo As String
         Get
             Return txtAssetNo.Text
         End Get
+        Set(value As String)
+            txtAssetNo.Text = value
+        End Set
     End Property
 
-    Public ReadOnly Property Quantity As Integer
+    Public Property Quantity As Integer
         Get
             Return CInt(numQuantity.Value)
         End Get
+        Set(value As Integer)
+            If value >= numQuantity.Minimum AndAlso value <= numQuantity.Maximum Then
+                numQuantity.Value = value
+            End If
+        End Set
     End Property
 
     Public ReadOnly Property CashPrice As String
