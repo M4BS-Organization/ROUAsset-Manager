@@ -32,7 +32,7 @@ Namespace My
         
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Global.LeaseM4BS.TestWinForms.FrmLeaseContractMain
+            Me.MainForm = Global.LeaseM4BS.TestWinForms.FrmFlexMenu
         End Sub
         
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
