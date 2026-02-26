@@ -23,7 +23,13 @@ Partial Class FrmFlexContract
         Me.lblContractNo = New System.Windows.Forms.Label()
         Me.txtContractNo = New System.Windows.Forms.TextBox()
         Me.btnSearch = New System.Windows.Forms.Button()
+        Me.grpContractFlex = New System.Windows.Forms.GroupBox()
         Me.dgvContractList = New System.Windows.Forms.DataGridView()
+        Me.pnlButtons = New System.Windows.Forms.Panel()
+        Me.flowButtons = New System.Windows.Forms.FlowLayoutPanel()
+        Me.btnInquiry = New System.Windows.Forms.Button()
+        Me.btnEdit = New System.Windows.Forms.Button()
+        Me.btnNewEntry = New System.Windows.Forms.Button()
         Me.colMgmtUnit = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colContractType = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colAccountTarget = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -43,7 +49,10 @@ Partial Class FrmFlexContract
         Me.colConsistency = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlSearch.SuspendLayout()
         Me.tblSearch.SuspendLayout()
+        Me.grpContractFlex.SuspendLayout()
         CType(Me.dgvContractList, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.pnlButtons.SuspendLayout()
+        Me.flowButtons.SuspendLayout()
         Me.SuspendLayout()
         '
         ' pnlSearch
@@ -137,6 +146,91 @@ Partial Class FrmFlexContract
         Me.btnSearch.Text = "検索"
         Me.btnSearch.UseVisualStyleBackColor = False
         '
+        ' grpContractFlex
+        '
+        Me.grpContractFlex.BackColor = System.Drawing.Color.White
+        Me.grpContractFlex.Controls.Add(Me.dgvContractList)
+        Me.grpContractFlex.Controls.Add(Me.pnlButtons)
+        Me.grpContractFlex.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.grpContractFlex.Font = New System.Drawing.Font("Meiryo", 10.0F, System.Drawing.FontStyle.Bold)
+        Me.grpContractFlex.ForeColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(51, Integer), CType(102, Integer))
+        Me.grpContractFlex.Location = New System.Drawing.Point(0, 50)
+        Me.grpContractFlex.Margin = New System.Windows.Forms.Padding(0, 0, 0, 8)
+        Me.grpContractFlex.Name = "grpContractFlex"
+        Me.grpContractFlex.Padding = New System.Windows.Forms.Padding(6, 12, 6, 6)
+        Me.grpContractFlex.Size = New System.Drawing.Size(1200, 550)
+        Me.grpContractFlex.TabIndex = 1
+        Me.grpContractFlex.TabStop = False
+        Me.grpContractFlex.Text = "契約書フレックス"
+        '
+        ' pnlButtons
+        '
+        Me.pnlButtons.Controls.Add(Me.flowButtons)
+        Me.pnlButtons.Dock = System.Windows.Forms.DockStyle.Top
+        Me.pnlButtons.Location = New System.Drawing.Point(6, 24)
+        Me.pnlButtons.Name = "pnlButtons"
+        Me.pnlButtons.Padding = New System.Windows.Forms.Padding(0, 2, 0, 2)
+        Me.pnlButtons.Size = New System.Drawing.Size(1188, 36)
+        Me.pnlButtons.TabIndex = 0
+        '
+        ' flowButtons
+        '
+        Me.flowButtons.Controls.Add(Me.btnNewEntry)
+        Me.flowButtons.Controls.Add(Me.btnEdit)
+        Me.flowButtons.Controls.Add(Me.btnInquiry)
+        Me.flowButtons.Dock = System.Windows.Forms.DockStyle.Right
+        Me.flowButtons.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft
+        Me.flowButtons.Location = New System.Drawing.Point(888, 2)
+        Me.flowButtons.Name = "flowButtons"
+        Me.flowButtons.Size = New System.Drawing.Size(300, 32)
+        Me.flowButtons.TabIndex = 0
+        Me.flowButtons.WrapContents = False
+        '
+        ' btnNewEntry
+        '
+        Me.btnNewEntry.BackColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(123, Integer), CType(255, Integer))
+        Me.btnNewEntry.FlatAppearance.BorderSize = 0
+        Me.btnNewEntry.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnNewEntry.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.btnNewEntry.ForeColor = System.Drawing.Color.White
+        Me.btnNewEntry.Location = New System.Drawing.Point(4, 0)
+        Me.btnNewEntry.Margin = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.btnNewEntry.Name = "btnNewEntry"
+        Me.btnNewEntry.Size = New System.Drawing.Size(100, 28)
+        Me.btnNewEntry.TabIndex = 0
+        Me.btnNewEntry.Text = "新規登録"
+        Me.btnNewEntry.UseVisualStyleBackColor = False
+        '
+        ' btnEdit
+        '
+        Me.btnEdit.BackColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(123, Integer), CType(255, Integer))
+        Me.btnEdit.FlatAppearance.BorderSize = 0
+        Me.btnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnEdit.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.btnEdit.ForeColor = System.Drawing.Color.White
+        Me.btnEdit.Location = New System.Drawing.Point(108, 0)
+        Me.btnEdit.Margin = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.btnEdit.Name = "btnEdit"
+        Me.btnEdit.Size = New System.Drawing.Size(90, 28)
+        Me.btnEdit.TabIndex = 1
+        Me.btnEdit.Text = "変更"
+        Me.btnEdit.UseVisualStyleBackColor = False
+        '
+        ' btnInquiry
+        '
+        Me.btnInquiry.BackColor = System.Drawing.Color.FromArgb(CType(0, Integer), CType(123, Integer), CType(255, Integer))
+        Me.btnInquiry.FlatAppearance.BorderSize = 0
+        Me.btnInquiry.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnInquiry.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.btnInquiry.ForeColor = System.Drawing.Color.White
+        Me.btnInquiry.Location = New System.Drawing.Point(204, 0)
+        Me.btnInquiry.Margin = New System.Windows.Forms.Padding(0, 0, 4, 0)
+        Me.btnInquiry.Name = "btnInquiry"
+        Me.btnInquiry.Size = New System.Drawing.Size(90, 28)
+        Me.btnInquiry.TabIndex = 2
+        Me.btnInquiry.Text = "照会"
+        Me.btnInquiry.UseVisualStyleBackColor = False
+        '
         ' dgvContractList
         '
         Me.dgvContractList.AllowUserToAddRows = False
@@ -156,14 +250,14 @@ Partial Class FrmFlexContract
         Me.dgvContractList.Dock = System.Windows.Forms.DockStyle.Fill
         Me.dgvContractList.EnableHeadersVisualStyles = False
         Me.dgvContractList.GridColor = System.Drawing.Color.FromArgb(CType(222, Integer), CType(226, Integer), CType(230, Integer))
-        Me.dgvContractList.Location = New System.Drawing.Point(0, 50)
+        Me.dgvContractList.Location = New System.Drawing.Point(6, 60)
         Me.dgvContractList.MultiSelect = False
         Me.dgvContractList.Name = "dgvContractList"
         Me.dgvContractList.ReadOnly = True
         Me.dgvContractList.RowHeadersVisible = False
         Me.dgvContractList.ScrollBars = System.Windows.Forms.ScrollBars.Both
         Me.dgvContractList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
-        Me.dgvContractList.Size = New System.Drawing.Size(1200, 550)
+        Me.dgvContractList.Size = New System.Drawing.Size(1188, 484)
         Me.dgvContractList.TabIndex = 1
         '
         ' colMgmtUnit
@@ -301,14 +395,17 @@ Partial Class FrmFlexContract
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0F, 15.0F)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
-        Me.Controls.Add(Me.dgvContractList)
+        Me.Controls.Add(Me.grpContractFlex)
         Me.Controls.Add(Me.pnlSearch)
         Me.Name = "FrmFlexContract"
         Me.Size = New System.Drawing.Size(1200, 600)
         Me.pnlSearch.ResumeLayout(False)
         Me.tblSearch.ResumeLayout(False)
         Me.tblSearch.PerformLayout()
+        Me.grpContractFlex.ResumeLayout(False)
         CType(Me.dgvContractList, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.pnlButtons.ResumeLayout(False)
+        Me.flowButtons.ResumeLayout(False)
         Me.ResumeLayout(False)
     End Sub
 
@@ -319,7 +416,13 @@ Partial Class FrmFlexContract
     Friend WithEvents lblContractNo As System.Windows.Forms.Label
     Friend WithEvents txtContractNo As System.Windows.Forms.TextBox
     Friend WithEvents btnSearch As System.Windows.Forms.Button
+    Friend WithEvents grpContractFlex As System.Windows.Forms.GroupBox
     Friend WithEvents dgvContractList As System.Windows.Forms.DataGridView
+    Friend WithEvents pnlButtons As System.Windows.Forms.Panel
+    Friend WithEvents flowButtons As System.Windows.Forms.FlowLayoutPanel
+    Friend WithEvents btnInquiry As System.Windows.Forms.Button
+    Friend WithEvents btnEdit As System.Windows.Forms.Button
+    Friend WithEvents btnNewEntry As System.Windows.Forms.Button
     Friend WithEvents colMgmtUnit As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colContractType As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colAccountTarget As System.Windows.Forms.DataGridViewTextBoxColumn

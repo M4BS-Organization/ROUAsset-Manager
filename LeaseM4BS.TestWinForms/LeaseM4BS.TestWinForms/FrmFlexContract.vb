@@ -12,9 +12,14 @@ Imports Npgsql
 Partial Public Class FrmFlexContract
 
     Private ReadOnly CLR_HEADER As Color = Color.FromArgb(0, 51, 102)
+    Private ReadOnly CLR_CARD As Color = Color.White
     Private ReadOnly CLR_LABEL As Color = Color.FromArgb(73, 80, 87)
     Private ReadOnly CLR_TEXT As Color = Color.FromArgb(33, 37, 41)
     Private ReadOnly CLR_BORDER As Color = Color.FromArgb(222, 226, 230)
+    Private ReadOnly CLR_ACCENT As Color = Color.FromArgb(0, 123, 255)
+
+    Private ReadOnly FNT_LABEL As New Font("Meiryo", 9.0F, FontStyle.Bold)
+    Private ReadOnly FNT_SECTION As New Font("Meiryo", 10.0F, FontStyle.Bold)
 
     Public Sub New()
         InitializeComponent()
@@ -48,6 +53,60 @@ Partial Public Class FrmFlexContract
     Private Sub btnSearch_Click(sender As Object, e As EventArgs) Handles btnSearch.Click
         SearchContracts()
     End Sub
+
+    ''' <summary>
+    ''' 新規登録ボタンクリック時の処理
+    ''' FrmLeaseContractMain を新規作成モードで開く
+    ''' </summary>
+    Private Sub btnNewEntry_Click(sender As Object, e As EventArgs) Handles btnNewEntry.Click
+        OpenContractMain("", ContractOpenMode.NewEntry)
+    End Sub
+
+    ''' <summary>
+    ''' 変更ボタンクリック時の処理
+    ''' グリッドで選択されている行の契約番号を取得し、FrmLeaseContractMain を編集モードで開く
+    ''' </summary>
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+        Dim contractNo As String = GetSelectedContractNo()
+        If String.IsNullOrEmpty(contractNo) Then
+            MessageBox.Show(
+                "変更する契約を一覧から選択してください。",
+                "選択エラー",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning)
+            Return
+        End If
+        OpenContractMain(contractNo, ContractOpenMode.Edit)
+    End Sub
+
+    ''' <summary>
+    ''' 照会ボタンクリック時の処理
+    ''' グリッドで選択されている行の契約番号を取得し、FrmLeaseContractMain を読み取り専用モードで開く
+    ''' </summary>
+    Private Sub btnInquiry_Click(sender As Object, e As EventArgs) Handles btnInquiry.Click
+        Dim contractNo As String = GetSelectedContractNo()
+        If String.IsNullOrEmpty(contractNo) Then
+            MessageBox.Show(
+                "照会する契約を一覧から選択してください。",
+                "選択エラー",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning)
+            Return
+        End If
+        OpenContractMain(contractNo, ContractOpenMode.Inquiry)
+    End Sub
+
+    ''' <summary>
+    ''' グリッドで選択されている行の契約番号を取得する
+    ''' </summary>
+    Private Function GetSelectedContractNo() As String
+        If dgvContractList.SelectedRows.Count = 0 Then Return ""
+        Dim row As DataGridViewRow = dgvContractList.SelectedRows(0)
+        If row.Cells("colContractNo").Value IsNot Nothing Then
+            Return row.Cells("colContractNo").Value.ToString()
+        End If
+        Return ""
+    End Function
 
     ''' <summary>
     ''' 検索条件に基づいて契約一覧を取得・表示する
@@ -169,7 +228,7 @@ Partial Public Class FrmFlexContract
     End Function
 
     ''' <summary>
-    ''' グリッド行ダブルクリック時に FrmLeaseContractMain を開く
+    ''' グリッド行ダブルクリック時に FrmLeaseContractMain を編集モードで開く
     ''' </summary>
     Private Sub dgvContractList_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvContractList.CellDoubleClick
         If e.RowIndex < 0 Then Return
@@ -180,17 +239,29 @@ Partial Public Class FrmFlexContract
             contractNo = row.Cells("colContractNo").Value.ToString()
         End If
 
-        OpenContractMain(contractNo)
+        OpenContractMain(contractNo, ContractOpenMode.Edit)
     End Sub
 
     ''' <summary>
-    ''' FrmLeaseContractMain を開く
+    ''' FrmLeaseContractMain を指定モードで開く
     ''' </summary>
-    Private Sub OpenContractMain(contractNo As String)
+    Private Sub OpenContractMain(contractNo As String, mode As ContractOpenMode)
         Try
             Dim frm As New FrmLeaseContractMain()
-            frm.Text = "新リース会計対応 リース契約管理 - " & contractNo
-            frm.Tag = contractNo
+
+            Select Case mode
+                Case ContractOpenMode.NewEntry
+                    frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
+                    frm.Tag = ""
+                Case ContractOpenMode.Edit
+                    frm.Text = "新リース会計対応 リース契約管理 - " & contractNo
+                    frm.Tag = contractNo
+                Case ContractOpenMode.Inquiry
+                    frm.Text = "新リース会計対応 リース契約管理 - 照会 - " & contractNo
+                    frm.Tag = contractNo
+                    ' TODO: 将来的に ReadOnly モードの制御を追加
+            End Select
+
             frm.Show()
         Catch ex As Exception
             MessageBox.Show(
@@ -200,5 +271,17 @@ Partial Public Class FrmFlexContract
                 MessageBoxIcon.Error)
         End Try
     End Sub
+
+    ''' <summary>
+    ''' 契約画面の表示モード
+    ''' </summary>
+    Private Enum ContractOpenMode
+        ''' <summary>新規登録</summary>
+        NewEntry
+        ''' <summary>変更（編集）</summary>
+        Edit
+        ''' <summary>照会（読み取り専用）</summary>
+        Inquiry
+    End Enum
 
 End Class
