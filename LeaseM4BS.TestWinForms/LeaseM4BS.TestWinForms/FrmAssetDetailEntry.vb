@@ -515,8 +515,23 @@ Partial Public Class FrmAssetDetailEntry
     End Sub
 
     Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+        ' --- 入力バリデーション ---
+        If cmbAccountClass.SelectedIndex < 0 Then
+            MessageBox.Show("計上区分を選択してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            cmbAccountClass.Focus()
+            Return
+        End If
+
+        If String.IsNullOrWhiteSpace(txtAssetNo.Text) Then
+            MessageBox.Show("資産番号を入力してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtAssetNo.Focus()
+            Return
+        End If
+
         If String.IsNullOrWhiteSpace(txtPropertyName.Text) Then
-            MessageBox.Show("物件名を入力してください。", "入力エラー",
+            MessageBox.Show("資産名（物件名）を入力してください。", "入力エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning)
             txtPropertyName.Focus()
             Return

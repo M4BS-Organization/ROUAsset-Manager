@@ -1795,9 +1795,9 @@ Public Class FrmLeaseContractMain
             If frm.ShowDialog(Me) = DialogResult.OK Then
                 AddAssetRow(
                     frm.AssetId,
-                    "",
+                    frm.AccountClass,
                     frm.PropertyName,
-                    "1",
+                    frm.Quantity.ToString(),
                     False,
                     frm.CashPrice,
                     frm.MonthlyLease)
