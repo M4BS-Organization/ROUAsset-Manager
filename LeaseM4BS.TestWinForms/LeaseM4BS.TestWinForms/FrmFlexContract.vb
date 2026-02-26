@@ -21,6 +21,21 @@ Partial Public Class FrmFlexContract
     Private ReadOnly FNT_LABEL As New Font("Meiryo", 9.0F, FontStyle.Bold)
     Private ReadOnly FNT_SECTION As New Font("Meiryo", 10.0F, FontStyle.Bold)
 
+    ''' <summary>
+    ''' 契約番号の自動採番用カウンタ
+    ''' </summary>
+    Private Shared _contractCounter As Integer = 0
+
+    ''' <summary>
+    ''' 管理番号の自動採番用カウンタ
+    ''' </summary>
+    Private Shared _managementCounter As Integer = 0
+
+    ''' <summary>
+    ''' 稟議番号の自動採番用カウンタ
+    ''' </summary>
+    Private Shared _approvalCounter As Integer = 0
+
     Public Sub New()
         InitializeComponent()
         ApplyGridStyles()
@@ -251,6 +266,13 @@ Partial Public Class FrmFlexContract
 
             Select Case mode
                 Case ContractOpenMode.NewEntry
+                    ' 新規登録時: 各番号を自動採番してセット
+                    _contractCounter += 1
+                    _managementCounter += 1
+                    _approvalCounter += 1
+                    frm.InitContractNo = String.Format("LC-{0}-{1:D4}", Date.Now.Year, _contractCounter)
+                    frm.InitManagementNo = String.Format("MGMT-{0}-{1:D4}", Date.Now.Year, _managementCounter)
+                    frm.InitApprovalNo = String.Format("APP-{0}-{1:D4}", Date.Now.Year, _approvalCounter)
                     frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
                     frm.Tag = ""
                 Case ContractOpenMode.Edit

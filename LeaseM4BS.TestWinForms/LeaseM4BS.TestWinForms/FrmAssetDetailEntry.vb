@@ -10,6 +10,11 @@ Partial Public Class FrmAssetDetailEntry
     Public Property AssetId As Integer = 0
     Public Property IsReadOnly As Boolean = False
 
+    ''' <summary>
+    ''' 新規登録時に外部から設定される資産番号（自動採番値）
+    ''' </summary>
+    Public Property InitAssetNo As String = ""
+
     ' 月次明細タブ用コントロール
     Private dgvMonthlyPayments As DataGridView
     Private lblMonthlyTotalExTax As Label
@@ -67,9 +72,11 @@ Partial Public Class FrmAssetDetailEntry
             cmbAccountClass.SelectedIndex = 0
         End If
 
-        ' 資産番号が設定済みなら表示
+        ' 資産番号の初期表示: 既存資産IDがあればその値、なければ自動採番値を表示
         If AssetId > 0 Then
             txtAssetNo.Text = AssetId.ToString()
+        ElseIf Not String.IsNullOrEmpty(InitAssetNo) Then
+            txtAssetNo.Text = InitAssetNo
         End If
 
         If AssetId > 0 Then
