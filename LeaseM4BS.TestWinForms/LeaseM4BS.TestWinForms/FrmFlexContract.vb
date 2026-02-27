@@ -39,6 +39,7 @@ Partial Public Class FrmFlexContract
     Public Sub New()
         InitializeComponent()
         ApplyGridStyles()
+        LoadSampleData()
     End Sub
 
     ''' <summary>
@@ -60,6 +61,44 @@ Partial Public Class FrmFlexContract
         dgvContractList.AlternatingRowsDefaultCellStyle = New DataGridViewCellStyle() With {
             .BackColor = Color.FromArgb(248, 249, 250)
         }
+    End Sub
+
+    ''' <summary>
+    ''' DBデータが未格納の状態でも一覧にサンプル行を表示する
+    ''' </summary>
+    Private Sub LoadSampleData()
+        dgvContractList.Rows.Clear()
+
+        ' サンプルデータ（5行）
+        Dim sampleData()() As String = {
+            New String() {"本社", "新規", "対象", "ABC不動産", "LC-2025-0001", "MGR-001", "APP-2025-0001", "0", "本社ビル賃貸借契約", "2025/04/01", "2030/03/31", "60", "50,000,000", "800,000", "3", "2025/03/15 10:30", "○"},
+            New String() {"本社", "新規", "対象", "XYZ設備リース", "LC-2025-0002", "MGR-002", "APP-2025-0002", "0", "複合機リース契約", "2025/04/01", "2029/03/31", "48", "3,600,000", "75,000", "5", "2025/03/15 11:00", "○"},
+            New String() {"大阪支店", "新規", "対象", "DEFモータース", "LC-2025-0003", "MGR-003", "APP-2025-0003", "0", "社用車リース契約", "2025/05/01", "2028/04/30", "36", "4,800,000", "133,333", "2", "2025/03/20 09:15", "○"},
+            New String() {"本社", "更新", "対象", "GHIテクノロジー", "LC-2025-0004", "MGR-004", "APP-2025-0004", "1", "サーバー機器リース", "2025/06/01", "2030/05/31", "60", "12,000,000", "200,000", "10", "2025/04/01 14:00", "―"},
+            New String() {"名古屋支店", "新規", "除外", "JKLプロパティ", "LC-2025-0005", "MGR-005", "APP-2025-0005", "0", "倉庫賃貸借契約", "2025/07/01", "2035/06/30", "120", "80,000,000", "666,667", "1", "2025/05/10 16:45", "○"}
+        }
+
+        For Each rowData As String() In sampleData
+            Dim rowIndex As Integer = dgvContractList.Rows.Add()
+            Dim dgvRow As DataGridViewRow = dgvContractList.Rows(rowIndex)
+            dgvRow.Cells("colMgmtUnit").Value = rowData(0)
+            dgvRow.Cells("colContractType").Value = rowData(1)
+            dgvRow.Cells("colAccountTarget").Value = rowData(2)
+            dgvRow.Cells("colPayee").Value = rowData(3)
+            dgvRow.Cells("colContractNo").Value = rowData(4)
+            dgvRow.Cells("colOwnMgmt").Value = rowData(5)
+            dgvRow.Cells("colApprovalNo").Value = rowData(6)
+            dgvRow.Cells("colReleaseCount").Value = rowData(7)
+            dgvRow.Cells("colContractName").Value = rowData(8)
+            dgvRow.Cells("colStartDate").Value = rowData(9)
+            dgvRow.Cells("colEndDate").Value = rowData(10)
+            dgvRow.Cells("colContractPeriod").Value = rowData(11)
+            dgvRow.Cells("colCashPrice").Value = rowData(12)
+            dgvRow.Cells("colMonthlyLease").Value = rowData(13)
+            dgvRow.Cells("colAssetQty").Value = rowData(14)
+            dgvRow.Cells("colUpdateDate").Value = rowData(15)
+            dgvRow.Cells("colConsistency").Value = rowData(16)
+        Next
     End Sub
 
     ''' <summary>
