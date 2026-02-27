@@ -1,3 +1,41 @@
+-- tw_m_user: ユーザーマスタテーブル
+CREATE TABLE IF NOT EXISTS tw_m_user (
+    user_id       INTEGER PRIMARY KEY,
+    user_name     VARCHAR(100),
+    user_kana     VARCHAR(100),
+    create_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- td_sisn: 契約（リース試算）トランザクションテーブル
+CREATE TABLE IF NOT EXISTS td_sisn (
+    sisn_id       SERIAL PRIMARY KEY,
+    knrtni        VARCHAR(50),
+    kykkbn        VARCHAR(50),
+    kjotis        VARCHAR(50),
+    shrsk         VARCHAR(200),
+    kykno         VARCHAR(50) UNIQUE,
+    jshknr        VARCHAR(50),
+    rngno         VARCHAR(50),
+    srsks         INTEGER DEFAULT 0,
+    kyknm         VARCHAR(200),
+    kisymd        DATE,
+    syrymd        DATE,
+    kykkk         INTEGER,
+    gnknkngk      DECIMAL(18,2),
+    gtkrsry       DECIMAL(18,2),
+    ssnsry        INTEGER,
+    sigo          VARCHAR(10),
+    updusrid      VARCHAR(50),
+    updusrnm      VARCHAR(100),
+    insid         VARCHAR(50),
+    insnm         VARCHAR(100),
+    kosnid        VARCHAR(50),
+    kosnnm        VARCHAR(100),
+    insdt         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    kosndt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- d_asset: 資産情報テーブル
 CREATE TABLE IF NOT EXISTS d_asset (
     asset_id      SERIAL PRIMARY KEY,
