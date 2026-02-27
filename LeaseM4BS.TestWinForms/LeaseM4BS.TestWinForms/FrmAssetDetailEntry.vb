@@ -10,6 +10,11 @@ Partial Public Class FrmAssetDetailEntry
     Public Property AssetId As Integer = 0
     Public Property IsReadOnly As Boolean = False
 
+    ''' <summary>
+    ''' 新規登録時に外部から設定される資産番号（自動採番値）
+    ''' </summary>
+    Public Property InitAssetNo As String = ""
+
     ' 月次明細タブ用コントロール
     Private dgvMonthlyPayments As DataGridView
     Private lblMonthlyTotalExTax As Label
@@ -21,31 +26,48 @@ Partial Public Class FrmAssetDetailEntry
     Private numIBR As NumericUpDown
     Private lblAppliedRate As Label
 
-    Public ReadOnly Property PropertyName As String
+    Public Property PropertyName As String
         Get
             Return txtPropertyName.Text
         End Get
+        Set(value As String)
+            txtPropertyName.Text = value
+        End Set
     End Property
 
-    Public ReadOnly Property AccountClass As String
+    Public Property AccountClass As String
         Get
             If cmbAccountClass.SelectedItem IsNot Nothing Then
                 Return cmbAccountClass.SelectedItem.ToString()
             End If
             Return ""
         End Get
+        Set(value As String)
+            If Not String.IsNullOrEmpty(value) Then
+                Dim idx As Integer = cmbAccountClass.FindStringExact(value)
+                If idx >= 0 Then cmbAccountClass.SelectedIndex = idx
+            End If
+        End Set
     End Property
 
-    Public ReadOnly Property AssetNo As String
+    Public Property AssetNo As String
         Get
             Return txtAssetNo.Text
         End Get
+        Set(value As String)
+            txtAssetNo.Text = value
+        End Set
     End Property
 
-    Public ReadOnly Property Quantity As Integer
+    Public Property Quantity As Integer
         Get
             Return CInt(numQuantity.Value)
         End Get
+        Set(value As Integer)
+            If value >= numQuantity.Minimum AndAlso value <= numQuantity.Maximum Then
+                numQuantity.Value = value
+            End If
+        End Set
     End Property
 
     Public ReadOnly Property CashPrice As String
@@ -67,9 +89,11 @@ Partial Public Class FrmAssetDetailEntry
             cmbAccountClass.SelectedIndex = 0
         End If
 
-        ' 資産番号が設定済みなら表示
+        ' 資産番号の初期表示: 既存資産IDがあればその値、なければ自動採番値を表示
         If AssetId > 0 Then
             txtAssetNo.Text = AssetId.ToString()
+        ElseIf Not String.IsNullOrEmpty(InitAssetNo) Then
+            txtAssetNo.Text = InitAssetNo
         End If
 
         If AssetId > 0 Then
@@ -405,7 +429,7 @@ Partial Public Class FrmAssetDetailEntry
                     If usefulLife >= numUsefulLife.Minimum AndAlso usefulLife <= numUsefulLife.Maximum Then
                         numUsefulLife.Value = usefulLife
                     End If
-                    If row("shunko_dt") IsNot DBNull.Value Then
+                    If row("shunko_dt") IsNot Nothing AndAlso Not IsDBNull(row("shunko_dt")) Then
                         dtpCompletion.Checked = True
                         dtpCompletion.Value = CDate(row("shunko_dt"))
                     Else
@@ -508,8 +532,23 @@ Partial Public Class FrmAssetDetailEntry
     End Sub
 
     Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+        ' --- 入力バリデーション ---
+        If cmbAccountClass.SelectedIndex < 0 Then
+            MessageBox.Show("計上区分を選択してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            cmbAccountClass.Focus()
+            Return
+        End If
+
+        If String.IsNullOrWhiteSpace(txtAssetNo.Text) Then
+            MessageBox.Show("資産番号を入力してください。", "入力エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtAssetNo.Focus()
+            Return
+        End If
+
         If String.IsNullOrWhiteSpace(txtPropertyName.Text) Then
-            MessageBox.Show("物件名を入力してください。", "入力エラー",
+            MessageBox.Show("資産名（物件名）を入力してください。", "入力エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning)
             txtPropertyName.Focus()
             Return

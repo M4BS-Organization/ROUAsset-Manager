@@ -21,6 +21,26 @@ Public Class FrmLeaseContractMain
     Private _defaultTaxRate As Decimal = 0.10D
     Private _tooltipProvider As ToolTip
 
+    ''' <summary>
+    ''' 新規登録時に外部から設定される契約番号（自動採番値）
+    ''' </summary>
+    Public Property InitContractNo As String = ""
+
+    ''' <summary>
+    ''' 新規登録時に外部から設定される管理番号（自動採番値）
+    ''' </summary>
+    Public Property InitManagementNo As String = ""
+
+    ''' <summary>
+    ''' 新規登録時に外部から設定される稟議番号（自動採番値）
+    ''' </summary>
+    Public Property InitApprovalNo As String = ""
+
+    ''' <summary>
+    ''' 資産番号の自動採番用カウンタ
+    ''' </summary>
+    Private Shared _assetCounter As Integer = 0
+
     Private pnlHeader As Panel
     Private pnlBody As Panel
     Private tabMain As TabControl
@@ -151,9 +171,26 @@ Public Class FrmLeaseContractMain
         _fontResultReason = New Font("Meiryo", 9.0F)
 
         BuildUI()
+        ApplyInitialValues()
 
         _isLoaded = True
         RecalcAll()
+    End Sub
+
+    ''' <summary>
+    ''' 外部から設定された初期値（自動採番値）をコントロールに反映する。
+    ''' 新規登録モード時のみ値が設定される。編集・照会モードでは空文字のため上書きしない。
+    ''' </summary>
+    Private Sub ApplyInitialValues()
+        If Not String.IsNullOrEmpty(InitContractNo) Then
+            txtContractNo.Text = InitContractNo
+        End If
+        If Not String.IsNullOrEmpty(InitManagementNo) Then
+            txtManagementNo.Text = InitManagementNo
+        End If
+        If Not String.IsNullOrEmpty(InitApprovalNo) Then
+            txtApprovalNo.Text = InitApprovalNo
+        End If
     End Sub
 
     Private Sub BuildUI()
@@ -1752,12 +1789,15 @@ Public Class FrmLeaseContractMain
 
     Private Sub OnAssetNewClick(sender As Object, e As EventArgs)
         Using frm As New FrmAssetDetailEntry()
+            ' 資産番号の自動採番
+            _assetCounter += 1
+            frm.InitAssetNo = String.Format("ASSET-{0:D4}", _assetCounter)
             If frm.ShowDialog(Me) = DialogResult.OK Then
                 AddAssetRow(
-                    frm.AssetId,
-                    "",
+                    frm.AssetNo,
+                    frm.AccountClass,
                     frm.PropertyName,
-                    "1",
+                    frm.Quantity.ToString(),
                     False,
                     frm.CashPrice,
                     frm.MonthlyLease)
@@ -1765,7 +1805,7 @@ Public Class FrmLeaseContractMain
         End Using
     End Sub
 
-    Private Sub AddAssetRow(assetId As Integer, accountClass As String,
+    Private Sub AddAssetRow(assetNo As String, accountClass As String,
                             propertyName As String, quantity As String,
                             earlyTermination As Boolean,
                             cashPrice As String, monthlyLease As String)
@@ -1782,7 +1822,7 @@ Public Class FrmLeaseContractMain
 
         If emptyRowIndex >= 0 Then
             Dim row As DataGridViewRow = dgvAssets.Rows(emptyRowIndex)
-            row.Cells("AssetNo").Value = assetId.ToString()
+            row.Cells("AssetNo").Value = assetNo
             row.Cells("AccountClass").Value = accountClass
             row.Cells("PropertyName").Value = propertyName
             row.Cells("Quantity").Value = quantity
@@ -1792,7 +1832,7 @@ Public Class FrmLeaseContractMain
         Else
             dgvAssets.Rows.Add(
                 False,
-                assetId.ToString(),
+                assetNo,
                 accountClass,
                 propertyName,
                 quantity,
