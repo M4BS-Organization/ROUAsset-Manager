@@ -171,20 +171,20 @@ Partial Public Class FrmFlexContract
             Dim contractNoFilter As String = txtContractNo.Text.Trim()
 
             Using db As New CrudHelper()
-                Dim sql As String = "SELECT * FROM td_sisn WHERE 1=1"
+                Dim sql As String = "SELECT * FROM d_asset WHERE 1=1"
                 Dim parameters As New List(Of NpgsqlParameter)()
 
                 If Not String.IsNullOrEmpty(userFilter) Then
-                    sql &= " AND (updusrnm LIKE @user OR updusrid LIKE @user)"
+                    sql &= " AND (upd_user_nm LIKE @user OR upd_user_id LIKE @user)"
                     parameters.Add(New NpgsqlParameter("@user", "%" & userFilter & "%"))
                 End If
 
                 If Not String.IsNullOrEmpty(contractNoFilter) Then
-                    sql &= " AND kykno LIKE @contractNo"
+                    sql &= " AND contract_no LIKE @contractNo"
                     parameters.Add(New NpgsqlParameter("@contractNo", "%" & contractNoFilter & "%"))
                 End If
 
-                sql &= " ORDER BY kykno"
+                sql &= " ORDER BY contract_no"
 
                 Dim dt As DataTable = db.GetDataTable(sql, parameters)
                 BindDataToGrid(dt)
@@ -209,23 +209,24 @@ Partial Public Class FrmFlexContract
             Dim rowIndex As Integer = dgvContractList.Rows.Add()
             Dim dgvRow As DataGridViewRow = dgvContractList.Rows(rowIndex)
 
-            dgvRow.Cells("colMgmtUnit").Value = SafeValue(row, "knrtni")
-            dgvRow.Cells("colContractType").Value = SafeValue(row, "kykkbn")
-            dgvRow.Cells("colAccountTarget").Value = SafeValue(row, "kjotis")
-            dgvRow.Cells("colPayee").Value = SafeValue(row, "shrsk")
-            dgvRow.Cells("colContractNo").Value = SafeValue(row, "kykno")
-            dgvRow.Cells("colOwnMgmt").Value = SafeValue(row, "jshknr")
-            dgvRow.Cells("colApprovalNo").Value = SafeValue(row, "rngno")
-            dgvRow.Cells("colReleaseCount").Value = SafeValue(row, "srsks")
-            dgvRow.Cells("colContractName").Value = SafeValue(row, "kyknm")
-            dgvRow.Cells("colStartDate").Value = SafeDateValue(row, "kisymd")
-            dgvRow.Cells("colEndDate").Value = SafeDateValue(row, "syrymd")
-            dgvRow.Cells("colContractPeriod").Value = SafeValue(row, "kykkk")
-            dgvRow.Cells("colCashPrice").Value = SafeDecimalValue(row, "gnknkngk")
-            dgvRow.Cells("colMonthlyLease").Value = SafeDecimalValue(row, "gtkrsry")
-            dgvRow.Cells("colAssetQty").Value = SafeValue(row, "ssnsry")
-            dgvRow.Cells("colUpdateDate").Value = SafeDateTimeValue(row, "kosndt")
-            dgvRow.Cells("colConsistency").Value = SafeValue(row, "sigo")
+            ' カラムマッピング: 旧 td_sisn → 新 d_asset
+            dgvRow.Cells("colMgmtUnit").Value = SafeValue(row, "mgmt_unit")           ' knrtni → mgmt_unit
+            dgvRow.Cells("colContractType").Value = SafeValue(row, "contract_type")   ' kykkbn → contract_type
+            dgvRow.Cells("colAccountTarget").Value = SafeValue(row, "acct_target")    ' kjotis → acct_target
+            dgvRow.Cells("colPayee").Value = SafeValue(row, "payee")                  ' shrsk → payee
+            dgvRow.Cells("colContractNo").Value = SafeValue(row, "contract_no")       ' kykno → contract_no
+            dgvRow.Cells("colOwnMgmt").Value = SafeValue(row, "own_mgmt")             ' jshknr → own_mgmt
+            dgvRow.Cells("colApprovalNo").Value = SafeValue(row, "approval_no")       ' rngno → approval_no
+            dgvRow.Cells("colReleaseCount").Value = SafeValue(row, "re_lease_cnt")    ' srsks → re_lease_cnt
+            dgvRow.Cells("colContractName").Value = SafeValue(row, "contract_nm")     ' kyknm → contract_nm
+            dgvRow.Cells("colStartDate").Value = SafeDateValue(row, "start_dt")       ' kisymd → start_dt
+            dgvRow.Cells("colEndDate").Value = SafeDateValue(row, "end_dt")           ' syrymd → end_dt
+            dgvRow.Cells("colContractPeriod").Value = SafeValue(row, "contract_period") ' kykkk → contract_period
+            dgvRow.Cells("colCashPrice").Value = SafeDecimalValue(row, "cash_price")  ' gnknkngk → cash_price
+            dgvRow.Cells("colMonthlyLease").Value = SafeDecimalValue(row, "monthly_lease") ' gtkrsry → monthly_lease
+            dgvRow.Cells("colAssetQty").Value = SafeValue(row, "quantity")             ' ssnsry → quantity
+            dgvRow.Cells("colUpdateDate").Value = SafeDateTimeValue(row, "update_dt") ' kosndt → update_dt
+            dgvRow.Cells("colConsistency").Value = SafeValue(row, "consistency")       ' sigo → consistency
         Next
     End Sub
 

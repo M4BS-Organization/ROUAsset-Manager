@@ -7,56 +7,48 @@ CREATE TABLE IF NOT EXISTS tw_m_user (
     update_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- td_sisn: 契約（リース試算）トランザクションテーブル
-CREATE TABLE IF NOT EXISTS td_sisn (
-    sisn_id       SERIAL PRIMARY KEY,
-    knrtni        VARCHAR(50),
-    kykkbn        VARCHAR(50),
-    kjotis        VARCHAR(50),
-    shrsk         VARCHAR(200),
-    kykno         VARCHAR(50) UNIQUE,
-    jshknr        VARCHAR(50),
-    rngno         VARCHAR(50),
-    srsks         INTEGER DEFAULT 0,
-    kyknm         VARCHAR(200),
-    kisymd        DATE,
-    syrymd        DATE,
-    kykkk         INTEGER,
-    gnknkngk      DECIMAL(18,2),
-    gtkrsry       DECIMAL(18,2),
-    ssnsry        INTEGER,
-    sigo          VARCHAR(10),
-    updusrid      VARCHAR(50),
-    updusrnm      VARCHAR(100),
-    insid         VARCHAR(50),
-    insnm         VARCHAR(100),
-    kosnid        VARCHAR(50),
-    kosnnm        VARCHAR(100),
-    insdt         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    kosndt        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- d_asset: 資産情報テーブル
+-- d_asset: 資産情報テーブル（契約関連カラム統合済み）
+-- 旧 td_sisn テーブルの契約カラムを統合
 CREATE TABLE IF NOT EXISTS d_asset (
-    asset_id      SERIAL PRIMARY KEY,
-    account_class VARCHAR(50),
-    asset_no      VARCHAR(50),
-    quantity      INTEGER DEFAULT 1,
-    bukken_nm     VARCHAR(200),
-    shozaichi     VARCHAR(500),
-    kukaku        VARCHAR(100),
-    menseki       VARCHAR(50),
-    madori        VARCHAR(100),
-    kozo_yoto     VARCHAR(200),
-    yoto_seigen   VARCHAR(500),
-    taiyo_nensu   INTEGER,
-    shunko_dt     DATE,
-    kashushi_nm   VARCHAR(200),
-    chukai_nm     VARCHAR(200),
-    kessai_nm     VARCHAR(200),
-    hosho_nm      VARCHAR(200),
-    create_dt     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    update_dt     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    asset_id        SERIAL PRIMARY KEY,
+    -- 資産基本情報
+    account_class   VARCHAR(50),
+    asset_no        VARCHAR(50),
+    quantity        INTEGER DEFAULT 1,
+    bukken_nm       VARCHAR(200),
+    shozaichi       VARCHAR(500),
+    kukaku          VARCHAR(100),
+    menseki         VARCHAR(50),
+    madori          VARCHAR(100),
+    kozo_yoto       VARCHAR(200),
+    yoto_seigen     VARCHAR(500),
+    taiyo_nensu     INTEGER,
+    shunko_dt       DATE,
+    kashushi_nm     VARCHAR(200),
+    chukai_nm       VARCHAR(200),
+    kessai_nm       VARCHAR(200),
+    hosho_nm        VARCHAR(200),
+    -- 契約関連情報（旧 td_sisn から統合）
+    mgmt_unit       VARCHAR(50),
+    contract_type   VARCHAR(50),
+    acct_target     VARCHAR(50),
+    payee           VARCHAR(200),
+    contract_no     VARCHAR(50),
+    own_mgmt        VARCHAR(50),
+    approval_no     VARCHAR(50),
+    re_lease_cnt    INTEGER DEFAULT 0,
+    contract_nm     VARCHAR(200),
+    start_dt        DATE,
+    end_dt          DATE,
+    contract_period INTEGER,
+    cash_price      DECIMAL(18,2),
+    monthly_lease   DECIMAL(18,2),
+    consistency     VARCHAR(10),
+    upd_user_id     VARCHAR(50),
+    upd_user_nm     VARCHAR(100),
+    -- 共通タイムスタンプ
+    create_dt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_dt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- d_asset_equipment: 資産付属設備テーブル
