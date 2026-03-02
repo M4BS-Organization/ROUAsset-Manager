@@ -925,23 +925,28 @@ Public Class FrmLeaseContractMain
         ' データ行
         txtAccFirstContractDate = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         txtAccStartDate = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         txtAccContractPeriod = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         txtAccFreePeriod = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         txtAccEndDate = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         tblContract.Controls.Add(txtAccFirstContractDate, 0, 1)
         tblContract.Controls.Add(txtAccStartDate, 1, 1)
