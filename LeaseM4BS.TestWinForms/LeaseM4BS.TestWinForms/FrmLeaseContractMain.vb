@@ -1267,7 +1267,7 @@ Public Class FrmLeaseContractMain
         }
         btnSaveAccounting.FlatAppearance.BorderSize = 0
         AddHandler btnSaveAccounting.Click, Sub(s, e)
-            ' TODO: 保存処理を実装
+            MessageBox.Show("未実装", "保存", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End Sub
 
         btnCalcAccSchedule = New Button() With {
@@ -1282,7 +1282,7 @@ Public Class FrmLeaseContractMain
         }
         btnCalcAccSchedule.FlatAppearance.BorderSize = 0
         AddHandler btnCalcAccSchedule.Click, Sub(s, e)
-            ' TODO: スケジュール計算処理を実装
+            MessageBox.Show("未実装", "スケジュール計算", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End Sub
 
         flowActions.Controls.Add(btnSaveAccounting)
