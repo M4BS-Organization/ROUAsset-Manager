@@ -1117,7 +1117,7 @@ Public Class FrmLeaseContractMain
         tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' Col4: ラベル
         tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' Col5: 値
         tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' Col6: ラベル
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 15.0F))   ' Col7: 値
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))   ' Col7: 値
 
         ' ヘッダー色
         Dim clrRCHeader As Color = Color.FromArgb(0, 128, 0)
