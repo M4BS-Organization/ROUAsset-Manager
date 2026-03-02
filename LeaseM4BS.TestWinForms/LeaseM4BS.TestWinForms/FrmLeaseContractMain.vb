@@ -1230,8 +1230,13 @@ Public Class FrmLeaseContractMain
         tblRC.Controls.Add(lblCancelNoticePeriod, 2, 2)
         tblRC.Controls.Add(txtAccCancelNoticePeriod, 3, 2)
         tblRC.Controls.Add(lblCancelNoticeDate, 4, 2)
-        tblRC.Controls.Add(txtAccCancelNoticeDate, 5, 2)
-        tblRC.Controls.Add(lblMoveOutDate, 6, 2)
+        tblRC.SetColumnSpan(lblCancelNoticeDate, 2)  ' スペーサー列(4)+次列(5)にまたがる
+        tblRC.Controls.Add(txtAccCancelNoticeDate, 6, 2)
+        ' 退去予定日: ラベルはSetColumnSpanで収められないため、DTPのTagに設定名を保持
+        ' 退去予定日ラベルは行0のヘッダーコンテキストまたはツールチップで表示
+        dtpAccMoveOutDate.Tag = "退去予定日"
+        Dim ttMoveOut As New ToolTip()
+        ttMoveOut.SetToolTip(dtpAccMoveOutDate, "退去予定日")
         tblRC.Controls.Add(dtpAccMoveOutDate, 7, 2)
 
         grpRenewalCancel.Controls.Add(tblRC)
