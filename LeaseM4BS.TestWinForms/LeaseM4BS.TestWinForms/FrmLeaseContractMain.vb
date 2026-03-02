@@ -324,7 +324,9 @@ Public Class FrmLeaseContractMain
         InitTabJudge_Pro()
 
         tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
-        AddHandler tabMain.SelectedIndexChanged, Sub(s, e) UpdateAccountingTabValues()
+        AddHandler tabMain.SelectedIndexChanged, Sub(s, e)
+            If tabMain.SelectedTab Is pgAccounting Then UpdateAccountingTabValues()
+        End Sub
 
         lblJudgmentPreview = New Label() With {
             .Dock = DockStyle.Fill,
@@ -1655,7 +1657,7 @@ Public Class FrmLeaseContractMain
         If Not _isLoaded Then Return
         Try
             ' --- 契約期間の連動 ---
-            txtAccFirstContractDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")  ' TODO: 初回契約日の正しいソースを設定
+            txtAccFirstContractDate.Text = dtpApplyDate.Value.ToString("yyyy/MM/dd")
             txtAccStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
             txtAccEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
             txtAccFreePeriod.Text = CInt(numFreePeriod.Value).ToString() & " ヶ月"
@@ -1693,6 +1695,26 @@ Public Class FrmLeaseContractMain
             txtAccShikikinAmort.Text = shikikinAmort.ToString("N0")
             txtAccReikin.Text = reikin.ToString("N0")
             txtAccChukaiFee.Text = chukaiFee.ToString("N0")
+
+            ' --- 更新解約規定の連動 ---
+            numAccRenewalForecastCount.Value = numRenewalCount.Value
+            txtAccRenewalRent.Text = numRenewalRent.Value.ToString("N0")
+            txtAccCancelNoticePeriod.Text = numCancelNoticePeriod.Value.ToString() & " ヶ月"
+            dtpAccMoveOutDate.Checked = dtpMoveOutDate.Checked
+            dtpAccMoveOutDate.Value = dtpMoveOutDate.Value
+
+            ' 規定の「あり/なし」判定
+            If numRenewalCount.Value > 0 Then
+                cmbAccRenewalRule.SelectedIndex = 0  ' あり
+            Else
+                cmbAccRenewalRule.SelectedIndex = 1  ' なし
+            End If
+
+            If numCancelNoticePeriod.Value > 0 OrElse numCancelPenalty.Value > 0 Then
+                cmbAccCancelRule.SelectedIndex = 0  ' あり
+            Else
+                cmbAccCancelRule.SelectedIndex = 1  ' なし
+            End If
         Catch ex As Exception
             ' エラー時は無視(初期化中のタイミング問題など)
         End Try
