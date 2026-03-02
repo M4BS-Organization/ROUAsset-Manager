@@ -1655,6 +1655,7 @@ Public Class FrmLeaseContractMain
         If Not _isLoaded Then Return
         Try
             ' --- 契約期間の連動 ---
+            txtAccFirstContractDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")  ' TODO: 初回契約日の正しいソースを設定
             txtAccStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
             txtAccEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
             txtAccFreePeriod.Text = CInt(numFreePeriod.Value).ToString() & " ヶ月"
