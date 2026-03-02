@@ -124,6 +124,10 @@ Public Class FrmLeaseContractMain
     Private txtAccCancelNoticeDate As TextBox
     Private dtpAccMoveOutDate As DateTimePicker
 
+    ' === 会計タブ: アクションボタン ===
+    Private btnCalcAccSchedule As Button
+    Private btnSaveAccounting As Button
+
     Private chkSublease As CheckBox
     Private pnlSubleaseDetail As Panel
     Private txtSublesseeName As TextBox
@@ -320,6 +324,7 @@ Public Class FrmLeaseContractMain
         InitTabJudge_Pro()
 
         tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
+        AddHandler tabMain.SelectedIndexChanged, Sub(s, e) UpdateAccountingTabValues()
 
         lblJudgmentPreview = New Label() With {
             .Dock = DockStyle.Fill,
@@ -873,11 +878,12 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 3
+            .ColumnCount = 1, .RowCount = 4
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 契約期間 + 初回金
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 月次支払明細
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 更新解約規定
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))  ' アクションボタン
 
         ' ============================================================
         ' セクション1: ＜契約期間＞ + 初回金 (横並び)
@@ -1060,7 +1066,7 @@ Public Class FrmLeaseContractMain
         colAccItem.Items.AddRange("月賃料", "管理費", "共益費", "月関係費")
         dgvAccMonthlyPayments.Columns.Add(colAccItem)
         dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "1支払額", .Name = "AccPayAmount", .FillWeight = 12,
+            .HeaderText = "支払額", .Name = "AccPayAmount", .FillWeight = 12,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
                 .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
             }
@@ -1237,11 +1243,59 @@ Public Class FrmLeaseContractMain
         grpRenewalCancel.Controls.Add(tblRC)
 
         ' ============================================================
+        ' セクション4: アクションボタン (右寄せ)
+        ' ============================================================
+        Dim pnlAccActions As New Panel() With {
+            .Dock = DockStyle.Fill, .Padding = New Padding(0, 8, 0, 0)
+        }
+        Dim flowActions As New FlowLayoutPanel() With {
+            .Dock = DockStyle.Fill,
+            .FlowDirection = FlowDirection.RightToLeft,
+            .WrapContents = False,
+            .Padding = New Padding(0)
+        }
+
+        btnSaveAccounting = New Button() With {
+            .Text = "保存",
+            .Width = 120, .Height = 32,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = CLR_HEADER,
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand,
+            .Margin = New Padding(4, 0, 0, 0)
+        }
+        btnSaveAccounting.FlatAppearance.BorderSize = 0
+        AddHandler btnSaveAccounting.Click, Sub(s, e)
+            ' TODO: 保存処理を実装
+        End Sub
+
+        btnCalcAccSchedule = New Button() With {
+            .Text = "スケジュール計算",
+            .Width = 150, .Height = 32,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = CLR_ACCENT,
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand,
+            .Margin = New Padding(4, 0, 0, 0)
+        }
+        btnCalcAccSchedule.FlatAppearance.BorderSize = 0
+        AddHandler btnCalcAccSchedule.Click, Sub(s, e)
+            ' TODO: スケジュール計算処理を実装
+        End Sub
+
+        flowActions.Controls.Add(btnSaveAccounting)
+        flowActions.Controls.Add(btnCalcAccSchedule)
+        pnlAccActions.Controls.Add(flowActions)
+
+        ' ============================================================
         ' メインレイアウトに全セクションを追加
         ' ============================================================
         mainTbl.Controls.Add(pnlContractAndInitial, 0, 0)
         mainTbl.Controls.Add(grpAccMonthly, 0, 1)
         mainTbl.Controls.Add(grpRenewalCancel, 0, 2)
+        mainTbl.Controls.Add(pnlAccActions, 0, 3)
 
         scroll.Controls.Add(mainTbl)
         pgAccounting.Controls.Add(scroll)
@@ -1590,6 +1644,57 @@ Public Class FrmLeaseContractMain
         CalcLeaseMonths()
 
         RecalcJudge()
+
+        UpdateAccountingTabValues()
+    End Sub
+
+    ''' <summary>
+    ''' 契約タブ・初回金タブの入力値を会計タブのReadOnly TextBoxに反映する
+    ''' </summary>
+    Private Sub UpdateAccountingTabValues()
+        If Not _isLoaded Then Return
+        Try
+            ' --- 契約期間の連動 ---
+            txtAccStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
+            txtAccEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
+            txtAccFreePeriod.Text = CInt(numFreePeriod.Value).ToString() & " ヶ月"
+            txtAccContractPeriod.Text = lblLeaseMonths.Text
+
+            ' --- 初回金の連動 ---
+            Dim shikikin As Decimal = 0
+            Dim shikikinAmort As Decimal = 0
+            Dim reikin As Decimal = 0
+            Dim chukaiFee As Decimal = 0
+
+            For Each row As DataGridViewRow In dgvInitialCosts.Rows
+                If row.IsNewRow Then Continue For
+                Dim costItem As String = ""
+                If row.Cells("CostItem").Value IsNot Nothing Then
+                    costItem = row.Cells("CostItem").Value.ToString()
+                End If
+                Dim amount As Decimal = 0
+                If row.Cells("AmountIncTax").Value IsNot Nothing Then
+                    Decimal.TryParse(row.Cells("AmountIncTax").Value.ToString().Replace(",", ""), amount)
+                End If
+                Select Case costItem
+                    Case "敷金"
+                        shikikin += amount
+                    Case "敷金償却額（返還不能分）"
+                        shikikinAmort += amount
+                    Case "礼金"
+                        reikin += amount
+                    Case "仲介手数料"
+                        chukaiFee += amount
+                End Select
+            Next
+
+            txtAccShikikin.Text = shikikin.ToString("N0")
+            txtAccShikikinAmort.Text = shikikinAmort.ToString("N0")
+            txtAccReikin.Text = reikin.ToString("N0")
+            txtAccChukaiFee.Text = chukaiFee.ToString("N0")
+        Catch ex As Exception
+            ' エラー時は無視(初期化中のタイミング問題など)
+        End Try
     End Sub
 
     Private Sub CalcLeaseMonths()
@@ -1813,6 +1918,7 @@ Public Class FrmLeaseContractMain
 
     Private Sub OnInitialCostCellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
         dgvInitialCosts.CommitEdit(DataGridViewDataErrorContexts.Commit)
+        UpdateAccountingTabValues()
     End Sub
 
     Private Function CreateSection(title As String) As GroupBox
