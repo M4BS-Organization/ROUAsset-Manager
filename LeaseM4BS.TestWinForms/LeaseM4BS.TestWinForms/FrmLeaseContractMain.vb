@@ -1230,7 +1230,7 @@ Public Class FrmLeaseContractMain
         tblRC.Controls.Add(lblCancelNoticePeriod, 2, 2)
         tblRC.Controls.Add(txtAccCancelNoticePeriod, 3, 2)
         tblRC.Controls.Add(lblCancelNoticeDate, 5, 2)
-        tblRC.Controls.Add(txtAccCancelNoticeDate, 6, 2)
+        tblRC.Controls.Add(lblMoveOutDate, 6, 2)
         tblRC.Controls.Add(dtpAccMoveOutDate, 7, 2)
 
         grpRenewalCancel.Controls.Add(tblRC)
