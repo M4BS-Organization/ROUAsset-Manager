@@ -986,7 +986,8 @@ Public Class FrmLeaseContractMain
         }
         txtAccShikikin = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         Dim lblShikikinAmort As New Label() With {
             .Text = "敷金償却", .Dock = DockStyle.Fill, .BackColor = clrInitHeader,
@@ -995,7 +996,8 @@ Public Class FrmLeaseContractMain
         }
         txtAccShikikinAmort = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         tblInitial.Controls.Add(lblShikikin, 0, 0)
         tblInitial.Controls.Add(txtAccShikikin, 1, 0)
@@ -1009,7 +1011,8 @@ Public Class FrmLeaseContractMain
         }
         txtAccReikin = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         Dim lblChukai As New Label() With {
             .Text = "仲介手数料", .Dock = DockStyle.Fill, .BackColor = clrInitHeader,
@@ -1018,7 +1021,8 @@ Public Class FrmLeaseContractMain
         }
         txtAccChukaiFee = New TextBox() With {
             .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY
+            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY,
+            .ForeColor = CLR_TEXT
         }
         tblInitial.Controls.Add(lblReikin, 0, 1)
         tblInitial.Controls.Add(txtAccReikin, 1, 1)
@@ -1105,14 +1109,15 @@ Public Class FrmLeaseContractMain
             .ColumnCount = 8, .Padding = New Padding(4),
             .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
         }
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' ラベル (更新規定/解約規定)
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 50.0F))   ' あり/なし
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' ラベル2
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 35.0F))    ' 値2
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 10.0F))   ' スペーサー
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' ラベル3/値3
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))  ' ラベル4
-        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 15.0F))    ' 値4
+        ' 8列: 4つのラベル+値ペア (全行で統一的に使用)
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' Col0: ラベル
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' Col1: 値
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' Col2: ラベル
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))   ' Col3: 値
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' Col4: ラベル
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' Col5: 値
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' Col6: ラベル
+        tblRC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 15.0F))   ' Col7: 値
 
         ' ヘッダー色
         Dim clrRCHeader As Color = Color.FromArgb(0, 128, 0)
@@ -1145,6 +1150,7 @@ Public Class FrmLeaseContractMain
         tblRC.Controls.Add(cmbAccRenewalRule, 1, 0)
         tblRC.Controls.Add(lblRenewalCond, 2, 0)
         tblRC.Controls.Add(txtAccRenewalCondition, 3, 0)
+        tblRC.SetColumnSpan(txtAccRenewalCondition, 2)  ' 値が広いため2列にまたがる
         tblRC.Controls.Add(chkAccRenewalRentDefined, 5, 0)
         tblRC.SetColumnSpan(chkAccRenewalRentDefined, 3)
 
@@ -1179,12 +1185,12 @@ Public Class FrmLeaseContractMain
         }
         tblRC.Controls.Add(lblRenewalRent, 0, 1)
         tblRC.Controls.Add(txtAccRenewalRent, 1, 1)
-        tblRC.SetColumnSpan(txtAccRenewalRent, 1)
         tblRC.Controls.Add(lblRenewalPayDate, 2, 1)
         tblRC.Controls.Add(txtAccRenewalPayDate, 3, 1)
-        tblRC.Controls.Add(lblRenewalForecast, 5, 1)
+        tblRC.Controls.Add(lblRenewalForecast, 4, 1)
         tblRC.SetColumnSpan(lblRenewalForecast, 2)
-        tblRC.Controls.Add(numAccRenewalForecastCount, 7, 1)
+        tblRC.Controls.Add(numAccRenewalForecastCount, 6, 1)
+        tblRC.SetColumnSpan(numAccRenewalForecastCount, 2)
 
         ' --- Row 2: 解約規定 あり | 解約告知期間 | [value] | | 解約告知日 | | 退去予定日 ---
         tblRC.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
@@ -1230,13 +1236,8 @@ Public Class FrmLeaseContractMain
         tblRC.Controls.Add(lblCancelNoticePeriod, 2, 2)
         tblRC.Controls.Add(txtAccCancelNoticePeriod, 3, 2)
         tblRC.Controls.Add(lblCancelNoticeDate, 4, 2)
-        tblRC.SetColumnSpan(lblCancelNoticeDate, 2)  ' スペーサー列(4)+次列(5)にまたがる
-        tblRC.Controls.Add(txtAccCancelNoticeDate, 6, 2)
-        ' 退去予定日: ラベルはSetColumnSpanで収められないため、DTPのTagに設定名を保持
-        ' 退去予定日ラベルは行0のヘッダーコンテキストまたはツールチップで表示
-        dtpAccMoveOutDate.Tag = "退去予定日"
-        Dim ttMoveOut As New ToolTip()
-        ttMoveOut.SetToolTip(dtpAccMoveOutDate, "退去予定日")
+        tblRC.Controls.Add(txtAccCancelNoticeDate, 5, 2)
+        tblRC.Controls.Add(lblMoveOutDate, 6, 2)
         tblRC.Controls.Add(dtpAccMoveOutDate, 7, 2)
 
         grpRenewalCancel.Controls.Add(tblRC)
