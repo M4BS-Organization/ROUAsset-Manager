@@ -1150,8 +1150,8 @@ Public Class FrmLeaseContractMain
             .Margin = New Padding(0)
         }
         txtAccRenewalRent = New TextBox() With {
-            .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Right
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .TextAlign = HorizontalAlignment.Right, .ReadOnly = True, .BackColor = CLR_READONLY
         }
         Dim lblRenewalPayDate As New Label() With {
             .Text = "更新支払日", .Dock = DockStyle.Fill, .BackColor = clrRCHeader,
@@ -1198,8 +1198,8 @@ Public Class FrmLeaseContractMain
             .Margin = New Padding(0)
         }
         txtAccCancelNoticePeriod = New TextBox() With {
-            .Dock = DockStyle.Fill, .Font = FNT_INPUT,
-            .TextAlign = HorizontalAlignment.Center
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .TextAlign = HorizontalAlignment.Center, .ReadOnly = True, .BackColor = CLR_READONLY
         }
         Dim lblCancelNoticeDate As New Label() With {
             .Text = "解約告知日", .Dock = DockStyle.Fill, .BackColor = clrRCHeader,
