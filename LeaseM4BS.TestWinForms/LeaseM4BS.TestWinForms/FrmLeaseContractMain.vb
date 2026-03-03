@@ -109,9 +109,6 @@ Public Class FrmLeaseContractMain
     Private txtAccReikin As TextBox
     Private txtAccChukaiFee As TextBox
 
-    ' === 会計タブ: 月次支払明細 ===
-    Private dgvAccMonthlyPayments As DataGridView
-
     ' === 会計タブ: 更新解約規定 ===
     Private cmbAccRenewalRule As ComboBox
     Private txtAccRenewalCondition As TextBox
@@ -880,10 +877,9 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 4
+            .ColumnCount = 1, .RowCount = 3
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 契約期間 + 初回金
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 月次支払明細
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 更新解約規定
         mainTbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))  ' アクションボタン
 
@@ -1038,72 +1034,7 @@ Public Class FrmLeaseContractMain
         pnlContractAndInitial.Controls.Add(tblTopRow)
 
         ' ============================================================
-        ' セクション2: ＜月次支払明細＞
-        ' ============================================================
-        Dim grpAccMonthly As GroupBox = CreateSection("＜月次支払明細＞")
-        grpAccMonthly.Height = 180
-        grpAccMonthly.AutoSize = False
-
-        dgvAccMonthlyPayments = New DataGridView() With {
-            .Dock = DockStyle.Fill,
-            .BackgroundColor = CLR_CARD,
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            .AllowUserToAddRows = True,
-            .RowHeadersVisible = False,
-            .BorderStyle = BorderStyle.None,
-            .GridColor = CLR_BORDER,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
-            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
-                .BackColor = Color.FromArgb(0, 128, 0),
-                .Font = FNT_LABEL,
-                .ForeColor = Color.White,
-                .Alignment = DataGridViewContentAlignment.MiddleCenter
-            },
-            .EnableHeadersVisualStyles = False
-        }
-
-        Dim colAccItem As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "科目内訳", .Name = "AccItem", .FillWeight = 12
-        }
-        colAccItem.Items.AddRange("月賃料", "管理費", "共益費", "月関係費")
-        dgvAccMonthlyPayments.Columns.Add(colAccItem)
-        dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "支払額", .Name = "AccPayAmount", .FillWeight = 12,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "消費税", .Name = "AccTax", .FillWeight = 10,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "税込", .Name = "AccTotalIncTax", .FillWeight = 12,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "振込口座", .Name = "AccBankAccount", .FillWeight = 22
-        })
-        Dim colAccPayMethod As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "支払方法", .Name = "AccPayMethod", .FillWeight = 10
-        }
-        colAccPayMethod.Items.AddRange("引落", "振込", "口座振替", "手形", "現金")
-        dgvAccMonthlyPayments.Columns.Add(colAccPayMethod)
-        dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "支払日", .Name = "AccPayDate", .FillWeight = 8
-        })
-        dgvAccMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "指数", .Name = "AccIndex", .FillWeight = 8
-        })
-
-        grpAccMonthly.Controls.Add(dgvAccMonthlyPayments)
-
-        ' ============================================================
-        ' セクション3: ＜更新解約規定＞
+        ' セクション2: ＜更新解約規定＞
         ' ============================================================
         Dim grpRenewalCancel As GroupBox = CreateSection("＜更新解約規定＞")
         Dim tblRC As New TableLayoutPanel() With {
@@ -1295,9 +1226,8 @@ Public Class FrmLeaseContractMain
         ' メインレイアウトに全セクションを追加
         ' ============================================================
         mainTbl.Controls.Add(pnlContractAndInitial, 0, 0)
-        mainTbl.Controls.Add(grpAccMonthly, 0, 1)
-        mainTbl.Controls.Add(grpRenewalCancel, 0, 2)
-        mainTbl.Controls.Add(pnlAccActions, 0, 3)
+        mainTbl.Controls.Add(grpRenewalCancel, 0, 1)
+        mainTbl.Controls.Add(pnlAccActions, 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgAccounting.Controls.Add(scroll)
