@@ -895,7 +895,7 @@ Public Class FrmLeaseContractMain
     End Sub
 
     Private Sub InitTabAccounting()
-        Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(6)}
+        Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(2)}
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
@@ -915,268 +915,299 @@ Public Class FrmLeaseContractMain
         pgAccounting.Controls.Add(scroll)
     End Sub
 
-    ''' <summary>＜現契約期間＞ + ＜現支払情報＞ (横並び)</summary>
+    ''' <summary>＜現契約期間＞ + ＜現支払情報＞ (横並び・1行化)</summary>
     Private Function BuildAccSchTopRowSection() As Panel
         Dim pnlSchTopRow As New Panel() With {
-            .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0, 0, 0, 4)
+            .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0)
         }
         Dim tblSchTopRow As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 2, .RowCount = 1
+            .ColumnCount = 2, .RowCount = 1, .Margin = New Padding(0), .Padding = New Padding(0)
         }
-        tblSchTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 45.0F))
-        tblSchTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 55.0F))
+        tblSchTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 40.0F))
+        tblSchTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 60.0F))
         tblSchTopRow.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
-        ' --- ＜現契約期間＞ ---
-        Dim grpCurrentContract As GroupBox = CreateSection("＜現契約期間＞")
+        ' --- ＜現契約期間＞ (枠線なしPanel + セクションラベル + 8列1行テーブル) ---
+        Dim pnlCC As New Panel() With {.Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0), .Margin = New Padding(0)}
+        Dim lblCCTitle As New Label() With {
+            .Text = "＜現契約期間＞", .Dock = DockStyle.Top, .AutoSize = True,
+            .Font = FNT_LABEL, .ForeColor = CLR_HEADER, .Padding = New Padding(2, 2, 0, 1)
+        }
         Dim tblCC As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
+            .ColumnCount = 8, .RowCount = 1, .Padding = New Padding(0), .Margin = New Padding(0),
+            .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
         }
-        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 契約日ラベル
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))   ' 契約日値
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 開始日ラベル
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))   ' 開始日値
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 契約期間ラベル
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))   ' 契約期間値
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 終了日ラベル
+        tblCC.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))   ' 終了日値
+        tblCC.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
 
-        txtSchContractDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchStartDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchContractPeriod = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchEndDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
+        txtSchContractDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchStartDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchContractPeriod = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchEndDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
 
-        AddFieldRow(tblCC, "契約日", txtSchContractDate, "開始日", txtSchStartDate)
-        AddFieldRow(tblCC, "契約期間", txtSchContractPeriod, "終了日", txtSchEndDate)
-        grpCurrentContract.Controls.Add(tblCC)
+        tblCC.Controls.Add(CreateGridLabel("契約日"), 0, 0)
+        tblCC.Controls.Add(txtSchContractDate, 1, 0)
+        tblCC.Controls.Add(CreateGridLabel("開始日"), 2, 0)
+        tblCC.Controls.Add(txtSchStartDate, 3, 0)
+        tblCC.Controls.Add(CreateGridLabel("契約期間"), 4, 0)
+        tblCC.Controls.Add(txtSchContractPeriod, 5, 0)
+        tblCC.Controls.Add(CreateGridLabel("終了日"), 6, 0)
+        tblCC.Controls.Add(txtSchEndDate, 7, 0)
 
-        ' --- ＜現支払情報＞ ---
-        Dim grpPayInfo As GroupBox = CreateSection("＜現支払情報＞")
+        pnlCC.Controls.Add(tblCC)
+        pnlCC.Controls.Add(lblCCTitle)
+
+        ' --- ＜現支払情報＞ (枠線なしPanel + セクションラベル + 10列1行テーブル) ---
+        Dim pnlPI As New Panel() With {.Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0), .Margin = New Padding(0)}
+        Dim lblPITitle As New Label() With {
+            .Text = "＜現支払情報＞", .Dock = DockStyle.Top, .AutoSize = True,
+            .Font = FNT_LABEL, .ForeColor = CLR_HEADER, .Padding = New Padding(2, 2, 0, 1)
+        }
         Dim tblPI As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
+            .ColumnCount = 10, .RowCount = 1, .Padding = New Padding(0), .Margin = New Padding(0),
+            .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
         }
-        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
-        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
-        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 65.0F))  ' 初回支払日ラベル
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' 初回支払日値
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 支払間隔ラベル
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' 支払間隔値
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 支払回数ラベル
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' 支払回数値
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 55.0F))  ' 無償期間ラベル
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' 無償期間値
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 65.0F))  ' 最終支払日ラベル
+        tblPI.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))   ' 最終支払日値
+        tblPI.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
 
-        txtSchFirstPayDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchPayInterval = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchPayCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchFreePeriod = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
-        txtSchLastPayDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT}
+        txtSchFirstPayDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchPayInterval = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchPayCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchFreePeriod = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
+        txtSchLastPayDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .Margin = New Padding(0), .TextAlign = HorizontalAlignment.Center}
 
-        AddFieldRow(tblPI, "初回支払日", txtSchFirstPayDate, "支払間隔", txtSchPayInterval)
-        AddFieldRow(tblPI, "支払回数", txtSchPayCount, "無償期間", txtSchFreePeriod)
-        AddFieldRow(tblPI, "最終支払日", txtSchLastPayDate, Nothing, Nothing)
-        grpPayInfo.Controls.Add(tblPI)
+        tblPI.Controls.Add(CreateGridLabel("初回支払日"), 0, 0)
+        tblPI.Controls.Add(txtSchFirstPayDate, 1, 0)
+        tblPI.Controls.Add(CreateGridLabel("支払間隔"), 2, 0)
+        tblPI.Controls.Add(txtSchPayInterval, 3, 0)
+        tblPI.Controls.Add(CreateGridLabel("支払回数"), 4, 0)
+        tblPI.Controls.Add(txtSchPayCount, 5, 0)
+        tblPI.Controls.Add(CreateGridLabel("無償期間"), 6, 0)
+        tblPI.Controls.Add(txtSchFreePeriod, 7, 0)
+        tblPI.Controls.Add(CreateGridLabel("最終支払日"), 8, 0)
+        tblPI.Controls.Add(txtSchLastPayDate, 9, 0)
 
-        tblSchTopRow.Controls.Add(grpCurrentContract, 0, 0)
-        tblSchTopRow.Controls.Add(grpPayInfo, 1, 0)
+        pnlPI.Controls.Add(tblPI)
+        pnlPI.Controls.Add(lblPITitle)
+
+        tblSchTopRow.Controls.Add(pnlCC, 0, 0)
+        tblSchTopRow.Controls.Add(pnlPI, 1, 0)
         pnlSchTopRow.Controls.Add(tblSchTopRow)
         Return pnlSchTopRow
     End Function
 
-    ''' <summary>＜会計期間＞ 統合表形式</summary>
-    Private Function BuildAccSchAccountingSection() As GroupBox
-        Dim grpAccounting As GroupBox = CreateSection("＜会計期間＞")
+    ''' <summary>＜会計期間＞ 統合表形式 (GroupBox廃止・テキスト見出し)</summary>
+    Private Function BuildAccSchAccountingSection() As Panel
+        Dim pnlAccounting As New Panel() With {
+            .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0), .Margin = New Padding(0)
+        }
+        Dim lblTitle As New Label() With {
+            .Text = "＜会計期間＞", .Dock = DockStyle.Top, .AutoSize = True,
+            .Font = FNT_LABEL, .ForeColor = CLR_HEADER, .Padding = New Padding(2, 2, 0, 1)
+        }
         Dim tbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 10, .Padding = New Padding(4),
+            .ColumnCount = 10, .Padding = New Padding(0), .Margin = New Padding(0),
             .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
         }
-        ' 列幅: ラベル(100px) + 値(%) を5ペア = 10列
-        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))  ' 0: ラベル
+        ' 列幅: ラベル(80px) + 値(%) を5ペア = 10列
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 0: ラベル
         tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 1: 値
-        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 2: ラベル
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 70.0F))   ' 2: ラベル
         tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 3: 値
-        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 4: ラベル
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 70.0F))   ' 4: ラベル
         tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 5: 値
-        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 6: ラベル
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 70.0F))   ' 6: ラベル
         tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 7: 値
-        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 8: ラベル
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 70.0F))   ' 8: ラベル
         tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 9: 値
 
         ' === 1段目: 更新予想回数 | 開始日 | 会計期間 | 終了日 ===
-        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
-        tbl.Controls.Add(CreateGridLabel("更新予想回数"), 0, 0)
-        txtSchRenewalForecastCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center}
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
+        tbl.Controls.Add(CreateHighlightGridLabel("更新予想回数", Color.Yellow), 0, 0)
+        txtSchRenewalForecastCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchRenewalForecastCount, 1, 0)
         tbl.Controls.Add(CreateGridLabel("開始日"), 2, 0)
-        txtSchAccStartDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center}
+        txtSchAccStartDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchAccStartDate, 3, 0)
         tbl.Controls.Add(CreateGridLabel("会計期間"), 4, 0)
-        txtSchAccPeriod = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center}
+        txtSchAccPeriod = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchAccPeriod, 5, 0)
         tbl.Controls.Add(CreateGridLabel("終了日"), 6, 0)
-        txtSchAccEndDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center}
+        txtSchAccEndDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchAccEndDate, 7, 0)
-        ' 8-9列は空白
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 8, 0)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 9, 0)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 8, 0)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 9, 0)
 
-        ' === 2段目: 賃料 (xxx /月) | 更新賃料 (xxx /月) | 更新支払日 ===
-        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        ' === 2段目: 賃料 | 更新賃料 | 更新支払日 ===
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
         tbl.Controls.Add(CreateGridLabel("賃料"), 0, 1)
-        txtSchRent = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchRent = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchRent, 1, 1)
         tbl.Controls.Add(CreateGridLabel("更新賃料"), 2, 1)
-        txtSchRenewalRent = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchRenewalRent = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchRenewalRent, 3, 1)
         tbl.Controls.Add(CreateGridLabel("更新支払日"), 4, 1)
-        txtSchRenewalPayDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center}
+        txtSchRenewalPayDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchRenewalPayDate, 5, 1)
-        ' 6-9列は空白
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 6, 1)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 7, 1)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 8, 1)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 9, 1)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 6, 1)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 7, 1)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 8, 1)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 9, 1)
 
         ' === 3段目: 賃料総額 | 算定総額 | リース割合 | 配分総額 | 割引率 ===
-        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
         tbl.Controls.Add(CreateGridLabel("賃料総額"), 0, 2)
-        txtSchRentTotal = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchRentTotal = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchRentTotal, 1, 2)
         tbl.Controls.Add(CreateGridLabel("算定総額"), 2, 2)
-        txtSchCalcTotal = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchCalcTotal = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchCalcTotal, 3, 2)
         tbl.Controls.Add(CreateGridLabel("リース割合"), 4, 2)
-        txtSchLeaseRatio = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchLeaseRatio = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchLeaseRatio, 5, 2)
         tbl.Controls.Add(CreateGridLabel("配分総額"), 6, 2)
-        txtSchAllocTotal = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchAllocTotal = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchAllocTotal, 7, 2)
         tbl.Controls.Add(CreateGridLabel("割引率"), 8, 2)
-        txtSchDiscountRate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchDiscountRate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchDiscountRate, 9, 2)
 
         ' === 4段目: 維持管理費用 | 非リース割合 | (配分総額の非リース分) ===
-        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))
         tbl.Controls.Add(CreateGridLabel("維持管理費用"), 0, 3)
-        txtSchMaintenanceCost = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchMaintenanceCost = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchMaintenanceCost, 1, 3)
         tbl.Controls.Add(CreateGridLabel("非リース割合"), 2, 3)
-        txtSchNonLeaseRatio = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchNonLeaseRatio = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchNonLeaseRatio, 3, 3)
         tbl.Controls.Add(CreateGridLabel("配分総額"), 4, 3)
-        txtSchDistributionRate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
+        txtSchDistributionRate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
         tbl.Controls.Add(txtSchDistributionRate, 5, 3)
-        ' 6-9列は空白
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 6, 3)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 7, 3)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 8, 3)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 9, 3)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 6, 3)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 7, 3)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 8, 3)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 9, 3)
 
         tbl.RowCount = 4
-        grpAccounting.Controls.Add(tbl)
-        Return grpAccounting
+        pnlAccounting.Controls.Add(tbl)
+        pnlAccounting.Controls.Add(lblTitle)
+        Return pnlAccounting
     End Function
 
-    ''' <summary>返済スケジュールマトリックス (クロス集計表形式)</summary>
+    ''' <summary>返済スケジュールマトリックス (単一テーブル8列x4行)</summary>
     Private Function BuildAccSchMatrixSection() As Panel
         Dim pnlMatrix As New Panel() With {
-            .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0, 0, 0, 4)
+            .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0), .Margin = New Padding(0)
         }
-        Dim tblOuter As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 2, .RowCount = 1
-        }
-        tblOuter.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
-        tblOuter.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        tblOuter.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
-        ' === 左側: 現在価値 + 使用権資産ラベル ===
-        Dim tblLeft As New TableLayoutPanel() With {
+        ' === 統合テーブル: 8列 x 4行 ===
+        Dim tbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 3, .Padding = New Padding(4),
+            .ColumnCount = 8, .RowCount = 4, .Padding = New Padding(0), .Margin = New Padding(0),
             .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
         }
-        tblLeft.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 0: 現在価値
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 1: 使用権資産
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))  ' 2: 返済スケジュール
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 3: 期首
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 4: 増加
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 5: 変更増減
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 6: 減少
+        tbl.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))    ' 7: 期末
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))  ' ヘッダー行
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))  ' 使用権資産行
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))  ' リース負債行
+        tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 24.0F))  ' 除去債務行
 
-        tblLeft.Controls.Add(CreateGridLabel("現在価値"), 0, 0)
-        txtSchPresentValue = New TextBox() With {
-            .Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY,
-            .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right
-        }
-        tblLeft.Controls.Add(txtSchPresentValue, 0, 1)
-        tblLeft.Controls.Add(CreateGridLabel("使用権資産"), 0, 2)
+        ' --- Row 0 (ヘッダー): 現在価値 | 使用権資産(青+白) | 返済スケジュール(青+黄) | 期首 | 増加 | 変更増減 | 減少 | 期末 ---
+        tbl.Controls.Add(CreateGridLabel("現在価値"), 0, 0)
+        tbl.Controls.Add(CreateHighlightGridLabel("使用権資産", Color.White), 1, 0)
+        tbl.Controls.Add(CreateHighlightGridLabel("返済スケジュール", Color.Yellow), 2, 0)
+        tbl.Controls.Add(CreateGridLabel("期首"), 3, 0)
+        tbl.Controls.Add(CreateGridLabel("増加"), 4, 0)
+        tbl.Controls.Add(CreateGridLabel("変更増減"), 5, 0)
+        tbl.Controls.Add(CreateGridLabel("減少"), 6, 0)
+        tbl.Controls.Add(CreateGridLabel("期末"), 7, 0)
 
-        ' === 右側: 返済スケジュール表 (マトリックス) ===
-        Dim tblSchedule As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 6, .RowCount = 4, .Padding = New Padding(4),
-            .CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
-        }
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
+        ' --- Row 1: 現在価値TextBox | 空白 | 使用権資産 | TextBox x 5 ---
+        txtSchPresentValue = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        tbl.Controls.Add(txtSchPresentValue, 0, 1)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 1, 1)
+        tbl.Controls.Add(CreateGridLabel("使用権資産"), 2, 1)
+        txtSchRouBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchRouIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchRouChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchRouDecrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchRouEnd = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        tbl.Controls.Add(txtSchRouBegin, 3, 1)
+        tbl.Controls.Add(txtSchRouIncrease, 4, 1)
+        tbl.Controls.Add(txtSchRouChange, 5, 1)
+        tbl.Controls.Add(txtSchRouDecrease, 6, 1)
+        tbl.Controls.Add(txtSchRouEnd, 7, 1)
 
-        ' ヘッダー行
-        tblSchedule.Controls.Add(CreateGridLabel("返済スケジュール"), 0, 0)
-        Dim schHeaders() As String = {"期首", "増加", "変更増減", "減少", "期末"}
-        For i As Integer = 0 To schHeaders.Length - 1
-            tblSchedule.Controls.Add(CreateGridLabel(schHeaders(i)), i + 1, 0)
-        Next
+        ' --- Row 2: 空白 | 空白 | リース負債 | TextBox x 5 ---
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 0, 2)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 1, 2)
+        tbl.Controls.Add(CreateGridLabel("リース負債"), 2, 2)
+        txtSchLiabBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchLiabIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchLiabChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchLiabDecrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchLiabEnd = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        tbl.Controls.Add(txtSchLiabBegin, 3, 2)
+        tbl.Controls.Add(txtSchLiabIncrease, 4, 2)
+        tbl.Controls.Add(txtSchLiabChange, 5, 2)
+        tbl.Controls.Add(txtSchLiabDecrease, 6, 2)
+        tbl.Controls.Add(txtSchLiabEnd, 7, 2)
 
-        ' Row 1: 使用権資産
-        tblSchedule.Controls.Add(CreateGridLabel("使用権資産"), 0, 1)
-        txtSchRouBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchRouIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchRouChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchRouDecrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchRouEnd = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        tblSchedule.Controls.Add(txtSchRouBegin, 1, 1)
-        tblSchedule.Controls.Add(txtSchRouIncrease, 2, 1)
-        tblSchedule.Controls.Add(txtSchRouChange, 3, 1)
-        tblSchedule.Controls.Add(txtSchRouDecrease, 4, 1)
-        tblSchedule.Controls.Add(txtSchRouEnd, 5, 1)
+        ' --- Row 3: 空白 | 空白 | 除去債務 | TextBox x 5 ---
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 0, 3)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill, .Margin = New Padding(0)}, 1, 3)
+        tbl.Controls.Add(CreateGridLabel("除去債務"), 2, 3)
+        txtSchAroBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchAroIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchAroChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchAroDecrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        txtSchAroEnd = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(0)}
+        tbl.Controls.Add(txtSchAroBegin, 3, 3)
+        tbl.Controls.Add(txtSchAroIncrease, 4, 3)
+        tbl.Controls.Add(txtSchAroChange, 5, 3)
+        tbl.Controls.Add(txtSchAroDecrease, 6, 3)
+        tbl.Controls.Add(txtSchAroEnd, 7, 3)
 
-        ' Row 2: リース負債
-        tblSchedule.Controls.Add(CreateGridLabel("リース負債"), 0, 2)
-        txtSchLiabBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchLiabIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchLiabChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchLiabDecrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchLiabEnd = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        tblSchedule.Controls.Add(txtSchLiabBegin, 1, 2)
-        tblSchedule.Controls.Add(txtSchLiabIncrease, 2, 2)
-        tblSchedule.Controls.Add(txtSchLiabChange, 3, 2)
-        tblSchedule.Controls.Add(txtSchLiabDecrease, 4, 2)
-        tblSchedule.Controls.Add(txtSchLiabEnd, 5, 2)
-
-        ' Row 3: 除去債務
-        tblSchedule.Controls.Add(CreateGridLabel("除去債務"), 0, 3)
-        txtSchAroBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchAroIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchAroChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchAroDecrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        txtSchAroEnd = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
-        tblSchedule.Controls.Add(txtSchAroBegin, 1, 3)
-        tblSchedule.Controls.Add(txtSchAroIncrease, 2, 3)
-        tblSchedule.Controls.Add(txtSchAroChange, 3, 3)
-        tblSchedule.Controls.Add(txtSchAroDecrease, 4, 3)
-        tblSchedule.Controls.Add(txtSchAroEnd, 5, 3)
-
-        tblOuter.Controls.Add(tblLeft, 0, 0)
-        tblOuter.Controls.Add(tblSchedule, 1, 0)
-        pnlMatrix.Controls.Add(tblOuter)
+        pnlMatrix.Controls.Add(tbl)
         Return pnlMatrix
     End Function
 
-    ''' <summary>＜変更履歴＞</summary>
-    Private Function BuildAccChangeHistorySection() As GroupBox
-        Dim grpChangeHistory As GroupBox = CreateSection("＜変更履歴＞")
-        grpChangeHistory.Height = 160
-        grpChangeHistory.AutoSize = False
+    ''' <summary>＜変更履歴＞ (GroupBox廃止・テキスト見出し)</summary>
+    Private Function BuildAccChangeHistorySection() As Panel
+        Dim pnlChangeHistory As New Panel() With {
+            .Dock = DockStyle.Top, .Height = 180, .AutoSize = False, .Padding = New Padding(0), .Margin = New Padding(0)
+        }
+        Dim lblTitle As New Label() With {
+            .Text = "＜変更履歴＞", .Dock = DockStyle.Top, .AutoSize = True,
+            .Font = FNT_LABEL, .ForeColor = CLR_HEADER, .Padding = New Padding(2, 2, 0, 1)
+        }
 
         dgvChangeHistory = New DataGridView() With {
             .Dock = DockStyle.Fill,
@@ -1237,8 +1268,9 @@ Public Class FrmLeaseContractMain
             }
         })
 
-        grpChangeHistory.Controls.Add(dgvChangeHistory)
-        Return grpChangeHistory
+        pnlChangeHistory.Controls.Add(dgvChangeHistory)
+        pnlChangeHistory.Controls.Add(lblTitle)
+        Return pnlChangeHistory
     End Function
 
     Private Sub InitTabSublease()
@@ -1923,6 +1955,19 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Fill,
             .BackColor = CLR_READONLY,
             .ForeColor = CLR_TEXT,
+            .Font = FNT_LABEL,
+            .TextAlign = ContentAlignment.MiddleCenter,
+            .Margin = New Padding(0)
+        }
+    End Function
+
+    ''' <summary>濃い青背景のハイライトラベル (設計書の特定ヘッダセル用)</summary>
+    Private Function CreateHighlightGridLabel(text As String, fgColor As Color) As Label
+        Return New Label() With {
+            .Text = text,
+            .Dock = DockStyle.Fill,
+            .BackColor = Color.FromArgb(0, 51, 102),
+            .ForeColor = fgColor,
             .Font = FNT_LABEL,
             .TextAlign = ContentAlignment.MiddleCenter,
             .Margin = New Padding(0)
