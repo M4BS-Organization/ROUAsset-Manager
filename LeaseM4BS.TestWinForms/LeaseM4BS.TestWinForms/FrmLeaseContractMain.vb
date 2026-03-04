@@ -899,17 +899,15 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 4
+            .ColumnCount = 1, .RowCount = 3
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 現契約期間 + 現支払情報
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 会計期間・金額
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 返済スケジュールマトリックス
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 会計期間・金額 + 返済スケジュールマトリックス
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 変更履歴
 
         mainTbl.Controls.Add(BuildAccSchTopRowSection(), 0, 0)
         mainTbl.Controls.Add(BuildAccSchAccountingSection(), 0, 1)
-        mainTbl.Controls.Add(BuildAccSchMatrixSection(), 0, 2)
-        mainTbl.Controls.Add(BuildAccChangeHistorySection(), 0, 3)
+        mainTbl.Controls.Add(BuildAccChangeHistorySection(), 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgAccounting.Controls.Add(scroll)
@@ -1066,6 +1064,7 @@ Public Class FrmLeaseContractMain
         tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 9, 3)
 
         tbl.RowCount = 4
+        grpAccounting.Controls.Add(BuildAccSchMatrixSection())
         grpAccounting.Controls.Add(tbl)
         Return grpAccounting
     End Function
