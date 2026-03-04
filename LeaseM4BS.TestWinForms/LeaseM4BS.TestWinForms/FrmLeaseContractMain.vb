@@ -96,10 +96,6 @@ Public Class FrmLeaseContractMain
     Private numLeaseIncentive As NumericUpDown
 
 
-    ' === 会計タブ: アクションボタン ===
-    Private btnCalcAccSchedule As Button
-    Private btnSaveAccounting As Button
-
     ' === スケジュールタブ: 現契約期間 ===
     Private txtSchContractDate As TextBox
     Private txtSchStartDate As TextBox
@@ -903,19 +899,17 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 5
+            .ColumnCount = 1, .RowCount = 4
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 現契約期間 + 現支払情報
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 会計期間・金額
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 返済スケジュールマトリックス
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 変更履歴
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))  ' アクションボタン
 
         mainTbl.Controls.Add(BuildAccSchTopRowSection(), 0, 0)
         mainTbl.Controls.Add(BuildAccSchAccountingSection(), 0, 1)
         mainTbl.Controls.Add(BuildAccSchMatrixSection(), 0, 2)
         mainTbl.Controls.Add(BuildAccChangeHistorySection(), 0, 3)
-        mainTbl.Controls.Add(BuildAccActionsSection(), 0, 4)
 
         scroll.Controls.Add(mainTbl)
         pgAccounting.Controls.Add(scroll)
@@ -1245,54 +1239,6 @@ Public Class FrmLeaseContractMain
 
         grpChangeHistory.Controls.Add(dgvChangeHistory)
         Return grpChangeHistory
-    End Function
-
-    ''' <summary>保存・スケジュール計算ボタン</summary>
-    Private Function BuildAccActionsSection() As Panel
-        Dim pnlAccActions As New Panel() With {
-            .Dock = DockStyle.Fill, .Padding = New Padding(0, 8, 0, 0)
-        }
-        Dim flowActions As New FlowLayoutPanel() With {
-            .Dock = DockStyle.Fill,
-            .FlowDirection = FlowDirection.RightToLeft,
-            .WrapContents = False,
-            .Padding = New Padding(0)
-        }
-
-        btnSaveAccounting = New Button() With {
-            .Text = "保存",
-            .Width = 120, .Height = 32,
-            .FlatStyle = FlatStyle.Flat,
-            .BackColor = CLR_HEADER,
-            .ForeColor = Color.White,
-            .Font = FNT_LABEL,
-            .Cursor = Cursors.Hand,
-            .Margin = New Padding(4, 0, 0, 0)
-        }
-        btnSaveAccounting.FlatAppearance.BorderSize = 0
-        AddHandler btnSaveAccounting.Click, Sub(s, e)
-            MessageBox.Show("未実装", "保存", MessageBoxButtons.OK, MessageBoxIcon.Information)
-        End Sub
-
-        btnCalcAccSchedule = New Button() With {
-            .Text = "スケジュール計算",
-            .Width = 150, .Height = 32,
-            .FlatStyle = FlatStyle.Flat,
-            .BackColor = CLR_ACCENT,
-            .ForeColor = Color.White,
-            .Font = FNT_LABEL,
-            .Cursor = Cursors.Hand,
-            .Margin = New Padding(4, 0, 0, 0)
-        }
-        btnCalcAccSchedule.FlatAppearance.BorderSize = 0
-        AddHandler btnCalcAccSchedule.Click, Sub(s, e)
-            MessageBox.Show("未実装", "スケジュール計算", MessageBoxButtons.OK, MessageBoxIcon.Information)
-        End Sub
-
-        flowActions.Controls.Add(btnSaveAccounting)
-        flowActions.Controls.Add(btnCalcAccSchedule)
-        pnlAccActions.Controls.Add(flowActions)
-        Return pnlAccActions
     End Function
 
     Private Sub InitTabSublease()
