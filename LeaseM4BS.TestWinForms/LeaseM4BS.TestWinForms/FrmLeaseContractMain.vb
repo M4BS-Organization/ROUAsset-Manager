@@ -47,7 +47,6 @@ Public Class FrmLeaseContractMain
     Private pgContract As TabPage
     Private pgInitial As TabPage
     Private pgAccounting As TabPage
-    Private pgSchedule As TabPage
     Private pgSublease As TabPage
     Private pgJudgment As TabPage
 
@@ -364,18 +363,16 @@ Public Class FrmLeaseContractMain
         pgContract = New TabPage("契約") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
         pgInitial = New TabPage("初回金") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
         pgAccounting = New TabPage("会計") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
-        pgSchedule = New TabPage("スケジュール") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
         pgSublease = New TabPage("転貸") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
         pgJudgment = New TabPage("リース判定") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
 
         InitTabContract()
         InitTabInitialCost()
         InitTabAccounting()
-        InitTabSchedule()
         InitTabSublease()
         InitTabJudge_Pro()
 
-        tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSchedule, pgSublease, pgJudgment})
+        tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
         AddHandler tabMain.SelectedIndexChanged, Sub(s, e)
             If tabMain.SelectedTab Is pgAccounting Then UpdateAccountingTabValues()
         End Sub
@@ -932,10 +929,14 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 3
+            .ColumnCount = 1, .RowCount = 7
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 契約期間 + 初回金
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 更新解約規定
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 現契約期間 + 現支払情報
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 会計期間・金額
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 返済スケジュールマトリックス
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 変更履歴
         mainTbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))  ' アクションボタン
 
         ' ============================================================
@@ -1277,49 +1278,24 @@ Public Class FrmLeaseContractMain
         flowActions.Controls.Add(btnCalcAccSchedule)
         pnlAccActions.Controls.Add(flowActions)
 
-        ' ============================================================
-        ' メインレイアウトに全セクションを追加
-        ' ============================================================
-        mainTbl.Controls.Add(pnlContractAndInitial, 0, 0)
-        mainTbl.Controls.Add(grpRenewalCancel, 0, 1)
-        mainTbl.Controls.Add(pnlAccActions, 0, 2)
-
-        scroll.Controls.Add(mainTbl)
-        pgAccounting.Controls.Add(scroll)
-    End Sub
-
-    Private Sub InitTabSchedule()
-        Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(6)}
-
-        Dim mainTbl As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 5
-        }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 現契約期間 + 現支払情報
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 会計期間・金額
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 返済スケジュールマトリックス
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 変更履歴
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 10.0F))  ' 余白
-
-        ' 特殊カラー定義
+        ' スケジュールセクション用カラー定義
         Dim clrNavy As Color = Color.FromArgb(0, 0, 128)
         Dim clrYellow As Color = Color.Yellow
         Dim clrLightGreen As Color = Color.FromArgb(198, 239, 206)
-        Dim clrTblHeader As Color = Color.FromArgb(0, 128, 0)
 
         ' ============================================================
         ' Row 0: ＜現契約期間＞ + ＜現支払情報＞ (横並び)
         ' ============================================================
-        Dim pnlTopRow As New Panel() With {
+        Dim pnlSchTopRow As New Panel() With {
             .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0, 0, 0, 4)
         }
-        Dim tblTopRow As New TableLayoutPanel() With {
+        Dim tblSchTopRow As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 2, .RowCount = 1
         }
-        tblTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 45.0F))
-        tblTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 55.0F))
-        tblTopRow.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        tblSchTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 45.0F))
+        tblSchTopRow.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 55.0F))
+        tblSchTopRow.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
         ' --- ＜現契約期間＞ ---
         Dim grpCurrentContract As GroupBox = CreateSection("＜現契約期間＞")
@@ -1394,14 +1370,14 @@ Public Class FrmLeaseContractMain
         tblPI.Controls.Add(txtSchLastPayDate, 4, 1)
         grpPayInfo.Controls.Add(tblPI)
 
-        tblTopRow.Controls.Add(grpCurrentContract, 0, 0)
-        tblTopRow.Controls.Add(grpPayInfo, 1, 0)
-        pnlTopRow.Controls.Add(tblTopRow)
+        tblSchTopRow.Controls.Add(grpCurrentContract, 0, 0)
+        tblSchTopRow.Controls.Add(grpPayInfo, 1, 0)
+        pnlSchTopRow.Controls.Add(tblSchTopRow)
 
         ' ============================================================
         ' Row 1: ＜会計期間＞ + 金額・割合情報
         ' ============================================================
-        Dim pnlAccounting As New Panel() With {
+        Dim pnlSchAccounting As New Panel() With {
             .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0, 0, 0, 4)
         }
         Dim tblAccOuter As New TableLayoutPanel() With {
@@ -1594,7 +1570,7 @@ Public Class FrmLeaseContractMain
 
         tblAccOuter.Controls.Add(pnlAccLeft, 0, 0)
         tblAccOuter.Controls.Add(pnlAccRight, 1, 0)
-        pnlAccounting.Controls.Add(tblAccOuter)
+        pnlSchAccounting.Controls.Add(tblAccOuter)
 
         ' ============================================================
         ' Row 2: 返済スケジュールマトリックス
@@ -1808,13 +1784,16 @@ Public Class FrmLeaseContractMain
         ' ============================================================
         ' メインレイアウトに全セクションを追加
         ' ============================================================
-        mainTbl.Controls.Add(pnlTopRow, 0, 0)
-        mainTbl.Controls.Add(pnlAccounting, 0, 1)
-        mainTbl.Controls.Add(pnlMatrix, 0, 2)
-        mainTbl.Controls.Add(grpChangeHistory, 0, 3)
+        mainTbl.Controls.Add(pnlContractAndInitial, 0, 0)
+        mainTbl.Controls.Add(grpRenewalCancel, 0, 1)
+        mainTbl.Controls.Add(pnlSchTopRow, 0, 2)
+        mainTbl.Controls.Add(pnlSchAccounting, 0, 3)
+        mainTbl.Controls.Add(pnlMatrix, 0, 4)
+        mainTbl.Controls.Add(grpChangeHistory, 0, 5)
+        mainTbl.Controls.Add(pnlAccActions, 0, 6)
 
         scroll.Controls.Add(mainTbl)
-        pgSchedule.Controls.Add(scroll)
+        pgAccounting.Controls.Add(scroll)
     End Sub
 
     Private Sub InitTabSublease()
