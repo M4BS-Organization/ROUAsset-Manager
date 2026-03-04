@@ -2224,7 +2224,7 @@ Public Class FrmLeaseContractMain
             lblLeaseMonths.Text = leaseMonths.ToString() & "ヶ月"
             _tooltipProvider.SetToolTip(lblLeaseMonths,
                 String.Format("計算式: ({0} - {1})の月数{2} - 無償期間{3}ヶ月 = {4}ヶ月",
-                    startDt.ToString("yyyy/MM/dd"), endDt.ToString("yyyy/MM/dd"),
+                    endDt.ToString("yyyy/MM/dd"), startDt.ToString("yyyy/MM/dd"),
                     totalMonths, freePeriodVal, leaseMonths))
         Catch ex As Exception
             lblLeaseMonths.Text = "---ヶ月"
