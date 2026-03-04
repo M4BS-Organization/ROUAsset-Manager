@@ -984,7 +984,6 @@ Public Class FrmLeaseContractMain
 
     ''' <summary>＜会計期間＞ 統合表形式</summary>
     Private Function BuildAccSchAccountingSection() As GroupBox
-        Dim CLR_MATRIX_HEADER As Color = Color.FromArgb(0, 51, 102)
         Dim grpAccounting As GroupBox = CreateSection("＜会計期間＞")
         Dim tbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
@@ -1005,12 +1004,7 @@ Public Class FrmLeaseContractMain
 
         ' === 1段目: 更新予想回数 | 開始日 | 会計期間 | 終了日 ===
         tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
-        Dim lblRenewalForecast As New Label() With {
-            .Text = "更新予想回数", .Dock = DockStyle.Fill,
-            .BackColor = CLR_MATRIX_HEADER, .ForeColor = Color.Yellow,
-            .Font = FNT_LABEL, .TextAlign = ContentAlignment.MiddleCenter, .Margin = New Padding(0)
-        }
-        tbl.Controls.Add(lblRenewalForecast, 0, 0)
+        tbl.Controls.Add(CreateGridLabel("更新予想回数"), 0, 0)
         txtSchRenewalForecastCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center}
         tbl.Controls.Add(txtSchRenewalForecastCount, 1, 0)
         tbl.Controls.Add(CreateGridLabel("開始日"), 2, 0)
@@ -1085,7 +1079,6 @@ Public Class FrmLeaseContractMain
 
     ''' <summary>返済スケジュールマトリックス (クロス集計表形式)</summary>
     Private Function BuildAccSchMatrixSection() As Panel
-        Dim CLR_MATRIX_HEADER As Color = Color.FromArgb(0, 51, 102)
         Dim pnlMatrix As New Panel() With {
             .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0, 0, 0, 4)
         }
@@ -1108,13 +1101,13 @@ Public Class FrmLeaseContractMain
         tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
         tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
 
-        tblLeft.Controls.Add(CreateMatrixHeaderLabel("現在価値", CLR_MATRIX_HEADER, Color.White), 0, 0)
+        tblLeft.Controls.Add(CreateGridLabel("現在価値"), 0, 0)
         txtSchPresentValue = New TextBox() With {
             .Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY,
             .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right
         }
         tblLeft.Controls.Add(txtSchPresentValue, 0, 1)
-        tblLeft.Controls.Add(CreateMatrixHeaderLabel("使用権資産", CLR_MATRIX_HEADER, Color.Yellow), 0, 2)
+        tblLeft.Controls.Add(CreateGridLabel("使用権資産"), 0, 2)
 
         ' === 右側: 返済スケジュール表 (マトリックス) ===
         Dim tblSchedule As New TableLayoutPanel() With {
@@ -1134,14 +1127,14 @@ Public Class FrmLeaseContractMain
         tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
 
         ' ヘッダー行
-        tblSchedule.Controls.Add(CreateMatrixHeaderLabel("返済スケジュール", CLR_MATRIX_HEADER, Color.Yellow), 0, 0)
+        tblSchedule.Controls.Add(CreateGridLabel("返済スケジュール"), 0, 0)
         Dim schHeaders() As String = {"期首", "増加", "変更増減", "減少", "期末"}
         For i As Integer = 0 To schHeaders.Length - 1
-            tblSchedule.Controls.Add(CreateMatrixHeaderLabel(schHeaders(i), CLR_MATRIX_HEADER, Color.White), i + 1, 0)
+            tblSchedule.Controls.Add(CreateGridLabel(schHeaders(i)), i + 1, 0)
         Next
 
         ' Row 1: 使用権資産
-        tblSchedule.Controls.Add(CreateMatrixHeaderLabel("使用権資産", CLR_MATRIX_HEADER, Color.White), 0, 1)
+        tblSchedule.Controls.Add(CreateGridLabel("使用権資産"), 0, 1)
         txtSchRouBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
         txtSchRouIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
         txtSchRouChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
@@ -1154,7 +1147,7 @@ Public Class FrmLeaseContractMain
         tblSchedule.Controls.Add(txtSchRouEnd, 5, 1)
 
         ' Row 2: リース負債
-        tblSchedule.Controls.Add(CreateMatrixHeaderLabel("リース負債", CLR_MATRIX_HEADER, Color.White), 0, 2)
+        tblSchedule.Controls.Add(CreateGridLabel("リース負債"), 0, 2)
         txtSchLiabBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
         txtSchLiabIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
         txtSchLiabChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
@@ -1167,7 +1160,7 @@ Public Class FrmLeaseContractMain
         tblSchedule.Controls.Add(txtSchLiabEnd, 5, 2)
 
         ' Row 3: 除去債務
-        tblSchedule.Controls.Add(CreateMatrixHeaderLabel("除去債務", CLR_MATRIX_HEADER, Color.White), 0, 3)
+        tblSchedule.Controls.Add(CreateGridLabel("除去債務"), 0, 3)
         txtSchAroBegin = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
         txtSchAroIncrease = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
         txtSchAroChange = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right}
@@ -1212,8 +1205,7 @@ Public Class FrmLeaseContractMain
         dgvChangeHistory.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "変更", .Name = "ChangeNo", .FillWeight = 6,
             .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleCenter,
-                .BackColor = Color.Yellow
+                .Alignment = DataGridViewContentAlignment.MiddleCenter
             }
         })
         dgvChangeHistory.Columns.Add(New DataGridViewTextBoxColumn() With {
@@ -1985,19 +1977,6 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Fill,
             .BackColor = CLR_READONLY,
             .ForeColor = CLR_TEXT,
-            .Font = FNT_LABEL,
-            .TextAlign = ContentAlignment.MiddleCenter,
-            .Margin = New Padding(0)
-        }
-    End Function
-
-    ''' <summary>マトリックスヘッダー用ラベル (任意背景色・前景色)</summary>
-    Private Function CreateMatrixHeaderLabel(text As String, bgColor As Color, fgColor As Color) As Label
-        Return New Label() With {
-            .Text = text,
-            .Dock = DockStyle.Fill,
-            .BackColor = bgColor,
-            .ForeColor = fgColor,
             .Font = FNT_LABEL,
             .TextAlign = ContentAlignment.MiddleCenter,
             .Margin = New Padding(0)
