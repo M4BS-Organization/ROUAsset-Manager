@@ -1628,19 +1628,8 @@ Public Class FrmLeaseContractMain
             txtSchAccEndDate.Text = accEndDt.ToString("yyyy/MM/dd")
             txtSchAccPeriod.Text = accountingMonths.ToString() & "ヶ月"
 
-            ' dgvMonthlyPayments から月額賃料（税抜）を集計
-            Dim monthlyRentExTax As Decimal = 0
-            For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
-                If row.IsNewRow Then Continue For
-                Dim itemVal As String = If(row.Cells("MItem").Value?.ToString(), "")
-                If itemVal = "賃料" Then
-                    Dim amt As Decimal = 0
-                    Decimal.TryParse(If(row.Cells("MAmountExTax").Value?.ToString(), "0"),
-                                     System.Globalization.NumberStyles.Any,
-                                     System.Globalization.CultureInfo.InvariantCulture, amt)
-                    monthlyRentExTax += amt
-                End If
-            Next
+            ' 月額賃料 = リース判定タブの月額リース料（numMonthlyRentJudge）を使用
+            Dim monthlyRentExTax As Decimal = numMonthlyRentJudge.Value
             txtSchRent.Text = monthlyRentExTax.ToString("N0")
             txtSchRenewalRent.Text = numRenewalRent.Value.ToString("N0")
 
