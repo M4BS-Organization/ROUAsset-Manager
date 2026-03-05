@@ -406,8 +406,8 @@ Partial Public Class FrmAssetDetailEntry
                     "SELECT * FROM d_asset WHERE asset_id = @asset_id", params)
                 If dt.Rows.Count > 0 Then
                     Dim row As DataRow = dt.Rows(0)
-                    ' 新規3項目の読み込み
-                    Dim accountClassVal As String = db.SafeConvert(Of String)(row("account_class"), "")
+                    ' 資産区分 (旧 account_class → asset_category_cd / m_asset_category FK)
+                    Dim accountClassVal As String = db.SafeConvert(Of String)(row("asset_category_cd"), "")
                     If Not String.IsNullOrEmpty(accountClassVal) Then
                         Dim idx As Integer = cmbAccountClass.FindStringExact(accountClassVal)
                         If idx >= 0 Then cmbAccountClass.SelectedIndex = idx
@@ -435,10 +435,10 @@ Partial Public Class FrmAssetDetailEntry
                     Else
                         dtpCompletion.Checked = False
                     End If
-                    txtLandlordName.Text = db.SafeConvert(Of String)(row("kashushi_nm"), "")
-                    txtBrokerCompany.Text = db.SafeConvert(Of String)(row("chukai_nm"), "")
-                    txtPaymentAgent.Text = db.SafeConvert(Of String)(row("kessai_nm"), "")
-                    txtGuarantor.Text = db.SafeConvert(Of String)(row("hosho_nm"), "")
+                    txtLandlordName.Text = db.SafeConvert(Of String)(row("kashushi_vendor_cd"), "")  ' 旧 kashushi_nm → m_vendor FK
+                    txtBrokerCompany.Text = db.SafeConvert(Of String)(row("chukai_vendor_cd"), "") ' 旧 chukai_nm   → m_vendor FK
+                    txtPaymentAgent.Text = db.SafeConvert(Of String)(row("payment_method_cd"), "")  ' 旧 kessai_nm → m_payment_method FK
+                    txtGuarantor.Text = db.SafeConvert(Of String)(row("hosho_vendor_cd"), "")        ' 旧 hosho_nm  → m_vendor FK
                 End If
 
                 Dim eqParams As New List(Of NpgsqlParameter)()
@@ -559,7 +559,7 @@ Partial Public Class FrmAssetDetailEntry
                 db.BeginTransaction()
                 Try
                     Dim columnValues As New Dictionary(Of String, Object)()
-                    columnValues.Add("account_class", AccountClass)
+                    columnValues.Add("asset_category_cd", AccountClass) ' 旧 account_class → m_asset_category FK
                     columnValues.Add("asset_no", txtAssetNo.Text)
                     columnValues.Add("quantity", CInt(numQuantity.Value))
                     columnValues.Add("bukken_nm", txtPropertyName.Text)
@@ -575,10 +575,10 @@ Partial Public Class FrmAssetDetailEntry
                     Else
                         columnValues.Add("shunko_dt", DBNull.Value)
                     End If
-                    columnValues.Add("kashushi_nm", txtLandlordName.Text)
-                    columnValues.Add("chukai_nm", txtBrokerCompany.Text)
-                    columnValues.Add("kessai_nm", txtPaymentAgent.Text)
-                    columnValues.Add("hosho_nm", txtGuarantor.Text)
+                    columnValues.Add("kashushi_vendor_cd", txtLandlordName.Text)  ' 旧 kashushi_nm → m_vendor FK
+                    columnValues.Add("chukai_vendor_cd", txtBrokerCompany.Text)   ' 旧 chukai_nm   → m_vendor FK
+                    columnValues.Add("payment_method_cd", txtPaymentAgent.Text)   ' 旧 kessai_nm   → m_payment_method FK
+                    columnValues.Add("hosho_vendor_cd", txtGuarantor.Text)         ' 旧 hosho_nm    → m_vendor FK
                     columnValues.Add("update_dt", DateTime.Now)
 
                     If AssetId > 0 Then

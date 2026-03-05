@@ -209,11 +209,14 @@ Partial Public Class FrmFlexContract
             Dim rowIndex As Integer = dgvContractList.Rows.Add()
             Dim dgvRow As DataGridViewRow = dgvContractList.Rows(rowIndex)
 
-            ' カラムマッピング: 旧 td_sisn → 新 d_asset
-            dgvRow.Cells("colMgmtUnit").Value = SafeValue(row, "mgmt_unit")           ' knrtni → mgmt_unit
-            dgvRow.Cells("colContractType").Value = SafeValue(row, "contract_type")   ' kykkbn → contract_type
-            dgvRow.Cells("colAccountTarget").Value = SafeValue(row, "acct_target")    ' kjotis → acct_target
-            dgvRow.Cells("colPayee").Value = SafeValue(row, "payee")                  ' shrsk → payee
+            ' カラムマッピング: d_asset マスタFK参照カラムへ更新
+            '   mgmt_unit     → contract_mgmt_unit_cd (m_contract_mgmt_unit)
+            '   contract_type → property_type_cd      (m_property_type)
+            '   payee         → supplier_cd           (m_supplier)
+            dgvRow.Cells("colMgmtUnit").Value = SafeValue(row, "contract_mgmt_unit_cd") ' 旧 mgmt_unit
+            dgvRow.Cells("colContractType").Value = SafeValue(row, "property_type_cd")  ' 旧 contract_type
+            dgvRow.Cells("colAccountTarget").Value = SafeValue(row, "acct_target")
+            dgvRow.Cells("colPayee").Value = SafeValue(row, "supplier_cd")              ' 旧 payee
             dgvRow.Cells("colContractNo").Value = SafeValue(row, "contract_no")       ' kykno → contract_no
             dgvRow.Cells("colOwnMgmt").Value = SafeValue(row, "own_mgmt")             ' jshknr → own_mgmt
             dgvRow.Cells("colApprovalNo").Value = SafeValue(row, "approval_no")       ' rngno → approval_no
