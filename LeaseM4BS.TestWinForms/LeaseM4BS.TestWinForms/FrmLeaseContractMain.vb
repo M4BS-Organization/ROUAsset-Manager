@@ -995,7 +995,15 @@ Public Class FrmLeaseContractMain
 
         ' === 1段目: 更新予想回数 | 開始日 | 会計期間 | 終了日 ===
         tbl.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
-        tbl.Controls.Add(CreateGridLabel("更新予想回数"), 0, 0)
+        tbl.Controls.Add(New Label() With {
+            .Text = "更新予想回数",
+            .Dock = DockStyle.Fill,
+            .BackColor = Color.FromArgb(255, 235, 59),
+            .ForeColor = CLR_TEXT,
+            .Font = FNT_LABEL,
+            .TextAlign = ContentAlignment.MiddleCenter,
+            .Margin = New Padding(2)
+        }, 0, 0)
         txtSchRenewalForecastCount = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(2)}
         tbl.Controls.Add(txtSchRenewalForecastCount, 1, 0)
         tbl.Controls.Add(CreateGridLabel("開始日"), 2, 0)
@@ -1022,10 +1030,10 @@ Public Class FrmLeaseContractMain
         tbl.Controls.Add(CreateGridLabel("更新支払日"), 4, 1)
         txtSchRenewalPayDate = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Center, .Margin = New Padding(2)}
         tbl.Controls.Add(txtSchRenewalPayDate, 5, 1)
-        ' 6-9列は空白
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 6, 1)
+        ' 6-9列: 配分総額・割引率を列ヘッダーとして表示
+        tbl.Controls.Add(CreateGridLabel("配分総額"), 6, 1)
         tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 7, 1)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 8, 1)
+        tbl.Controls.Add(CreateGridLabel("割引率"), 8, 1)
         tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 9, 1)
 
         ' === 3段目: 賃料総額 | 算定総額 | リース割合 | 配分総額 | 割引率 ===
@@ -1039,10 +1047,10 @@ Public Class FrmLeaseContractMain
         tbl.Controls.Add(CreateGridLabel("リース割合"), 4, 2)
         txtSchLeaseRatio = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         tbl.Controls.Add(txtSchLeaseRatio, 5, 2)
-        tbl.Controls.Add(CreateGridLabel("配分総額"), 6, 2)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 6, 2)
         txtSchAllocTotal = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         tbl.Controls.Add(txtSchAllocTotal, 7, 2)
-        tbl.Controls.Add(CreateGridLabel("割引率"), 8, 2)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 8, 2)
         txtSchDiscountRate = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         tbl.Controls.Add(txtSchDiscountRate, 9, 2)
 
@@ -1054,14 +1062,18 @@ Public Class FrmLeaseContractMain
         tbl.Controls.Add(CreateGridLabel("非リース割合"), 2, 3)
         txtSchNonLeaseRatio = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         tbl.Controls.Add(txtSchNonLeaseRatio, 3, 3)
-        tbl.Controls.Add(CreateGridLabel("配分総額"), 4, 3)
-        txtSchDistributionRate = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
-        tbl.Controls.Add(txtSchDistributionRate, 5, 3)
-        ' 6-9列は空白
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 4, 3)
+        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 5, 3)
         tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 6, 3)
-        tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 7, 3)
+        txtSchDistributionRate = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
+        tbl.Controls.Add(txtSchDistributionRate, 7, 3)
         tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 8, 3)
         tbl.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 9, 3)
+
+        ' リース割合・非リース割合・維持管理費用はユーザー入力後に再計算
+        AddHandler txtSchLeaseRatio.Leave, Sub(s, e) RecalcAll()
+        AddHandler txtSchNonLeaseRatio.Leave, Sub(s, e) RecalcAll()
+        AddHandler txtSchMaintenanceCost.Leave, Sub(s, e) RecalcAll()
 
         tbl.RowCount = 4
         grpAccounting.Controls.Add(BuildAccSchMatrixSection())
@@ -1069,102 +1081,96 @@ Public Class FrmLeaseContractMain
         Return grpAccounting
     End Function
 
-    ''' <summary>返済スケジュールマトリックス (クロス集計表形式)</summary>
+    ''' <summary>返済スケジュールマトリックス (フラット集計表形式: 現在価値/使用権資産/返済スケジュール を水平ヘッダー行に配置)</summary>
     Private Function BuildAccSchMatrixSection() As Panel
         Dim pnlMatrix As New Panel() With {
             .Dock = DockStyle.Top, .AutoSize = True, .Padding = New Padding(0, 0, 0, 4)
         }
-        Dim tblOuter As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 2, .RowCount = 1
-        }
-        tblOuter.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
-        tblOuter.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        tblOuter.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
-        ' === 左側: 現在価値 + 使用権資産ラベル ===
-        Dim tblLeft As New TableLayoutPanel() With {
+        ' 8列: 現在価値(120) | 使用権資産(80) | 返済スケジュール行名(100) | 期首(%) | 増加(%) | 変更増減(%) | 減少(%) | 期末(%)
+        Dim tblMatrix As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 3, .Padding = New Padding(4)
+            .ColumnCount = 8, .RowCount = 4, .Padding = New Padding(4)
         }
-        tblLeft.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
-        tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblLeft.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblMatrix.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        For r As Integer = 0 To 3
+            tblMatrix.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
+        Next
 
-        tblLeft.Controls.Add(CreateGridLabel("現在価値"), 0, 0)
+        ' ヘッダー行: [現在価値(黄色)] [使用権資産] [返済スケジュール] [期首] [増加] [変更増減] [減少] [期末]
+        tblMatrix.Controls.Add(New Label() With {
+            .Text = "現在価値",
+            .Dock = DockStyle.Fill,
+            .BackColor = Color.FromArgb(255, 235, 59),
+            .ForeColor = CLR_TEXT,
+            .Font = FNT_LABEL,
+            .TextAlign = ContentAlignment.MiddleCenter,
+            .Margin = New Padding(2)
+        }, 0, 0)
+        tblMatrix.Controls.Add(CreateGridLabel("使用権資産"), 1, 0)
+        tblMatrix.Controls.Add(CreateGridLabel("返済スケジュール"), 2, 0)
+        Dim schHeaders() As String = {"期首", "増加", "変更増減", "減少", "期末"}
+        For i As Integer = 0 To schHeaders.Length - 1
+            tblMatrix.Controls.Add(CreateGridLabel(schHeaders(i)), i + 3, 0)
+        Next
+
+        ' Row 1: 現在価値 | 空 | 使用権資産 | values
         txtSchPresentValue = New TextBox() With {
             .Dock = DockStyle.Fill, .BackColor = CLR_CARD,
             .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)
         }
-        tblLeft.Controls.Add(txtSchPresentValue, 0, 1)
-        tblLeft.Controls.Add(CreateGridLabel("使用権資産"), 0, 2)
-
-        ' === 右側: 返済スケジュール表 (マトリックス) ===
-        Dim tblSchedule As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 6, .RowCount = 4, .Padding = New Padding(4)
-        }
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-        tblSchedule.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
-
-        ' ヘッダー行
-        tblSchedule.Controls.Add(CreateGridLabel("返済スケジュール"), 0, 0)
-        Dim schHeaders() As String = {"期首", "増加", "変更増減", "減少", "期末"}
-        For i As Integer = 0 To schHeaders.Length - 1
-            tblSchedule.Controls.Add(CreateGridLabel(schHeaders(i)), i + 1, 0)
-        Next
-
-        ' Row 1: 使用権資産
-        tblSchedule.Controls.Add(CreateGridLabel("使用権資産"), 0, 1)
+        tblMatrix.Controls.Add(txtSchPresentValue, 0, 1)
+        tblMatrix.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 1, 1)
+        tblMatrix.Controls.Add(CreateGridLabel("使用権資産"), 2, 1)
         txtSchRouBegin = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchRouIncrease = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchRouChange = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchRouDecrease = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchRouEnd = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
-        tblSchedule.Controls.Add(txtSchRouBegin, 1, 1)
-        tblSchedule.Controls.Add(txtSchRouIncrease, 2, 1)
-        tblSchedule.Controls.Add(txtSchRouChange, 3, 1)
-        tblSchedule.Controls.Add(txtSchRouDecrease, 4, 1)
-        tblSchedule.Controls.Add(txtSchRouEnd, 5, 1)
+        tblMatrix.Controls.Add(txtSchRouBegin, 3, 1)
+        tblMatrix.Controls.Add(txtSchRouIncrease, 4, 1)
+        tblMatrix.Controls.Add(txtSchRouChange, 5, 1)
+        tblMatrix.Controls.Add(txtSchRouDecrease, 6, 1)
+        tblMatrix.Controls.Add(txtSchRouEnd, 7, 1)
 
-        ' Row 2: リース負債
-        tblSchedule.Controls.Add(CreateGridLabel("リース負債"), 0, 2)
+        ' Row 2: 空 | 空 | リース負債 | values
+        tblMatrix.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 0, 2)
+        tblMatrix.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 1, 2)
+        tblMatrix.Controls.Add(CreateGridLabel("リース負債"), 2, 2)
         txtSchLiabBegin = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchLiabIncrease = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchLiabChange = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchLiabDecrease = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchLiabEnd = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
-        tblSchedule.Controls.Add(txtSchLiabBegin, 1, 2)
-        tblSchedule.Controls.Add(txtSchLiabIncrease, 2, 2)
-        tblSchedule.Controls.Add(txtSchLiabChange, 3, 2)
-        tblSchedule.Controls.Add(txtSchLiabDecrease, 4, 2)
-        tblSchedule.Controls.Add(txtSchLiabEnd, 5, 2)
+        tblMatrix.Controls.Add(txtSchLiabBegin, 3, 2)
+        tblMatrix.Controls.Add(txtSchLiabIncrease, 4, 2)
+        tblMatrix.Controls.Add(txtSchLiabChange, 5, 2)
+        tblMatrix.Controls.Add(txtSchLiabDecrease, 6, 2)
+        tblMatrix.Controls.Add(txtSchLiabEnd, 7, 2)
 
-        ' Row 3: 除去債務
-        tblSchedule.Controls.Add(CreateGridLabel("除去債務"), 0, 3)
+        ' Row 3: 空 | 空 | 除去債務 | values
+        tblMatrix.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 0, 3)
+        tblMatrix.Controls.Add(New Label() With {.Dock = DockStyle.Fill}, 1, 3)
+        tblMatrix.Controls.Add(CreateGridLabel("除去債務"), 2, 3)
         txtSchAroBegin = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchAroIncrease = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchAroChange = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchAroDecrease = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
         txtSchAroEnd = New TextBox() With {.Dock = DockStyle.Fill, .BackColor = CLR_CARD, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = HorizontalAlignment.Right, .Margin = New Padding(2)}
-        tblSchedule.Controls.Add(txtSchAroBegin, 1, 3)
-        tblSchedule.Controls.Add(txtSchAroIncrease, 2, 3)
-        tblSchedule.Controls.Add(txtSchAroChange, 3, 3)
-        tblSchedule.Controls.Add(txtSchAroDecrease, 4, 3)
-        tblSchedule.Controls.Add(txtSchAroEnd, 5, 3)
+        tblMatrix.Controls.Add(txtSchAroBegin, 3, 3)
+        tblMatrix.Controls.Add(txtSchAroIncrease, 4, 3)
+        tblMatrix.Controls.Add(txtSchAroChange, 5, 3)
+        tblMatrix.Controls.Add(txtSchAroDecrease, 6, 3)
+        tblMatrix.Controls.Add(txtSchAroEnd, 7, 3)
 
-        tblOuter.Controls.Add(tblLeft, 0, 0)
-        tblOuter.Controls.Add(tblSchedule, 1, 0)
-        pnlMatrix.Controls.Add(tblOuter)
+        pnlMatrix.Controls.Add(tblMatrix)
         Return pnlMatrix
     End Function
 
@@ -1178,7 +1184,7 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Fill,
             .BackgroundColor = CLR_CARD,
             .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            .AllowUserToAddRows = True,
+            .AllowUserToAddRows = False,
             .RowHeadersVisible = False,
             .BorderStyle = BorderStyle.None,
             .GridColor = CLR_BORDER,
@@ -1585,26 +1591,131 @@ Public Class FrmLeaseContractMain
     End Sub
 
     ''' <summary>
-    ''' 契約タブ・初回金タブの入力値を会計タブのReadOnly TextBoxに反映する
+    ''' 契約タブ・初回金タブの入力値を会計タブに反映し、各種会計金額を自動計算する。
+    ''' 企業会計基準第34号に基づく当初認識（使用権資産・リース負債）を算定する。
     ''' </summary>
     Private Sub UpdateAccountingTabValues()
         If Not _isLoaded Then Return
         Try
-            ' --- 現契約期間の連動 ---
+            Dim startDt As DateTime = dtpStartDate.Value
+            Dim endDt As DateTime = dtpEndDate.Value
+            Dim freePeriodMonths As Integer = CInt(numFreePeriod.Value)
+            Dim renewalCount As Integer = CInt(numRenewalCount.Value)
+
+            ' 基本リース期間（無償期間控除後、月数）
+            Dim baseMonths As Integer = Math.Max(0, ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month) - freePeriodMonths)
+            ' 会計期間 = 基本期間 × (1 + 更新予想回数)（第34号§8 延長オプション合理的確実性）
+            Dim accountingMonths As Integer = baseMonths * (1 + renewalCount)
+
+            ' --- ＜現契約期間＞ ---
             txtSchContractDate.Text = dtpApplyDate.Value.ToString("yyyy/MM/dd")
-            txtSchStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
-            txtSchEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
+            txtSchStartDate.Text = startDt.ToString("yyyy/MM/dd")
+            txtSchEndDate.Text = endDt.ToString("yyyy/MM/dd")
             txtSchContractPeriod.Text = lblLeaseMonths.Text
 
-            ' --- 現支払情報の連動 ---
-            txtSchFreePeriod.Text = CInt(numFreePeriod.Value).ToString() & " ヶ月"
+            ' --- ＜現支払情報＞ ---
+            txtSchFreePeriod.Text = freePeriodMonths.ToString() & " ヶ月"
+            txtSchPayCount.Text = baseMonths.ToString() & " 回"
+            txtSchPayInterval.Text = "1 ヶ月"
+            Dim firstPayDt As DateTime = startDt.AddMonths(freePeriodMonths + 1)
+            txtSchFirstPayDate.Text = firstPayDt.ToString("yyyy/MM/dd")
+            txtSchLastPayDate.Text = endDt.AddMonths(-1).ToString("yyyy/MM/dd")
 
-            ' --- 会計期間の連動 ---
-            txtSchRenewalForecastCount.Text = CInt(numRenewalCount.Value).ToString()
-            txtSchAccStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
-            txtSchAccEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
-            txtSchAccPeriod.Text = lblLeaseMonths.Text
+            ' --- ＜会計期間＞ ---
+            txtSchRenewalForecastCount.Text = renewalCount.ToString()
+            txtSchAccStartDate.Text = startDt.ToString("yyyy/MM/dd")
+            Dim accEndDt As DateTime = startDt.AddMonths(accountingMonths)
+            txtSchAccEndDate.Text = accEndDt.ToString("yyyy/MM/dd")
+            txtSchAccPeriod.Text = accountingMonths.ToString() & "ヶ月"
+
+            ' dgvMonthlyPayments から月額賃料（税抜）を集計
+            Dim monthlyRentExTax As Decimal = 0
+            For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
+                If row.IsNewRow Then Continue For
+                Dim itemVal As String = If(row.Cells("MItem").Value?.ToString(), "")
+                If itemVal = "賃料" Then
+                    Dim amt As Decimal = 0
+                    Decimal.TryParse(If(row.Cells("MAmountExTax").Value?.ToString(), "0"),
+                                     System.Globalization.NumberStyles.Any,
+                                     System.Globalization.CultureInfo.InvariantCulture, amt)
+                    monthlyRentExTax += amt
+                End If
+            Next
+            txtSchRent.Text = monthlyRentExTax.ToString("N0")
             txtSchRenewalRent.Text = numRenewalRent.Value.ToString("N0")
+
+            ' --- 賃料総額・算定総額（第34号§22 リース負債の当初測定） ---
+            Dim rentTotal As Decimal = monthlyRentExTax * baseMonths
+            Dim calcTotal As Decimal = monthlyRentExTax * accountingMonths
+            txtSchRentTotal.Text = rentTotal.ToString("N0")
+            txtSchCalcTotal.Text = calcTotal.ToString("N0")
+
+            ' --- 割引率（第34号§22: 計算利子率、又は追加借入利子率） ---
+            Dim discRate As Decimal = numDiscountRate.Value
+            txtSchDiscountRate.Text = discRate.ToString("0.00")
+
+            ' --- リース・非リース 配分計算（第34号§13 構成要素の区分） ---
+            Dim leaseRatio As Decimal = 0
+            Dim nonLeaseRatio As Decimal = 0
+            Decimal.TryParse(txtSchLeaseRatio.Text.Replace(",", ""),
+                             System.Globalization.NumberStyles.Any,
+                             System.Globalization.CultureInfo.InvariantCulture, leaseRatio)
+            Decimal.TryParse(txtSchNonLeaseRatio.Text.Replace(",", ""),
+                             System.Globalization.NumberStyles.Any,
+                             System.Globalization.CultureInfo.InvariantCulture, nonLeaseRatio)
+            Dim totalRatio As Decimal = leaseRatio + nonLeaseRatio
+            Dim leaseAllocTotal As Decimal
+            If totalRatio > 0 Then
+                leaseAllocTotal = Math.Round(calcTotal * leaseRatio / totalRatio, 0)
+                txtSchAllocTotal.Text = leaseAllocTotal.ToString("N0")
+                txtSchDistributionRate.Text = Math.Round(calcTotal * nonLeaseRatio / totalRatio, 0).ToString("N0")
+            Else
+                leaseAllocTotal = calcTotal
+                txtSchAllocTotal.Text = calcTotal.ToString("N0")
+                txtSchDistributionRate.Text = "0"
+            End If
+
+            ' --- 現在価値計算（第34号§22: 将来リース料の現在価値、期末払い年金現価公式） ---
+            Dim monthlyPayment As Decimal = If(accountingMonths > 0, leaseAllocTotal / accountingMonths, 0)
+            Dim pv As Decimal = 0
+            If discRate > 0 AndAlso accountingMonths > 0 Then
+                Dim r As Double = CDbl(discRate) / 12.0 / 100.0
+                pv = CDec(CDbl(monthlyPayment) * (1.0 - Math.Pow(1.0 + r, -accountingMonths)) / r)
+            Else
+                pv = leaseAllocTotal
+            End If
+            pv = Math.Round(pv, 0)
+            txtSchPresentValue.Text = pv.ToString("N0")
+
+            ' --- 使用権資産・リース負債 当初認識（第34号§27・§22） ---
+            ' 期首が未設定（新規契約）の場合のみ自動計算する
+            Dim rouBeginVal As Decimal = 0
+            Dim liabBeginVal As Decimal = 0
+            Decimal.TryParse(txtSchRouBegin.Text.Replace(",", ""),
+                             System.Globalization.NumberStyles.Any,
+                             System.Globalization.CultureInfo.InvariantCulture, rouBeginVal)
+            Decimal.TryParse(txtSchLiabBegin.Text.Replace(",", ""),
+                             System.Globalization.NumberStyles.Any,
+                             System.Globalization.CultureInfo.InvariantCulture, liabBeginVal)
+
+            If rouBeginVal = 0 AndAlso liabBeginVal = 0 Then
+                ' 使用権資産 = PV + 初期直接費用 + 原状回復費用見積 - リース・インセンティブ（第34号§27）
+                Dim rouAmount As Decimal = pv + numInitialDirectCost.Value + numRestorationCost.Value - numLeaseIncentive.Value
+                rouAmount = Math.Max(0, rouAmount)
+                txtSchRouBegin.Text = "0"
+                txtSchRouIncrease.Text = rouAmount.ToString("N0")
+                txtSchRouChange.Text = "0"
+                txtSchRouDecrease.Text = "0"
+                txtSchRouEnd.Text = rouAmount.ToString("N0")
+
+                ' リース負債 = PV（第34号§22）
+                txtSchLiabBegin.Text = "0"
+                txtSchLiabIncrease.Text = pv.ToString("N0")
+                txtSchLiabChange.Text = "0"
+                txtSchLiabDecrease.Text = "0"
+                txtSchLiabEnd.Text = pv.ToString("N0")
+            End If
+
         Catch ex As Exception
             System.Diagnostics.Debug.WriteLine($"[UpdateAccountingTabValues] Error: {ex.Message}")
         End Try
