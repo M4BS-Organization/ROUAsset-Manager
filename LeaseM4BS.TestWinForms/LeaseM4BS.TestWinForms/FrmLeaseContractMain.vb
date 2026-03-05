@@ -80,15 +80,6 @@ Public Class FrmLeaseContractMain
     Private dtpEndDate As DateTimePicker
     Private numFreePeriod As NumericUpDown
     Private lblLeaseMonths As Label
-    Private numRenewalCount As NumericUpDown
-    Private numRenewalRent As NumericUpDown
-    Private cmbRenewalLikelihood As ComboBox
-    Private numCancelNoticePeriod As NumericUpDown
-    Private numCancelPenalty As NumericUpDown
-    Private cmbCancelLikelihood As ComboBox
-    Private numPurchasePrice As NumericUpDown
-    Private cmbPurchaseLikelihood As ComboBox
-    Private dtpMoveOutDate As DateTimePicker
 
     Private dgvInitialCosts As DataGridView
     Private numInitialDirectCost As NumericUpDown
@@ -326,9 +317,8 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Top,
             .AutoSize = True,
             .ColumnCount = 1,
-            .RowCount = 3
+            .RowCount = 2
         }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
@@ -662,75 +652,8 @@ Public Class FrmLeaseContractMain
         grpProperty.Controls.Add(pnlGrid)
         grpProperty.Controls.Add(tblProp)
 
-        Dim grpPeriod As GroupBox = CreateSection("オプション")
-        Dim tblPeriod As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
-        }
-        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
-        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 140.0F))
-        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        numRenewalCount = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 99,
-            .TextAlign = HorizontalAlignment.Right
-        }
-        numRenewalRent = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 9999999999D,
-            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right
-        }
-        cmbRenewalLikelihood = New ComboBox() With {
-            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList
-        }
-        cmbRenewalLikelihood.Items.AddRange({"確実", "高い", "低い"})
-
-        numCancelNoticePeriod = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 120,
-            .TextAlign = HorizontalAlignment.Right
-        }
-        numCancelPenalty = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 9999999999D,
-            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right
-        }
-        cmbCancelLikelihood = New ComboBox() With {
-            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList
-        }
-        cmbCancelLikelihood.Items.AddRange({"確実", "高い", "低い"})
-
-        numPurchasePrice = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 9999999999D,
-            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right
-        }
-        cmbPurchaseLikelihood = New ComboBox() With {
-            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList
-        }
-        cmbPurchaseLikelihood.Items.AddRange({"確実", "高い", "低い"})
-
-        dtpMoveOutDate = New DateTimePicker() With {
-            .Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short,
-            .ShowCheckBox = True, .Checked = False
-        }
-
-        AddSectionLabel(tblPeriod, "■ 更新規定")
-        AddFieldRow(tblPeriod, "更新予測回数", numRenewalCount, "更新行使可能性", cmbRenewalLikelihood)
-        AddFieldRow(tblPeriod, "更新時賃料", numRenewalRent, Nothing, Nothing)
-
-        AddSectionLabel(tblPeriod, "■ 解約規定")
-        AddFieldRow(tblPeriod, "解約告知期間（月）", numCancelNoticePeriod, "解約行使可能性", cmbCancelLikelihood)
-        AddFieldRow(tblPeriod, "解約違約金", numCancelPenalty, Nothing, Nothing)
-
-        AddSectionLabel(tblPeriod, "■ 購入オプション")
-        AddFieldRow(tblPeriod, "購入オプション価額", numPurchasePrice, "購入行使可能性", cmbPurchaseLikelihood)
-
-        AddSectionLabel(tblPeriod, "■ その他")
-        AddFieldRow(tblPeriod, "退去予定日", dtpMoveOutDate, Nothing, Nothing)
-
-        grpPeriod.Controls.Add(tblPeriod)
-
         mainTbl.Controls.Add(grpBasic, 0, 0)
         mainTbl.Controls.Add(grpProperty, 0, 1)
-        mainTbl.Controls.Add(grpPeriod, 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgContract.Controls.Add(scroll)
