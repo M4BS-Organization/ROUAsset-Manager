@@ -283,6 +283,7 @@ Public Class FrmLeaseContractMain
                 .Cursor = Cursors.Hand
             }
             btn.FlatAppearance.BorderSize = 0
+            AddHandler btn.Click, Sub(s, e) MessageBox.Show("この機能は現在実装中です。", "お知らせ", MessageBoxButtons.OK, MessageBoxIcon.Information)
             flowButtons.Controls.Add(btn)
         Next
 
@@ -1603,9 +1604,10 @@ Public Class FrmLeaseContractMain
             Dim renewalCount As Integer = CInt(numRenewalCount.Value)
 
             ' 基本リース期間（無償期間控除後、月数）
-            Dim baseMonths As Integer = Math.Max(0, ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month) - freePeriodMonths)
-            ' 会計期間 = 基本期間 × (1 + 更新予想回数)（第34号§8 延長オプション合理的確実性）
-            Dim accountingMonths As Integer = baseMonths * (1 + renewalCount)
+            Dim baseMonths As Integer = Math.Max(0, CalcMonthsBetween(startDt, endDt) - freePeriodMonths)
+            ' 会計期間 = 基本期間 + 更新予想回数 × 更新1回あたり月数（第34号§17 延長オプション合理的確実性）
+            Dim renewalExtMonths As Integer = CInt(numExtMonths.Value)
+            Dim accountingMonths As Integer = baseMonths + (renewalCount * renewalExtMonths)
 
             ' --- ＜現契約期間＞ ---
             txtSchContractDate.Text = dtpApplyDate.Value.ToString("yyyy/MM/dd")
@@ -1710,14 +1712,27 @@ Public Class FrmLeaseContractMain
         End Try
     End Sub
 
+    ''' <summary>2つの日付間の月数を計算する（端数補正あり）</summary>
+    Private Function CalcMonthsBetween(startDt As DateTime, endDt As DateTime) As Integer
+        Dim months As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
+        Dim tempDate As DateTime = startDt.AddMonths(months)
+        If endDt < tempDate.AddDays(-1) Then
+            months -= 1
+        End If
+        Return Math.Max(0, months)
+    End Function
+
     Private Sub CalcLeaseMonths()
         If Not _isLoaded Then Return
+        If dtpStartDate.Value >= dtpEndDate.Value Then
+            lblLeaseMonths.Text = "---ヶ月"
+            Return
+        End If
         Try
             Dim startDt As DateTime = dtpStartDate.Value
             Dim endDt As DateTime = dtpEndDate.Value
-            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
             Dim freePeriodVal As Integer = CInt(numFreePeriod.Value)
-            Dim leaseMonths As Integer = Math.Max(0, totalMonths - freePeriodVal)
+            Dim leaseMonths As Integer = Math.Max(0, CalcMonthsBetween(startDt, endDt) - freePeriodVal)
             lblLeaseMonths.Text = leaseMonths.ToString() & "ヶ月"
             _tooltipProvider.SetToolTip(lblLeaseMonths,
                 String.Format("計算式: ({0} - {1})の月数{2} - 無償期間{3}ヶ月 = {4}ヶ月",
@@ -1785,11 +1800,7 @@ Public Class FrmLeaseContractMain
             isValidDate = False
         Else
             lblDateError.Text = ""
-            months = (endDt.Year - startDt.Year) * 12 + (endDt.Month - startDt.Month)
-            Dim tempDate As DateTime = startDt.AddMonths(months)
-            If endDt < tempDate.AddDays(-1) Then
-                months -= 1
-            End If
+            months = CalcMonthsBetween(startDt, endDt)
             If hasExt AndAlso isExtCertain Then
                 months += extMonths
             End If
