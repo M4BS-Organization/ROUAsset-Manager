@@ -1,9 +1,6 @@
 Imports System
-Imports System.Data
 Imports System.Drawing
 Imports System.Windows.Forms
-Imports LeaseM4BS.DataAccess
-Imports Npgsql
 
 ''' <summary>
 ''' 契約書（フレックス）画面
@@ -163,127 +160,11 @@ Partial Public Class FrmFlexContract
     End Function
 
     ''' <summary>
-    ''' 検索条件に基づいて契約一覧を取得・表示する
+    ''' 検索条件に基づいて契約一覧を取得・表示する（DB未接続のためサンプル表示）
     ''' </summary>
     Private Sub SearchContracts()
-        Try
-            Dim userFilter As String = If(cboUser.SelectedItem IsNot Nothing, cboUser.SelectedItem.ToString(), "")
-            Dim contractNoFilter As String = txtContractNo.Text.Trim()
-
-            Using db As New CrudHelper()
-                Dim sql As String = "SELECT * FROM d_asset WHERE 1=1"
-                Dim parameters As New List(Of NpgsqlParameter)()
-
-                If Not String.IsNullOrEmpty(userFilter) Then
-                    sql &= " AND (upd_user_nm LIKE @user OR upd_user_id LIKE @user)"
-                    parameters.Add(New NpgsqlParameter("@user", "%" & userFilter & "%"))
-                End If
-
-                If Not String.IsNullOrEmpty(contractNoFilter) Then
-                    sql &= " AND contract_no LIKE @contractNo"
-                    parameters.Add(New NpgsqlParameter("@contractNo", "%" & contractNoFilter & "%"))
-                End If
-
-                sql &= " ORDER BY contract_no"
-
-                Dim dt As DataTable = db.GetDataTable(sql, parameters)
-                BindDataToGrid(dt)
-            End Using
-
-        Catch ex As Exception
-            MessageBox.Show(
-                "契約データの検索中にエラーが発生しました。" & Environment.NewLine & ex.Message,
-                "検索エラー",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error)
-        End Try
+        LoadSampleData()
     End Sub
-
-    ''' <summary>
-    ''' DataTable の内容を DataGridView にバインドする
-    ''' </summary>
-    Private Sub BindDataToGrid(dt As DataTable)
-        dgvContractList.Rows.Clear()
-
-        For Each row As DataRow In dt.Rows
-            Dim rowIndex As Integer = dgvContractList.Rows.Add()
-            Dim dgvRow As DataGridViewRow = dgvContractList.Rows(rowIndex)
-
-            ' カラムマッピング: d_asset マスタFK参照カラムへ更新
-            '   mgmt_unit     → contract_mgmt_unit_cd (m_contract_mgmt_unit)
-            '   contract_type → property_type_cd      (m_property_type)
-            '   payee         → supplier_cd           (m_supplier)
-            dgvRow.Cells("colMgmtUnit").Value = SafeValue(row, "contract_mgmt_unit_cd") ' 旧 mgmt_unit
-            dgvRow.Cells("colContractType").Value = SafeValue(row, "property_type_cd")  ' 旧 contract_type
-            dgvRow.Cells("colAccountTarget").Value = SafeValue(row, "acct_target")
-            dgvRow.Cells("colPayee").Value = SafeValue(row, "supplier_cd")              ' 旧 payee
-            dgvRow.Cells("colContractNo").Value = SafeValue(row, "contract_no")       ' kykno → contract_no
-            dgvRow.Cells("colOwnMgmt").Value = SafeValue(row, "own_mgmt")             ' jshknr → own_mgmt
-            dgvRow.Cells("colApprovalNo").Value = SafeValue(row, "approval_no")       ' rngno → approval_no
-            dgvRow.Cells("colReleaseCount").Value = SafeValue(row, "re_lease_cnt")    ' srsks → re_lease_cnt
-            dgvRow.Cells("colContractName").Value = SafeValue(row, "contract_nm")     ' kyknm → contract_nm
-            dgvRow.Cells("colStartDate").Value = SafeDateValue(row, "start_dt")       ' kisymd → start_dt
-            dgvRow.Cells("colEndDate").Value = SafeDateValue(row, "end_dt")           ' syrymd → end_dt
-            dgvRow.Cells("colContractPeriod").Value = SafeValue(row, "contract_period") ' kykkk → contract_period
-            dgvRow.Cells("colCashPrice").Value = SafeDecimalValue(row, "cash_price")  ' gnknkngk → cash_price
-            dgvRow.Cells("colMonthlyLease").Value = SafeDecimalValue(row, "monthly_lease") ' gtkrsry → monthly_lease
-            dgvRow.Cells("colAssetQty").Value = SafeValue(row, "quantity")             ' ssnsry → quantity
-            dgvRow.Cells("colUpdateDate").Value = SafeDateTimeValue(row, "update_dt") ' kosndt → update_dt
-            dgvRow.Cells("colConsistency").Value = SafeValue(row, "consistency")       ' sigo → consistency
-        Next
-    End Sub
-
-    ''' <summary>
-    ''' DataRow から安全に文字列値を取得する
-    ''' </summary>
-    Private Function SafeValue(row As DataRow, columnName As String) As String
-        If row.Table.Columns.Contains(columnName) AndAlso Not IsDBNull(row(columnName)) Then
-            Return row(columnName).ToString()
-        End If
-        Return ""
-    End Function
-
-    ''' <summary>
-    ''' DataRow から安全に日付値を取得する（yyyy/MM/dd 形式）
-    ''' </summary>
-    Private Function SafeDateValue(row As DataRow, columnName As String) As String
-        If row.Table.Columns.Contains(columnName) AndAlso Not IsDBNull(row(columnName)) Then
-            Dim dateVal As Date
-            If Date.TryParse(row(columnName).ToString(), dateVal) Then
-                Return dateVal.ToString("yyyy/MM/dd")
-            End If
-            Return row(columnName).ToString()
-        End If
-        Return ""
-    End Function
-
-    ''' <summary>
-    ''' DataRow から安全に日時値を取得する（yyyy/MM/dd HH:mm 形式）
-    ''' </summary>
-    Private Function SafeDateTimeValue(row As DataRow, columnName As String) As String
-        If row.Table.Columns.Contains(columnName) AndAlso Not IsDBNull(row(columnName)) Then
-            Dim dateVal As Date
-            If Date.TryParse(row(columnName).ToString(), dateVal) Then
-                Return dateVal.ToString("yyyy/MM/dd HH:mm")
-            End If
-            Return row(columnName).ToString()
-        End If
-        Return ""
-    End Function
-
-    ''' <summary>
-    ''' DataRow から安全に数値を取得する
-    ''' </summary>
-    Private Function SafeDecimalValue(row As DataRow, columnName As String) As Object
-        If row.Table.Columns.Contains(columnName) AndAlso Not IsDBNull(row(columnName)) Then
-            Dim decVal As Decimal
-            If Decimal.TryParse(row(columnName).ToString(), decVal) Then
-                Return decVal
-            End If
-            Return row(columnName)
-        End If
-        Return Nothing
-    End Function
 
     ''' <summary>
     ''' グリッド行ダブルクリック時に FrmLeaseContractMain を編集モードで開く

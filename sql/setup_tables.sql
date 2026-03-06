@@ -9,7 +9,6 @@
 -- ============================================================
 -- CTB (共通基盤テーブル) 新リース会計基準対応 (ASBJ 34/33)
 -- 定義書: 共通基盤テーブル(CTB)詳細定義書_20260304
--- ※ d_asset より先に定義すること（d_asset が FK 参照するため）
 -- ============================================================
 
 -- 1. 新基準統合メインテーブル (ctb_lease_integrated)
@@ -50,76 +49,6 @@ CREATE TABLE IF NOT EXISTS ctb_lease_integrated (
     UNIQUE (contract_no, property_no)
 );
 
--- ============================================================
--- 資産・契約トランザクションテーブル
--- 旧テーブル (tw_m_user, 旧 d_asset) を廃止し、
--- マスタFK参照型に再設計
--- ============================================================
-
--- d_asset: 資産・契約管理テーブル
--- 旧 free-text カラム → マスタFK参照カラムへの対応:
---   旧 account_class  → asset_category_cd  (m_asset_category)
---   旧 mgmt_unit      → contract_mgmt_unit_cd (m_contract_mgmt_unit)
---   旧 contract_type  → property_type_cd   (m_property_type)
---   旧 payee          → supplier_cd        (m_supplier)
---   旧 kashushi_nm    → kashushi_vendor_cd (m_vendor: 貸主)
---   旧 chukai_nm      → chukai_vendor_cd   (m_vendor: 仲介業者)
---   旧 kessai_nm      → payment_method_cd  (m_payment_method: 決済方法)
---   旧 hosho_nm       → hosho_vendor_cd    (m_vendor: 保証会社)
-CREATE TABLE IF NOT EXISTS d_asset (
-    asset_id                SERIAL          PRIMARY KEY,
-    -- CTB連携FK (NULL=CTB未連携、値設定=新基準計算エンジンと連携済み)
-    ctb_id                  INTEGER         REFERENCES ctb_lease_integrated(ctb_id) ON DELETE SET NULL,
-    -- マスタFK参照カラム
-    asset_category_cd       VARCHAR(10)     REFERENCES m_asset_category(asset_category_cd),       -- 資産区分
-    contract_mgmt_unit_cd   VARCHAR(10)     REFERENCES m_contract_mgmt_unit(contract_mgmt_unit_cd), -- 契約管理単位
-    property_type_cd        VARCHAR(10)     REFERENCES m_property_type(property_type_cd),          -- 物件種別/契約種別
-    supplier_cd             VARCHAR(10)     REFERENCES m_supplier(supplier_cd),                    -- 支払先
-    kashushi_vendor_cd      VARCHAR(10)     REFERENCES m_vendor(vendor_cd),                        -- 貸主
-    chukai_vendor_cd        VARCHAR(10)     REFERENCES m_vendor(vendor_cd),                        -- 仲介業者
-    payment_method_cd       VARCHAR(10)     REFERENCES m_payment_method(payment_method_cd),        -- 決済方法
-    hosho_vendor_cd         VARCHAR(10)     REFERENCES m_vendor(vendor_cd),                        -- 保証会社
-    -- 資産基本情報 (直接入力)
-    asset_no                VARCHAR(50),
-    quantity                INTEGER         DEFAULT 1,
-    bukken_nm               VARCHAR(200),
-    shozaichi               VARCHAR(500),
-    kukaku                  VARCHAR(100),
-    menseki                 VARCHAR(50),
-    madori                  VARCHAR(100),
-    kozo_yoto               VARCHAR(200),
-    yoto_seigen             VARCHAR(500),
-    taiyo_nensu             INTEGER,
-    shunko_dt               DATE,
-    -- 契約関連情報 (直接入力)
-    acct_target             VARCHAR(50),
-    contract_no             VARCHAR(50),
-    own_mgmt                VARCHAR(50),
-    approval_no             VARCHAR(50),
-    re_lease_cnt            INTEGER         DEFAULT 0,
-    contract_nm             VARCHAR(200),
-    start_dt                DATE,
-    end_dt                  DATE,
-    contract_period         INTEGER,
-    cash_price              DECIMAL(18,2),
-    monthly_lease           DECIMAL(18,2),
-    consistency             VARCHAR(10),
-    -- 更新者情報
-    upd_user_id             VARCHAR(50),
-    upd_user_nm             VARCHAR(100),
-    -- タイムスタンプ
-    create_dt               TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
-    update_dt               TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
-);
-
--- d_asset_equipment: 資産付属設備テーブル
-CREATE TABLE IF NOT EXISTS d_asset_equipment (
-    eq_id       SERIAL PRIMARY KEY,
-    asset_id    INTEGER NOT NULL REFERENCES d_asset(asset_id) ON DELETE CASCADE,
-    eq_name     VARCHAR(200),
-    eq_amount   VARCHAR(50),
-    eq_date     VARCHAR(50)
-);
 
 -- 2. 多部門配賦テーブル (ctb_dept_allocation)
 -- シサンM7の配賦ロジック(P.70)を継承。1物件の費用を複数部門へ按分する。
@@ -129,6 +58,7 @@ CREATE TABLE IF NOT EXISTS ctb_dept_allocation (
     dept_cd          VARCHAR(12)     NOT NULL,   -- M7 P.70: 費用負担する部署コード
     allocation_ratio NUMERIC(5,2)    NOT NULL    -- M7 P.70: 各部門への按分比率(%)
 );
+
 
 -- 3. 再測定履歴テーブル (ctb_remeasurement_history)
 -- 条件変更や見積りの見直し（新基準第34号 P.10）に伴う履歴を保持。
@@ -140,6 +70,7 @@ CREATE TABLE IF NOT EXISTS ctb_remeasurement_history (
     revised_liability   NUMERIC(15,0),             -- 再算定後の負債残高
     revised_rou_asset   NUMERIC(15,0)              -- 再算定後の資産簿価
 );
+
 
 -- スキーマ権限付与
 GRANT ALL ON SCHEMA public TO lease_m4bs_user;

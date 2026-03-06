@@ -1,9 +1,6 @@
 Imports System
-Imports System.Data
 Imports System.Drawing
 Imports System.Windows.Forms
-Imports LeaseM4BS.DataAccess
-Imports Npgsql
 
 Partial Public Class FrmAssetDetailEntry
 
@@ -398,64 +395,7 @@ Partial Public Class FrmAssetDetailEntry
     End Sub
 
     Private Sub LoadAssetData()
-        Try
-            Using db As New CrudHelper()
-                Dim params As New List(Of NpgsqlParameter)()
-                params.Add(New NpgsqlParameter("@asset_id", AssetId))
-                Dim dt As DataTable = db.GetDataTable(
-                    "SELECT * FROM d_asset WHERE asset_id = @asset_id", params)
-                If dt.Rows.Count > 0 Then
-                    Dim row As DataRow = dt.Rows(0)
-                    ' 資産区分 (旧 account_class → asset_category_cd / m_asset_category FK)
-                    Dim accountClassVal As String = db.SafeConvert(Of String)(row("asset_category_cd"), "")
-                    If Not String.IsNullOrEmpty(accountClassVal) Then
-                        Dim idx As Integer = cmbAccountClass.FindStringExact(accountClassVal)
-                        If idx >= 0 Then cmbAccountClass.SelectedIndex = idx
-                    End If
-                    txtAssetNo.Text = db.SafeConvert(Of String)(row("asset_no"), AssetId.ToString())
-                    Dim qty As Integer = db.SafeConvert(Of Integer)(row("quantity"), 1)
-                    If qty >= numQuantity.Minimum AndAlso qty <= numQuantity.Maximum Then
-                        numQuantity.Value = qty
-                    End If
-
-                    txtPropertyName.Text = db.SafeConvert(Of String)(row("bukken_nm"), "")
-                    txtLocation.Text = db.SafeConvert(Of String)(row("shozaichi"), "")
-                    txtSection.Text = db.SafeConvert(Of String)(row("kukaku"), "")
-                    txtArea.Text = db.SafeConvert(Of String)(row("menseki"), "")
-                    txtLayout.Text = db.SafeConvert(Of String)(row("madori"), "")
-                    txtStructure.Text = db.SafeConvert(Of String)(row("kozo_yoto"), "")
-                    txtUsageRestrictions.Text = db.SafeConvert(Of String)(row("yoto_seigen"), "")
-                    Dim usefulLife As Integer = db.SafeConvert(Of Integer)(row("taiyo_nensu"), 0)
-                    If usefulLife >= numUsefulLife.Minimum AndAlso usefulLife <= numUsefulLife.Maximum Then
-                        numUsefulLife.Value = usefulLife
-                    End If
-                    If row("shunko_dt") IsNot Nothing AndAlso Not IsDBNull(row("shunko_dt")) Then
-                        dtpCompletion.Checked = True
-                        dtpCompletion.Value = CDate(row("shunko_dt"))
-                    Else
-                        dtpCompletion.Checked = False
-                    End If
-                    txtLandlordName.Text = db.SafeConvert(Of String)(row("kashushi_vendor_cd"), "")  ' 旧 kashushi_nm → m_vendor FK
-                    txtBrokerCompany.Text = db.SafeConvert(Of String)(row("chukai_vendor_cd"), "") ' 旧 chukai_nm   → m_vendor FK
-                    txtPaymentAgent.Text = db.SafeConvert(Of String)(row("payment_method_cd"), "")  ' 旧 kessai_nm → m_payment_method FK
-                    txtGuarantor.Text = db.SafeConvert(Of String)(row("hosho_vendor_cd"), "")        ' 旧 hosho_nm  → m_vendor FK
-                End If
-
-                Dim eqParams As New List(Of NpgsqlParameter)()
-                eqParams.Add(New NpgsqlParameter("@asset_id", AssetId))
-                Dim eqDt As DataTable = db.GetDataTable(
-                    "SELECT * FROM d_asset_equipment WHERE asset_id = @asset_id ORDER BY eq_id", eqParams)
-                For Each eqRow As DataRow In eqDt.Rows
-                    dgvSelfEquipment.Rows.Add(
-                        db.SafeConvert(Of String)(eqRow("eq_name"), ""),
-                        db.SafeConvert(Of String)(eqRow("eq_date"), ""),
-                        db.SafeConvert(Of String)(eqRow("eq_amount"), ""))
-                Next
-            End Using
-        Catch ex As Exception
-            MessageBox.Show("資産データの読み込みに失敗しました。" & vbCrLf & ex.Message,
-                            "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        ' DB未接続（d_asset テーブル削除済み）
     End Sub
 
     Private Sub ApplyReadOnlyMode()
@@ -554,81 +494,9 @@ Partial Public Class FrmAssetDetailEntry
             Return
         End If
 
-        Try
-            Using db As New CrudHelper()
-                db.BeginTransaction()
-                Try
-                    Dim columnValues As New Dictionary(Of String, Object)()
-                    columnValues.Add("asset_category_cd", AccountClass) ' 旧 account_class → m_asset_category FK
-                    columnValues.Add("asset_no", txtAssetNo.Text)
-                    columnValues.Add("quantity", CInt(numQuantity.Value))
-                    columnValues.Add("bukken_nm", txtPropertyName.Text)
-                    columnValues.Add("shozaichi", txtLocation.Text)
-                    columnValues.Add("kukaku", txtSection.Text)
-                    columnValues.Add("menseki", txtArea.Text)
-                    columnValues.Add("madori", txtLayout.Text)
-                    columnValues.Add("kozo_yoto", txtStructure.Text)
-                    columnValues.Add("yoto_seigen", txtUsageRestrictions.Text)
-                    columnValues.Add("taiyo_nensu", CInt(numUsefulLife.Value))
-                    If dtpCompletion.Checked Then
-                        columnValues.Add("shunko_dt", dtpCompletion.Value.Date)
-                    Else
-                        columnValues.Add("shunko_dt", DBNull.Value)
-                    End If
-                    columnValues.Add("kashushi_vendor_cd", txtLandlordName.Text)  ' 旧 kashushi_nm → m_vendor FK
-                    columnValues.Add("chukai_vendor_cd", txtBrokerCompany.Text)   ' 旧 chukai_nm   → m_vendor FK
-                    columnValues.Add("payment_method_cd", txtPaymentAgent.Text)   ' 旧 kessai_nm   → m_payment_method FK
-                    columnValues.Add("hosho_vendor_cd", txtGuarantor.Text)         ' 旧 hosho_nm    → m_vendor FK
-                    columnValues.Add("update_dt", DateTime.Now)
-
-                    If AssetId > 0 Then
-                        Dim whereParams As New List(Of NpgsqlParameter)()
-                        whereParams.Add(New NpgsqlParameter("@w_asset_id", AssetId))
-                        db.Update("d_asset", columnValues, "asset_id = @w_asset_id", whereParams)
-                    Else
-                        columnValues.Add("create_dt", DateTime.Now)
-                        db.Insert("d_asset", columnValues)
-                        AssetId = db.ExecuteScalar(Of Integer)(
-                            "SELECT currval('d_asset_asset_id_seq')")
-                    End If
-
-                    Dim delParams As New List(Of NpgsqlParameter)()
-                    delParams.Add(New NpgsqlParameter("@d_asset_id", AssetId))
-                    db.Delete("d_asset_equipment", "asset_id = @d_asset_id", delParams)
-
-                    For Each row As DataGridViewRow In dgvSelfEquipment.Rows
-                        If row.IsNewRow Then Continue For
-                        Dim eqName As String = If(row.Cells("SelfEquipName").Value IsNot Nothing,
-                                                  row.Cells("SelfEquipName").Value.ToString(), "")
-                        Dim eqDate As String = If(row.Cells("SelfEquipDate").Value IsNot Nothing,
-                                                  row.Cells("SelfEquipDate").Value.ToString(), "")
-                        Dim eqAmount As String = If(row.Cells("SelfEquipAmount").Value IsNot Nothing,
-                                                    row.Cells("SelfEquipAmount").Value.ToString(), "")
-                        If String.IsNullOrWhiteSpace(eqName) AndAlso
-                           String.IsNullOrWhiteSpace(eqAmount) AndAlso
-                           String.IsNullOrWhiteSpace(eqDate) Then Continue For
-
-                        Dim eqValues As New Dictionary(Of String, Object)()
-                        eqValues.Add("asset_id", AssetId)
-                        eqValues.Add("eq_name", eqName)
-                        eqValues.Add("eq_amount", eqAmount)
-                        eqValues.Add("eq_date", eqDate)
-                        db.Insert("d_asset_equipment", eqValues)
-                    Next
-
-                    db.Commit()
-                Catch ex As Exception
-                    db.Rollback()
-                    Throw
-                End Try
-            End Using
-
-            Me.DialogResult = DialogResult.OK
-            Me.Close()
-        Catch ex As Exception
-            MessageBox.Show("保存に失敗しました。" & vbCrLf & ex.Message,
-                            "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        ' DB未接続（d_asset テーブル削除済み）
+        Me.DialogResult = DialogResult.OK
+        Me.Close()
     End Sub
 
     Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
