@@ -1,4 +1,4 @@
--- psql -U manager -d lease_new -f ctb_tables.sql
+-- psql -U manager -d lease_m4bs -f ctb_tables.sql
 
 CREATE TABLE IF NOT EXISTS ctb_lease_integrated (
     ctb_id              SERIAL          NOT NULL,

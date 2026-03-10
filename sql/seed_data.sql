@@ -1,4 +1,4 @@
--- psql -U manager -d lease_new -f seed_data.sql
+-- psql -U manager -d lease_m4bs -f seed_data.sql
 
 INSERT INTO m_company (company_cd, company_nm) VALUES
     ('0001', '本社'),
