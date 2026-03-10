@@ -136,6 +136,8 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CtbDataStore.vb" />
+    <Compile Include="CtbRepository.vb" />
     <Compile Include="FrmAssetDetailEntry.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -186,6 +188,12 @@
     </Compile>
     <Compile Include="FrmFlexTaxAdjustment.Designer.vb">
       <DependentUpon>FrmFlexTaxAdjustment.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexMaster.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexMaster.Designer.vb">
+      <DependentUpon>FrmFlexMaster.vb</DependentUpon>
     </Compile>
     <Compile Include="PopupBaseForm.vb">
       <SubType>Form</SubType>
