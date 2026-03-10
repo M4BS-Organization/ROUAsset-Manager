@@ -30,23 +30,20 @@ Partial Class FrmFlexContract
         Me.btnInquiry = New System.Windows.Forms.Button()
         Me.btnEdit = New System.Windows.Forms.Button()
         Me.btnNewEntry = New System.Windows.Forms.Button()
-        Me.colMgmtUnit = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colContractType = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colAccountTarget = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colPayee = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colCtbId = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colContractNo = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colOwnMgmt = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colApprovalNo = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colReleaseCount = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colPropertyNo = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colContractName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colAssetNo = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colAssetName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colAssetCategory = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colStartDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colEndDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colContractPeriod = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colCashPrice = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colMonthlyLease = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colAssetQty = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colUpdateDate = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.colConsistency = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colDeptName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colAllocationRatio = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colTotalPayment = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colSplitStatus = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlSearch.SuspendLayout()
         Me.tblSearch.SuspendLayout()
         Me.grpContractFlex.SuspendLayout()
@@ -163,7 +160,7 @@ Partial Class FrmFlexContract
         Me.grpContractFlex.Size = New System.Drawing.Size(1184, 534)
         Me.grpContractFlex.TabIndex = 1
         Me.grpContractFlex.TabStop = False
-        Me.grpContractFlex.Text = "契約書フレックス"
+        Me.grpContractFlex.Text = "契約書フレックス（CTB管理）"
         '
         ' pnlButtons
         '
@@ -245,11 +242,10 @@ Partial Class FrmFlexContract
         Me.dgvContractList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvContractList.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single
         Me.dgvContractList.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {
-            Me.colMgmtUnit, Me.colContractType, Me.colAccountTarget, Me.colPayee,
-            Me.colContractNo, Me.colOwnMgmt, Me.colApprovalNo, Me.colReleaseCount,
-            Me.colContractName, Me.colStartDate, Me.colEndDate, Me.colContractPeriod,
-            Me.colCashPrice, Me.colMonthlyLease, Me.colAssetQty, Me.colUpdateDate,
-            Me.colConsistency})
+            Me.colCtbId, Me.colContractNo, Me.colPropertyNo, Me.colContractName,
+            Me.colAssetNo, Me.colAssetName, Me.colAssetCategory,
+            Me.colStartDate, Me.colEndDate, Me.colContractPeriod, Me.colDeptName, Me.colAllocationRatio,
+            Me.colTotalPayment, Me.colSplitStatus})
         Me.dgvContractList.Dock = System.Windows.Forms.DockStyle.Fill
         Me.dgvContractList.EnableHeadersVisualStyles = False
         Me.dgvContractList.GridColor = System.Drawing.Color.FromArgb(CType(180, Integer), CType(180, Integer), CType(180, Integer))
@@ -263,33 +259,15 @@ Partial Class FrmFlexContract
         Me.dgvContractList.Size = New System.Drawing.Size(1188, 484)
         Me.dgvContractList.TabIndex = 1
         '
-        ' colMgmtUnit
+        ' colCtbId
         '
-        Me.colMgmtUnit.HeaderText = "管理単位"
-        Me.colMgmtUnit.Name = "colMgmtUnit"
-        Me.colMgmtUnit.ReadOnly = True
-        Me.colMgmtUnit.Width = 80
-        '
-        ' colContractType
-        '
-        Me.colContractType.HeaderText = "契約区分"
-        Me.colContractType.Name = "colContractType"
-        Me.colContractType.ReadOnly = True
-        Me.colContractType.Width = 80
-        '
-        ' colAccountTarget
-        '
-        Me.colAccountTarget.HeaderText = "計上対象"
-        Me.colAccountTarget.Name = "colAccountTarget"
-        Me.colAccountTarget.ReadOnly = True
-        Me.colAccountTarget.Width = 80
-        '
-        ' colPayee
-        '
-        Me.colPayee.HeaderText = "支払先"
-        Me.colPayee.Name = "colPayee"
-        Me.colPayee.ReadOnly = True
-        Me.colPayee.Width = 120
+        Me.colCtbId.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
+            .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        }
+        Me.colCtbId.HeaderText = "管理ID"
+        Me.colCtbId.Name = "colCtbId"
+        Me.colCtbId.ReadOnly = True
+        Me.colCtbId.Width = 60
         '
         ' colContractNo
         '
@@ -298,100 +276,102 @@ Partial Class FrmFlexContract
         Me.colContractNo.ReadOnly = True
         Me.colContractNo.Width = 120
         '
-        ' colOwnMgmt
+        ' colPropertyNo
         '
-        Me.colOwnMgmt.HeaderText = "自社管理"
-        Me.colOwnMgmt.Name = "colOwnMgmt"
-        Me.colOwnMgmt.ReadOnly = True
-        Me.colOwnMgmt.Width = 100
-        '
-        ' colApprovalNo
-        '
-        Me.colApprovalNo.HeaderText = "稟議番号"
-        Me.colApprovalNo.Name = "colApprovalNo"
-        Me.colApprovalNo.ReadOnly = True
-        Me.colApprovalNo.Width = 100
-        '
-        ' colReleaseCount
-        '
-        Me.colReleaseCount.HeaderText = "再リース回数"
-        Me.colReleaseCount.Name = "colReleaseCount"
-        Me.colReleaseCount.ReadOnly = True
-        Me.colReleaseCount.Width = 90
+        Me.colPropertyNo.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
+            .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        }
+        Me.colPropertyNo.HeaderText = "物件No"
+        Me.colPropertyNo.Name = "colPropertyNo"
+        Me.colPropertyNo.ReadOnly = True
+        Me.colPropertyNo.Width = 60
         '
         ' colContractName
         '
         Me.colContractName.HeaderText = "契約名"
         Me.colContractName.Name = "colContractName"
         Me.colContractName.ReadOnly = True
-        Me.colContractName.Width = 200
+        Me.colContractName.Width = 180
+        '
+        ' colAssetNo
+        '
+        Me.colAssetNo.HeaderText = "資産番号"
+        Me.colAssetNo.Name = "colAssetNo"
+        Me.colAssetNo.ReadOnly = True
+        Me.colAssetNo.Width = 110
+        '
+        ' colAssetName
+        '
+        Me.colAssetName.HeaderText = "資産名"
+        Me.colAssetName.Name = "colAssetName"
+        Me.colAssetName.ReadOnly = True
+        Me.colAssetName.Width = 160
+        '
+        ' colAssetCategory
+        '
+        Me.colAssetCategory.HeaderText = "資産種類"
+        Me.colAssetCategory.Name = "colAssetCategory"
+        Me.colAssetCategory.ReadOnly = True
+        Me.colAssetCategory.Width = 80
         '
         ' colStartDate
         '
         Me.colStartDate.HeaderText = "開始日"
         Me.colStartDate.Name = "colStartDate"
         Me.colStartDate.ReadOnly = True
-        Me.colStartDate.Width = 100
+        Me.colStartDate.Width = 90
         '
         ' colEndDate
         '
         Me.colEndDate.HeaderText = "終了日"
         Me.colEndDate.Name = "colEndDate"
         Me.colEndDate.ReadOnly = True
-        Me.colEndDate.Width = 100
+        Me.colEndDate.Width = 90
         '
         ' colContractPeriod
         '
-        Me.colContractPeriod.HeaderText = "契約期間"
-        Me.colContractPeriod.Name = "colContractPeriod"
-        Me.colContractPeriod.ReadOnly = True
-        Me.colContractPeriod.Width = 80
-        '
-        ' colCashPrice
-        '
-        Me.colCashPrice.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
-            .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight,
-            .Format = "N0"
-        }
-        Me.colCashPrice.HeaderText = "現金購入価額"
-        Me.colCashPrice.Name = "colCashPrice"
-        Me.colCashPrice.ReadOnly = True
-        Me.colCashPrice.Width = 120
-        '
-        ' colMonthlyLease
-        '
-        Me.colMonthlyLease.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
-            .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight,
-            .Format = "N0"
-        }
-        Me.colMonthlyLease.HeaderText = "月額リース料"
-        Me.colMonthlyLease.Name = "colMonthlyLease"
-        Me.colMonthlyLease.ReadOnly = True
-        Me.colMonthlyLease.Width = 120
-        '
-        ' colAssetQty
-        '
-        Me.colAssetQty.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
+        Me.colContractPeriod.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
             .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
         }
-        Me.colAssetQty.HeaderText = "資産数量"
-        Me.colAssetQty.Name = "colAssetQty"
-        Me.colAssetQty.ReadOnly = True
-        Me.colAssetQty.Width = 80
+        Me.colContractPeriod.HeaderText = "期間(月)"
+        Me.colContractPeriod.Name = "colContractPeriod"
+        Me.colContractPeriod.ReadOnly = True
+        Me.colContractPeriod.Width = 70
         '
-        ' colUpdateDate
+        ' colDeptName
         '
-        Me.colUpdateDate.HeaderText = "更新日時"
-        Me.colUpdateDate.Name = "colUpdateDate"
-        Me.colUpdateDate.ReadOnly = True
-        Me.colUpdateDate.Width = 140
+        Me.colDeptName.HeaderText = "配賦部門"
+        Me.colDeptName.Name = "colDeptName"
+        Me.colDeptName.ReadOnly = True
+        Me.colDeptName.Width = 120
         '
-        ' colConsistency
+        ' colAllocationRatio
         '
-        Me.colConsistency.HeaderText = "整合"
-        Me.colConsistency.Name = "colConsistency"
-        Me.colConsistency.ReadOnly = True
-        Me.colConsistency.Width = 60
+        Me.colAllocationRatio.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
+            .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight
+        }
+        Me.colAllocationRatio.HeaderText = "配賦率(%)"
+        Me.colAllocationRatio.Name = "colAllocationRatio"
+        Me.colAllocationRatio.ReadOnly = True
+        Me.colAllocationRatio.Width = 80
+        '
+        ' colTotalPayment
+        '
+        Me.colTotalPayment.DefaultCellStyle = New System.Windows.Forms.DataGridViewCellStyle() With {
+            .Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight,
+            .Format = "#,##0"
+        }
+        Me.colTotalPayment.HeaderText = "合計支払額"
+        Me.colTotalPayment.Name = "colTotalPayment"
+        Me.colTotalPayment.ReadOnly = True
+        Me.colTotalPayment.Width = 100
+        '
+        ' colSplitStatus
+        '
+        Me.colSplitStatus.HeaderText = "状況"
+        Me.colSplitStatus.Name = "colSplitStatus"
+        Me.colSplitStatus.ReadOnly = True
+        Me.colSplitStatus.Width = 70
         '
         ' FrmFlexContract
         '
@@ -427,22 +407,19 @@ Partial Class FrmFlexContract
     Friend WithEvents btnInquiry As System.Windows.Forms.Button
     Friend WithEvents btnEdit As System.Windows.Forms.Button
     Friend WithEvents btnNewEntry As System.Windows.Forms.Button
-    Friend WithEvents colMgmtUnit As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colContractType As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colAccountTarget As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colPayee As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colCtbId As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colContractNo As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colOwnMgmt As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colApprovalNo As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colReleaseCount As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colPropertyNo As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colContractName As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colAssetNo As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colAssetName As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colAssetCategory As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colStartDate As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colEndDate As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents colContractPeriod As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colCashPrice As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colMonthlyLease As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colAssetQty As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colUpdateDate As System.Windows.Forms.DataGridViewTextBoxColumn
-    Friend WithEvents colConsistency As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colDeptName As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colAllocationRatio As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colTotalPayment As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents colSplitStatus As System.Windows.Forms.DataGridViewTextBoxColumn
 
 End Class

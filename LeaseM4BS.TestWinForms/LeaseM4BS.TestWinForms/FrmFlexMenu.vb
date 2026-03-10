@@ -36,7 +36,8 @@ Partial Public Class FrmFlexMenu
     Private Sub SetupMenuButtons()
         Dim menuButtons() As Button = {
             btnContract, btnROUAsset, btnMonthlyPayments,
-            btnMonthlyAccounting, btnPeriodBalance, btnTaxAdjustment
+            btnMonthlyAccounting, btnPeriodBalance, btnTaxAdjustment,
+            btnMaster
         }
 
         For Each btn As Button In menuButtons
@@ -102,6 +103,8 @@ Partial Public Class FrmFlexMenu
             Return New FrmFlexPeriodBalance()
         ElseIf menuButton Is btnTaxAdjustment Then
             Return New FrmFlexTaxAdjustment()
+        ElseIf menuButton Is btnMaster Then
+            Return New FrmFlexMaster()
         End If
         Return Nothing
     End Function
