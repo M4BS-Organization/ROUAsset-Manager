@@ -4,7 +4,7 @@ Imports System.Windows.Forms
 
 ''' <summary>
 ''' 契約書（フレックス）画面
-''' 契約一覧の検索・表示と、契約詳細画面への遷移を提供する。
+''' CTBデータストアからCTBレコード（管理ID単位）を一覧表示する。
 ''' </summary>
 Partial Public Class FrmFlexContract
 
@@ -18,26 +18,57 @@ Partial Public Class FrmFlexContract
     Private ReadOnly FNT_LABEL As New Font("Meiryo", 9.0F, FontStyle.Bold)
     Private ReadOnly FNT_SECTION As New Font("Meiryo", 10.0F, FontStyle.Bold)
 
-    ''' <summary>
-    ''' 契約番号の自動採番用カウンタ
-    ''' </summary>
-    Private Shared _contractCounter As Integer = 0
-
-    ''' <summary>
-    ''' 管理番号の自動採番用カウンタ
-    ''' </summary>
-    Private Shared _managementCounter As Integer = 0
-
-    ''' <summary>
-    ''' 稟議番号の自動採番用カウンタ
-    ''' </summary>
-    Private Shared _approvalCounter As Integer = 0
-
     Public Sub New()
         InitializeComponent()
         ApplyGridStyles()
-        LoadSampleData()
+        LoadCtbData()
     End Sub
+
+    ''' <summary>
+    ''' DBとメモリストアから次の契約番号を生成する
+    ''' </summary>
+    Private Shared Function GetNextContractNo() As String
+        Dim maxCounter As Integer = 0
+
+        ' DBから最大カウンタを取得
+        Try
+            Dim connMgr As New LeaseM4BS.DataAccess.DbConnectionManager()
+            Using conn = connMgr.GetConnection()
+                ' 全契約番号を取得してVB側でパース（DB関数依存を排除）
+                Using cmd As New Npgsql.NpgsqlCommand(
+                    "SELECT contract_no FROM ctb_lease_integrated WHERE contract_no LIKE 'LC-%'", conn)
+                    Using reader = cmd.ExecuteReader()
+                        While reader.Read()
+                            Dim contractNo As String = reader.GetString(0)
+                            Dim num As Integer = ParseContractCounter(contractNo)
+                            If num > maxCounter Then maxCounter = num
+                        End While
+                    End Using
+                End Using
+            End Using
+        Catch
+        End Try
+
+        ' メモリストアにのみ存在するレコードも考慮
+        For Each rec In CtbDataStore.Instance.GetAll()
+            Dim num As Integer = ParseContractCounter(rec.ContractNo)
+            If num > maxCounter Then maxCounter = num
+        Next
+
+        Return String.Format("LC-{0}-{1:D4}", Date.Now.Year, maxCounter + 1)
+    End Function
+
+    ''' <summary>
+    ''' 契約番号 "LC-YYYY-NNNN" からカウンタ部分を取得する
+    ''' </summary>
+    Private Shared Function ParseContractCounter(contractNo As String) As Integer
+        If String.IsNullOrEmpty(contractNo) OrElse Not contractNo.StartsWith("LC-") Then Return 0
+        Dim parts = contractNo.Split("-"c)
+        If parts.Length <> 3 Then Return 0
+        Dim num As Integer
+        If Integer.TryParse(parts(2), num) Then Return num
+        Return 0
+    End Function
 
     ''' <summary>
     ''' DataGridView のヘッダースタイルを設定する
@@ -61,41 +92,47 @@ Partial Public Class FrmFlexContract
     End Sub
 
     ''' <summary>
-    ''' DBデータが未格納の状態でも一覧にサンプル行を表示する
+    ''' CTBデータストアからレコードを読み込んでグリッドに表示する
     ''' </summary>
-    Private Sub LoadSampleData()
+    Private Sub LoadCtbData()
         dgvContractList.Rows.Clear()
 
-        ' サンプルデータ（5行）
-        Dim sampleData()() As String = {
-            New String() {"本社", "新規", "対象", "ABC不動産", "LC-2025-0001", "MGR-001", "APP-2025-0001", "0", "本社ビル賃貸借契約", "2025/04/01", "2030/03/31", "60", "50,000,000", "800,000", "3", "2025/03/15 10:30", "○"},
-            New String() {"本社", "新規", "対象", "XYZ設備リース", "LC-2025-0002", "MGR-002", "APP-2025-0002", "0", "複合機リース契約", "2025/04/01", "2029/03/31", "48", "3,600,000", "75,000", "5", "2025/03/15 11:00", "○"},
-            New String() {"大阪支店", "新規", "対象", "DEFモータース", "LC-2025-0003", "MGR-003", "APP-2025-0003", "0", "社用車リース契約", "2025/05/01", "2028/04/30", "36", "4,800,000", "133,333", "2", "2025/03/20 09:15", "○"},
-            New String() {"本社", "更新", "対象", "GHIテクノロジー", "LC-2025-0004", "MGR-004", "APP-2025-0004", "1", "サーバー機器リース", "2025/06/01", "2030/05/31", "60", "12,000,000", "200,000", "10", "2025/04/01 14:00", "―"},
-            New String() {"名古屋支店", "新規", "除外", "JKLプロパティ", "LC-2025-0005", "MGR-005", "APP-2025-0005", "0", "倉庫賃貸借契約", "2025/07/01", "2035/06/30", "120", "80,000,000", "666,667", "1", "2025/05/10 16:45", "○"}
-        }
+        ' DBから取得を試み、失敗時はメモリストアにフォールバック
+        Dim records As List(Of CtbRecord)
+        Try
+            Dim repo As New CtbRepository()
+            records = repo.SelectAll()
+        Catch
+            records = CtbDataStore.Instance.GetAll()
+        End Try
 
-        For Each rowData As String() In sampleData
+        For Each rec As CtbRecord In records
             Dim rowIndex As Integer = dgvContractList.Rows.Add()
             Dim dgvRow As DataGridViewRow = dgvContractList.Rows(rowIndex)
-            dgvRow.Cells("colMgmtUnit").Value = rowData(0)
-            dgvRow.Cells("colContractType").Value = rowData(1)
-            dgvRow.Cells("colAccountTarget").Value = rowData(2)
-            dgvRow.Cells("colPayee").Value = rowData(3)
-            dgvRow.Cells("colContractNo").Value = rowData(4)
-            dgvRow.Cells("colOwnMgmt").Value = rowData(5)
-            dgvRow.Cells("colApprovalNo").Value = rowData(6)
-            dgvRow.Cells("colReleaseCount").Value = rowData(7)
-            dgvRow.Cells("colContractName").Value = rowData(8)
-            dgvRow.Cells("colStartDate").Value = rowData(9)
-            dgvRow.Cells("colEndDate").Value = rowData(10)
-            dgvRow.Cells("colContractPeriod").Value = rowData(11)
-            dgvRow.Cells("colCashPrice").Value = rowData(12)
-            dgvRow.Cells("colMonthlyLease").Value = rowData(13)
-            dgvRow.Cells("colAssetQty").Value = rowData(14)
-            dgvRow.Cells("colUpdateDate").Value = rowData(15)
-            dgvRow.Cells("colConsistency").Value = rowData(16)
+            dgvRow.Cells("colCtbId").Value = rec.CtbId
+            dgvRow.Cells("colContractNo").Value = rec.ContractNo
+            ' 契約番号末尾(上) - property_no(下) 形式で表示
+            Dim contractSuffix As String = ""
+            Dim parts = rec.ContractNo.Split("-"c)
+            If parts.Length = 3 Then contractSuffix = parts(2)
+            dgvRow.Cells("colPropertyNo").Value = contractSuffix & "-" & rec.PropertyNo.ToString()
+            dgvRow.Cells("colContractName").Value = rec.ContractName
+            dgvRow.Cells("colAssetNo").Value = rec.AssetNo
+            dgvRow.Cells("colAssetName").Value = rec.AssetName
+            dgvRow.Cells("colAssetCategory").Value = rec.AssetCategory
+            dgvRow.Cells("colStartDate").Value = If(rec.LeaseStartDate.HasValue,
+                rec.LeaseStartDate.Value.ToString("yyyy/MM/dd"), "")
+            dgvRow.Cells("colEndDate").Value = If(rec.LeaseEndDate.HasValue,
+                rec.LeaseEndDate.Value.ToString("yyyy/MM/dd"), "")
+            dgvRow.Cells("colContractPeriod").Value = If(rec.LeaseTermMonths.HasValue,
+                rec.LeaseTermMonths.Value.ToString(), "")
+            dgvRow.Cells("colDeptName").Value = rec.DeptName
+            dgvRow.Cells("colAllocationRatio").Value = rec.AllocationRatio
+            dgvRow.Cells("colTotalPayment").Value = rec.TotalPayment
+            dgvRow.Cells("colSplitStatus").Value = If(rec.SplitStatus = "unsplit", "未分割", "分割済")
         Next
+
+        ' データが0件の場合、案内メッセージ表示用の空行は追加しない
     End Sub
 
     ''' <summary>
@@ -160,10 +197,10 @@ Partial Public Class FrmFlexContract
     End Function
 
     ''' <summary>
-    ''' 検索条件に基づいて契約一覧を取得・表示する（DB未接続のためサンプル表示）
+    ''' 検索条件に基づいて契約一覧を取得・表示する
     ''' </summary>
     Private Sub SearchContracts()
-        LoadSampleData()
+        LoadCtbData()
     End Sub
 
     ''' <summary>
@@ -190,13 +227,8 @@ Partial Public Class FrmFlexContract
 
             Select Case mode
                 Case ContractOpenMode.NewEntry
-                    ' 新規登録時: 各番号を自動採番してセット
-                    _contractCounter += 1
-                    _managementCounter += 1
-                    _approvalCounter += 1
-                    frm.InitContractNo = String.Format("LC-{0}-{1:D4}", Date.Now.Year, _contractCounter)
-                    frm.InitManagementNo = String.Format("MGMT-{0}-{1:D4}", Date.Now.Year, _managementCounter)
-                    frm.InitApprovalNo = String.Format("APP-{0}-{1:D4}", Date.Now.Year, _approvalCounter)
+                    ' 新規登録時: 契約番号を自動採番してセット
+                    frm.InitContractNo = GetNextContractNo()
                     frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
                     frm.Tag = ""
                 Case ContractOpenMode.Edit
@@ -208,6 +240,7 @@ Partial Public Class FrmFlexContract
                     ' TODO: 将来的に ReadOnly モードの制御を追加
             End Select
 
+            AddHandler frm.ContractRegistered, AddressOf OnContractRegistered
             frm.Show()
         Catch ex As Exception
             MessageBox.Show(
@@ -219,8 +252,12 @@ Partial Public Class FrmFlexContract
     End Sub
 
     ''' <summary>
-    ''' 契約画面の表示モード
+    ''' 契約登録イベントハンドラ: 登録完了後にCTBデータストアから一覧を再読込する
     ''' </summary>
+    Private Sub OnContractRegistered(sender As Object, e As FrmLeaseContractMain.ContractRegisteredEventArgs)
+        LoadCtbData()
+    End Sub
+
     Private Enum ContractOpenMode
         ''' <summary>新規登録</summary>
         NewEntry

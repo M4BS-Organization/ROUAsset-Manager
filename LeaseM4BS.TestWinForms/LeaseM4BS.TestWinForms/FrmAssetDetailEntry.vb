@@ -4,497 +4,405 @@ Imports System.Windows.Forms
 
 Partial Public Class FrmAssetDetailEntry
 
-    Public Property AssetId As Integer = 0
-    Public Property IsReadOnly As Boolean = False
+    ''' <summary>
+    ''' 資産種別（"不動産"/"車両"/"OA機器"）。契約画面から設定される。
+    ''' </summary>
+    Public Property AssetCategory As String = ""
 
     ''' <summary>
     ''' 新規登録時に外部から設定される資産番号（自動採番値）
     ''' </summary>
     Public Property InitAssetNo As String = ""
 
-    ' 月次明細タブ用コントロール
-    Private dgvMonthlyPayments As DataGridView
-    Private lblMonthlyTotalExTax As Label
-    Private lblMonthlyTotalTax As Label
-    Private lblMonthlyTotalIncTax As Label
-    Private numFairValue As NumericUpDown
-    Private numEconomicLife As NumericUpDown
-    Private numImplicitRate As NumericUpDown
-    Private numIBR As NumericUpDown
-    Private lblAppliedRate As Label
+    ''' <summary>
+    ''' 照会モード
+    ''' </summary>
+    Public Property IsReadOnly As Boolean = False
 
-    Public Property PropertyName As String
-        Get
-            Return txtPropertyName.Text
-        End Get
-        Set(value As String)
-            txtPropertyName.Text = value
-        End Set
-    End Property
+    ' === 契約画面への戻り値プロパティ（ReadOnly） ===
 
-    Public Property AccountClass As String
-        Get
-            If cmbAccountClass.SelectedItem IsNot Nothing Then
-                Return cmbAccountClass.SelectedItem.ToString()
-            End If
-            Return ""
-        End Get
-        Set(value As String)
-            If Not String.IsNullOrEmpty(value) Then
-                Dim idx As Integer = cmbAccountClass.FindStringExact(value)
-                If idx >= 0 Then cmbAccountClass.SelectedIndex = idx
-            End If
-        End Set
-    End Property
-
-    Public Property AssetNo As String
+    Public ReadOnly Property AssetNo As String
         Get
             Return txtAssetNo.Text
         End Get
-        Set(value As String)
-            txtAssetNo.Text = value
-        End Set
     End Property
 
-    Public Property Quantity As Integer
+    Public ReadOnly Property AssetName As String
         Get
-            Return CInt(numQuantity.Value)
+            Return txtAssetName.Text
         End Get
-        Set(value As Integer)
-            If value >= numQuantity.Minimum AndAlso value <= numQuantity.Maximum Then
-                numQuantity.Value = value
+    End Property
+
+    Public ReadOnly Property InstallLocation As String
+        Get
+            Return txtInstallLocation.Text
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 配賦部門のサマリ文字列（例: "総務部(50%),経理部(50%)"）
+    ''' </summary>
+    Public ReadOnly Property DeptAllocationSummary As String
+        Get
+            Dim parts As New System.Collections.Generic.List(Of String)
+            For Each row As DataGridViewRow In dgvDeptAllocation.Rows
+                If row.IsNewRow Then Continue For
+                Dim deptName As String = If(row.Cells("DeptName").Value?.ToString(), "")
+                Dim ratio As String = If(row.Cells("AllocationRatio").Value?.ToString(), "0")
+                If Not String.IsNullOrEmpty(deptName) Then
+                    parts.Add(String.Format("{0}({1}%)", deptName, ratio))
+                End If
+            Next
+            Return String.Join(",", parts)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 配賦明細をCtbDeptAllocationリストとして返す
+    ''' </summary>
+    Public ReadOnly Property DeptAllocationList As System.Collections.Generic.List(Of CtbDeptAllocation)
+        Get
+            Dim result As New System.Collections.Generic.List(Of CtbDeptAllocation)
+            For Each row As DataGridViewRow In dgvDeptAllocation.Rows
+                If row.IsNewRow Then Continue For
+                Dim deptName As String = If(row.Cells("DeptName").Value?.ToString(), "")
+                If Not String.IsNullOrEmpty(deptName) Then
+                    Dim alloc As New CtbDeptAllocation()
+                    alloc.DeptCd = If(row.Cells("DeptCd").Value?.ToString(), "")
+                    alloc.DeptName = deptName
+                    Dim d As Decimal
+                    If Decimal.TryParse(If(row.Cells("AllocationRatio").Value?.ToString(), "0"), d) Then
+                        alloc.AllocationRatio = d
+                    End If
+                    result.Add(alloc)
+                End If
+            Next
+            Return result
+        End Get
+    End Property
+
+    ' === 種別固有データの戻り値プロパティ ===
+
+    ' 不動産
+    Public ReadOnly Property ReStructure As String
+        Get
+            Return txtStructure.Text
+        End Get
+    End Property
+    Public ReadOnly Property ReArea As String
+        Get
+            Return txtArea.Text
+        End Get
+    End Property
+    Public ReadOnly Property ReLayout As String
+        Get
+            Return txtLayout.Text
+        End Get
+    End Property
+    Public ReadOnly Property ReCompletionDate As Date
+        Get
+            Return dtpCompletion.Value
+        End Get
+    End Property
+    Public ReadOnly Property ReLandlordName As String
+        Get
+            Return txtLandlordName.Text
+        End Get
+    End Property
+    Public ReadOnly Property ReBrokerCompany As String
+        Get
+            Return txtBrokerCompany.Text
+        End Get
+    End Property
+    Public ReadOnly Property ReUsageRestrictions As String
+        Get
+            Return txtUsageRestrictions.Text
+        End Get
+    End Property
+
+    ' 車両
+    Public ReadOnly Property VhChassisNo As String
+        Get
+            Return txtChassisNo.Text
+        End Get
+    End Property
+    Public ReadOnly Property VhRegistrationNo As String
+        Get
+            Return txtRegistrationNo.Text
+        End Get
+    End Property
+    Public ReadOnly Property VhVehicleType As String
+        Get
+            Return txtVehicleType.Text
+        End Get
+    End Property
+    Public ReadOnly Property VhInspectionDate As Date
+        Get
+            Return dtpInspectionDate.Value
+        End Get
+    End Property
+    Public ReadOnly Property VhMileageLimit As String
+        Get
+            Return txtMileageLimit.Text
+        End Get
+    End Property
+
+    ' OA機器
+    Public ReadOnly Property OaModelNo As String
+        Get
+            Return txtModelNo.Text
+        End Get
+    End Property
+    Public ReadOnly Property OaSerialNo As String
+        Get
+            Return txtSerialNo.Text
+        End Get
+    End Property
+    Public ReadOnly Property OaMaintenanceDate As Date
+        Get
+            Return dtpMaintenanceDate.Value
+        End Get
+    End Property
+    Public ReadOnly Property OaMaintenanceContract As String
+        Get
+            Return txtMaintenanceContract.Text
+        End Get
+    End Property
+
+    ' 会社名
+    Public ReadOnly Property CompanyNameValue As String
+        Get
+            If cmbCompany.SelectedItem IsNot Nothing Then
+                Return cmbCompany.SelectedItem.ToString()
             End If
-        End Set
-    End Property
-
-    Public ReadOnly Property CashPrice As String
-        Get
             Return ""
         End Get
     End Property
 
-    Public ReadOnly Property MonthlyLease As String
+    ' 備考
+    Public ReadOnly Property RemarksValue As String
         Get
-            Return ""
+            Return txtRemarks.Text
         End Get
     End Property
+
+    ' =============================================
+    ' イベントハンドラ
+    ' =============================================
 
     Private Sub FrmAssetDetailEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' 計上区分コンボボックスの初期化
-        cmbAccountClass.Items.AddRange(New String() {"資産", "費用"})
-        If cmbAccountClass.Items.Count > 0 Then
-            cmbAccountClass.SelectedIndex = 0
-        End If
-
-        ' 資産番号の初期表示: 既存資産IDがあればその値、なければ自動採番値を表示
-        If AssetId > 0 Then
-            txtAssetNo.Text = AssetId.ToString()
-        ElseIf Not String.IsNullOrEmpty(InitAssetNo) Then
+        ' 資産番号セット
+        If Not String.IsNullOrEmpty(InitAssetNo) Then
             txtAssetNo.Text = InitAssetNo
         End If
 
-        If AssetId > 0 Then
-            LoadAssetData()
-        End If
-        If IsReadOnly Then
-            ApplyReadOnlyMode()
-        End If
+        ' 資産種類表示
+        lblAssetCategoryDisplay.Text = AssetCategory
 
-        Dim selfEquipRows As Integer = dgvSelfEquipment.Rows.Count
-        If dgvSelfEquipment.AllowUserToAddRows Then selfEquipRows -= 1
-        If selfEquipRows < 3 Then
-            For i As Integer = 0 To 2 - selfEquipRows
-                dgvSelfEquipment.Rows.Add()
-            Next
-        End If
+        ' 種別固有パネル切替
+        SwitchCategoryPanel(AssetCategory)
 
-        Dim allocRows As Integer = dgvAllocations.Rows.Count
-        If dgvAllocations.AllowUserToAddRows Then allocRows -= 1
-        If allocRows < 7 Then
-            For i As Integer = 0 To 6 - allocRows
-                dgvAllocations.Rows.Add()
-            Next
-        End If
+        ' コンボボックス初期化
+        InitComboBoxes()
 
-        CalcBuildingAge()
-        InitTabMonthlyDetail()
+        ' 配賦グリッド初期化
+        InitDeptAllocationGrid()
+
+        ' 読取専用モード
+        If IsReadOnly Then ApplyReadOnlyMode()
     End Sub
 
-    Private Sub InitTabMonthlyDetail()
-        Dim CLR_CARD As Color = Color.White
-        Dim CLR_BORDER As Color = Color.FromArgb(222, 226, 230)
-        Dim CLR_TEXT As Color = Color.FromArgb(33, 37, 41)
-        Dim CLR_LABEL As Color = Color.FromArgb(73, 80, 87)
-        Dim CLR_HEADER As Color = Color.FromArgb(0, 51, 102)
-        Dim CLR_READONLY As Color = Color.FromArgb(233, 236, 239)
-        Dim FNT_INPUT As New Font("Meiryo", 9.75F)
-        Dim FNT_LABEL As New Font("Meiryo", 9.0F, FontStyle.Bold)
-
-        Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(6)}
-
-        Dim mainTbl As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 2
-        }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-
-        ' === 月額支払明細 ===
-        Dim grpMonthly As New GroupBox() With {
-            .Text = "月額支払明細", .Dock = DockStyle.Top,
-            .BackColor = Color.White, .Height = 260, .AutoSize = False,
-            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
-            .ForeColor = CLR_HEADER,
-            .Padding = New Padding(6, 12, 6, 6)
-        }
-        Dim pnlGrid As New Panel() With {.Dock = DockStyle.Fill}
-
-        dgvMonthlyPayments = New DataGridView() With {
-            .Dock = DockStyle.Fill,
-            .BackgroundColor = CLR_CARD,
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            .AllowUserToAddRows = True,
-            .RowHeadersVisible = False,
-            .BorderStyle = BorderStyle.None,
-            .GridColor = CLR_BORDER,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
-            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
-                .BackColor = Color.FromArgb(240, 244, 248),
-                .Font = FNT_LABEL,
-                .ForeColor = CLR_LABEL,
-                .Alignment = DataGridViewContentAlignment.MiddleCenter
-            },
-            .EnableHeadersVisualStyles = False
-        }
-
-        Dim colMItem As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "科目", .Name = "MItem", .FillWeight = 14
-        }
-        colMItem.Items.AddRange("賃料", "管理費", "共益費")
-        dgvMonthlyPayments.Columns.Add(colMItem)
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "支払額（税抜）", .Name = "MAmountExTax", .FillWeight = 14,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "消費税", .Name = "MTax", .FillWeight = 12, .ReadOnly = True,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0",
-                .BackColor = CLR_READONLY
-            }
-        })
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "税込合計", .Name = "MTotalIncTax", .FillWeight = 14, .ReadOnly = True,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0",
-                .BackColor = CLR_READONLY
-            }
-        })
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "振込先口座", .Name = "MBankAccount", .FillWeight = 18
-        })
-        Dim colPayMethod As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "支払方法", .Name = "MPayMethod", .FillWeight = 12
-        }
-        colPayMethod.Items.AddRange("振込", "口座振替", "手形", "現金")
-        dgvMonthlyPayments.Columns.Add(colPayMethod)
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "支払日", .Name = "MPayDate", .FillWeight = 10
-        })
-
-        AddHandler dgvMonthlyPayments.CellValueChanged, AddressOf OnMonthlyPaymentChanged
-        AddHandler dgvMonthlyPayments.CellEndEdit, AddressOf OnMonthlyPaymentCellEndEdit
-
-        Dim pnlTotal As New Panel() With {
-            .Dock = DockStyle.Bottom, .Height = 30,
-            .BackColor = Color.FromArgb(230, 240, 250)
-        }
-        Dim flowTotal As New FlowLayoutPanel() With {
-            .Dock = DockStyle.Fill,
-            .FlowDirection = FlowDirection.LeftToRight,
-            .WrapContents = False,
-            .Padding = New Padding(4, 4, 0, 0)
-        }
-        flowTotal.Controls.Add(New Label() With {
-            .Text = "月額合計:", .Font = FNT_LABEL, .AutoSize = True,
-            .Padding = New Padding(0, 2, 10, 0)
-        })
-        lblMonthlyTotalExTax = New Label() With {
-            .Text = "税抜: 0", .Font = FNT_LABEL, .AutoSize = True,
-            .Padding = New Padding(0, 2, 20, 0)
-        }
-        lblMonthlyTotalTax = New Label() With {
-            .Text = "税: 0", .Font = FNT_LABEL, .AutoSize = True,
-            .Padding = New Padding(0, 2, 20, 0)
-        }
-        lblMonthlyTotalIncTax = New Label() With {
-            .Text = "税込: 0",
-            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
-            .AutoSize = True, .ForeColor = CLR_HEADER,
-            .Padding = New Padding(0, 1, 0, 0)
-        }
-        flowTotal.Controls.Add(lblMonthlyTotalExTax)
-        flowTotal.Controls.Add(lblMonthlyTotalTax)
-        flowTotal.Controls.Add(lblMonthlyTotalIncTax)
-        pnlTotal.Controls.Add(flowTotal)
-
-        pnlGrid.Controls.Add(dgvMonthlyPayments)
-        pnlGrid.Controls.Add(pnlTotal)
-        grpMonthly.Controls.Add(pnlGrid)
-
-        ' === 財務パラメータ ===
-        Dim grpFinancial As New GroupBox() With {
-            .Text = "財務パラメータ", .Dock = DockStyle.Top, .AutoSize = True,
-            .BackColor = Color.White,
-            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
-            .ForeColor = CLR_HEADER,
-            .Padding = New Padding(6, 12, 6, 6)
-        }
-        Dim tblFin As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
-        }
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 160.0F))
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 160.0F))
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        numFairValue = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 99999999999D,
-            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right,
-            .Value = 0
-        }
-        numEconomicLife = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 100,
-            .TextAlign = HorizontalAlignment.Right, .Value = 47
-        }
-        numImplicitRate = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .DecimalPlaces = 2, .Maximum = 100,
-            .Increment = 0.01D, .TextAlign = HorizontalAlignment.Right
-        }
-        numIBR = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .DecimalPlaces = 2, .Maximum = 100,
-            .Increment = 0.01D, .TextAlign = HorizontalAlignment.Right,
-            .Value = 2.5D
-        }
-
-        lblAppliedRate = New Label() With {
-            .Dock = DockStyle.Fill, .Text = "適用割引率: IBR 2.50%",
-            .BackColor = Color.FromArgb(255, 248, 220),
-            .TextAlign = ContentAlignment.MiddleCenter,
-            .Font = New Font("Meiryo", 9.0F, FontStyle.Bold),
-            .ForeColor = Color.FromArgb(133, 100, 4)
-        }
-
-        AddHandler numImplicitRate.ValueChanged, Sub(s, e) UpdateAppliedRate()
-        AddHandler numIBR.ValueChanged, Sub(s, e) UpdateAppliedRate()
-
-        ' Row 0
-        Dim lblFairValue As New Label() With {
-            .Text = "原資産見積公正価値", .Dock = DockStyle.Fill,
-            .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
-            .TextAlign = ContentAlignment.MiddleRight, .Padding = New Padding(0, 0, 4, 0)
-        }
-        Dim lblEconomicLife As New Label() With {
-            .Text = "経済的耐用年数(年)", .Dock = DockStyle.Fill,
-            .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
-            .TextAlign = ContentAlignment.MiddleRight, .Padding = New Padding(0, 0, 4, 0)
-        }
-        tblFin.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblFin.Controls.Add(lblFairValue, 0, 0)
-        tblFin.Controls.Add(numFairValue, 1, 0)
-        tblFin.Controls.Add(lblEconomicLife, 2, 0)
-        tblFin.Controls.Add(numEconomicLife, 3, 0)
-        tblFin.RowCount = 1
-
-        ' Row 1
-        Dim lblImplicitRate As New Label() With {
-            .Text = "リース計算利子率(%)", .Dock = DockStyle.Fill,
-            .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
-            .TextAlign = ContentAlignment.MiddleRight, .Padding = New Padding(0, 0, 4, 0)
-        }
-        Dim lblIBR As New Label() With {
-            .Text = "追加借入利子率IBR(%)", .Dock = DockStyle.Fill,
-            .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
-            .TextAlign = ContentAlignment.MiddleRight, .Padding = New Padding(0, 0, 4, 0)
-        }
-        tblFin.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblFin.Controls.Add(lblImplicitRate, 0, 1)
-        tblFin.Controls.Add(numImplicitRate, 1, 1)
-        tblFin.Controls.Add(lblIBR, 2, 1)
-        tblFin.Controls.Add(numIBR, 3, 1)
-        tblFin.RowCount = 2
-
-        ' Row 2: 適用割引率
-        tblFin.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblFin.Controls.Add(lblAppliedRate, 0, 2)
-        tblFin.SetColumnSpan(lblAppliedRate, 4)
-        tblFin.RowCount = 3
-
-        grpFinancial.Controls.Add(tblFin)
-
-        mainTbl.Controls.Add(grpMonthly, 0, 0)
-        mainTbl.Controls.Add(grpFinancial, 0, 1)
-
-        scroll.Controls.Add(mainTbl)
-        tabMonthlyDetail.Controls.Add(scroll)
+    ''' <summary>
+    ''' 資産種別に応じて固有入力パネルを切り替える
+    ''' </summary>
+    Private Sub SwitchCategoryPanel(category As String)
+        pnlRealEstate.Visible = (category = "不動産")
+        pnlVehicle.Visible = (category = "車両")
+        pnlOfficeEquip.Visible = (category = "OA機器")
     End Sub
 
-    Private Sub UpdateAppliedRate()
-        If numImplicitRate.Value > 0 Then
-            lblAppliedRate.Text = "適用割引率: 計算利子率 " & numImplicitRate.Value.ToString("F2") & "%"
-        Else
-            lblAppliedRate.Text = "適用割引率: IBR " & numIBR.Value.ToString("F2") & "%"
-        End If
+    ''' <summary>
+    ''' コンボボックスの選択肢を初期化する
+    ''' </summary>
+    Private Sub InitComboBoxes()
+        cmbCompany.Items.AddRange(New String() {"本社", "大阪支店", "名古屋支店"})
+        If cmbCompany.Items.Count > 0 Then cmbCompany.SelectedIndex = 0
     End Sub
 
-    Private Sub OnMonthlyPaymentChanged(sender As Object, e As DataGridViewCellEventArgs)
-        If e.RowIndex < 0 Then Return
-        Dim grid As DataGridView = DirectCast(sender, DataGridView)
-        Dim row As DataGridViewRow = grid.Rows(e.RowIndex)
+    ' =============================================
+    ' 配賦グリッド
+    ' =============================================
 
-        If e.ColumnIndex = grid.Columns("MAmountExTax").Index Then
-            Dim amountExTax As Decimal = 0
-            If row.Cells("MAmountExTax").Value IsNot Nothing Then
-                Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString(), amountExTax)
-            End If
-            Dim tax As Decimal = Math.Floor(amountExTax * 0.1D)
-            row.Cells("MTax").Value = tax
-            row.Cells("MTotalIncTax").Value = amountExTax + tax
-        End If
+    Private _deptTable As Data.DataTable
+    Private _deptNameList As String() = {}
 
-        RecalcMonthlyTotals()
-    End Sub
+    ''' <summary>
+    ''' 配賦グリッドの列を初期化する（DBマスタからコード＋名称を取得）
+    ''' </summary>
+    Private Sub InitDeptAllocationGrid()
+        dgvDeptAllocation.Columns.Clear()
 
-    Private Sub OnMonthlyPaymentCellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
-        Dim grid As DataGridView = DirectCast(sender, DataGridView)
-        grid.InvalidateCell(e.ColumnIndex, e.RowIndex)
-    End Sub
-
-    Private Sub RecalcMonthlyTotals()
-        Dim totalExTax As Decimal = 0
-        Dim totalTax As Decimal = 0
-        Dim totalIncTax As Decimal = 0
-        For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
-            If row.IsNewRow Then Continue For
-            Dim ex As Decimal = 0
-            Dim tx As Decimal = 0
-            Dim inc As Decimal = 0
-            If row.Cells("MAmountExTax").Value IsNot Nothing Then Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString(), ex)
-            If row.Cells("MTax").Value IsNot Nothing Then Decimal.TryParse(row.Cells("MTax").Value.ToString(), tx)
-            If row.Cells("MTotalIncTax").Value IsNot Nothing Then Decimal.TryParse(row.Cells("MTotalIncTax").Value.ToString(), inc)
-            totalExTax += ex
-            totalTax += tx
-            totalIncTax += inc
-        Next
-        lblMonthlyTotalExTax.Text = "税抜: " & totalExTax.ToString("N0")
-        lblMonthlyTotalTax.Text = "税: " & totalTax.ToString("N0")
-        lblMonthlyTotalIncTax.Text = "税込: " & totalIncTax.ToString("N0")
-    End Sub
-
-    Private Sub LoadAssetData()
-        ' DB未接続（d_asset テーブル削除済み）
-    End Sub
-
-    Private Sub ApplyReadOnlyMode()
-        cmbAccountClass.Enabled = False
-        numQuantity.Enabled = False
-        txtPropertyName.ReadOnly = True
-        txtLocation.ReadOnly = True
-        txtSection.ReadOnly = True
-        txtArea.ReadOnly = True
-        txtLayout.ReadOnly = True
-        txtStructure.ReadOnly = True
-        txtUsageRestrictions.ReadOnly = True
-        numUsefulLife.Enabled = False
-        dtpCompletion.Enabled = False
-        txtLandlordName.ReadOnly = True
-        txtBrokerCompany.ReadOnly = True
-        txtPaymentAgent.ReadOnly = True
-        txtGuarantor.ReadOnly = True
-        dgvSelfEquipment.ReadOnly = True
-        dgvSelfEquipment.AllowUserToAddRows = False
-        dgvAllocations.ReadOnly = True
-        dgvAllocations.AllowUserToAddRows = False
-        If dgvMonthlyPayments IsNot Nothing Then
-            dgvMonthlyPayments.ReadOnly = True
-            dgvMonthlyPayments.AllowUserToAddRows = False
-        End If
-        If numFairValue IsNot Nothing Then numFairValue.Enabled = False
-        If numEconomicLife IsNot Nothing Then numEconomicLife.Enabled = False
-        If numImplicitRate IsNot Nothing Then numImplicitRate.Enabled = False
-        If numIBR IsNot Nothing Then numIBR.Enabled = False
-        txtShikikin.ReadOnly = True
-        txtHoshokin.ReadOnly = True
-        txtReikin.ReadOnly = True
-        txtBrokerFee.ReadOnly = True
-        txtPrepaidRent.ReadOnly = True
-        btnSave.Visible = False
-
-        Dim readOnlyColor As Color = Color.FromArgb(233, 236, 239)
-        txtPropertyName.BackColor = readOnlyColor
-        txtLocation.BackColor = readOnlyColor
-        txtSection.BackColor = readOnlyColor
-        txtArea.BackColor = readOnlyColor
-        txtLayout.BackColor = readOnlyColor
-        txtStructure.BackColor = readOnlyColor
-        txtUsageRestrictions.BackColor = readOnlyColor
-        txtLandlordName.BackColor = readOnlyColor
-        txtBrokerCompany.BackColor = readOnlyColor
-        txtPaymentAgent.BackColor = readOnlyColor
-        txtGuarantor.BackColor = readOnlyColor
-        txtShikikin.BackColor = readOnlyColor
-        txtHoshokin.BackColor = readOnlyColor
-        txtReikin.BackColor = readOnlyColor
-        txtBrokerFee.BackColor = readOnlyColor
-        txtPrepaidRent.BackColor = readOnlyColor
-
-        Me.Text = "資産詳細（照会）"
-    End Sub
-
-    Private Sub CalcBuildingAge()
+        ' DBから部門マスタ取得
         Try
-            If dtpCompletion.Checked Then
-                Dim age As Integer = DateTime.Now.Year - dtpCompletion.Value.Year
-                lblBuildingAge.Text = age.ToString() & "年"
-            Else
-                lblBuildingAge.Text = "---年"
-            End If
-        Catch ex As Exception
-            lblBuildingAge.Text = "---年"
+            Dim mdl As New LeaseM4BS.DataAccess.MasterDataLoader()
+            _deptTable = mdl.LoadDepartments()
+            mdl.Dispose()
+        Catch
+            _deptTable = New Data.DataTable()
+            _deptTable.Columns.Add("dept_cd", GetType(String))
+            _deptTable.Columns.Add("dept_nm", GetType(String))
         End Try
+        ReDim _deptNameList(_deptTable.Rows.Count - 1)
+        For i As Integer = 0 To _deptTable.Rows.Count - 1
+            _deptNameList(i) = _deptTable.Rows(i)("dept_nm").ToString()
+        Next
+
+        ' 隠し部門コード列
+        dgvDeptAllocation.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .Name = "DeptCd",
+            .Visible = False
+        })
+
+        ' 部門名（コンボボックス列）
+        Dim cmbCol As New DataGridViewComboBoxColumn()
+        cmbCol.HeaderText = "部門"
+        cmbCol.Name = "DeptName"
+        cmbCol.Width = 200
+        cmbCol.MinimumWidth = 120
+        cmbCol.Items.AddRange(_deptNameList)
+        cmbCol.FlatStyle = FlatStyle.Flat
+        dgvDeptAllocation.Columns.Add(cmbCol)
+
+        ' 配賦率
+        dgvDeptAllocation.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "配賦率(%)",
+            .Name = "AllocationRatio",
+            .Width = 120,
+            .MinimumWidth = 80,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight,
+                .Format = "N2"
+            }
+        })
+
+        ' 部門名変更時に隠しコード列を自動更新
+        AddHandler dgvDeptAllocation.CellValueChanged, AddressOf OnDeptCellValueChanged
+        AddHandler dgvDeptAllocation.CurrentCellDirtyStateChanged, Sub(s, ev)
+                                                                        If dgvDeptAllocation.IsCurrentCellDirty Then
+                                                                            dgvDeptAllocation.CommitEdit(DataGridViewDataErrorContexts.Commit)
+                                                                        End If
+                                                                    End Sub
+
+        ' デフォルト1行追加（最初の部門）
+        If _deptTable.Rows.Count > 0 Then
+            dgvDeptAllocation.Rows.Add(_deptTable.Rows(0)("dept_cd").ToString(), _deptNameList(0), 100.00D)
+        Else
+            dgvDeptAllocation.Rows.Add("", "", 100.00D)
+        End If
+        UpdateAllocationTotal()
     End Sub
 
-    Private Sub dtpCompletion_ValueChanged(sender As Object, e As EventArgs) Handles dtpCompletion.ValueChanged
-        CalcBuildingAge()
+    ''' <summary>
+    ''' 部門名コンボ変更時に隠しDeptCd列を連動更新
+    ''' </summary>
+    Private Sub OnDeptCellValueChanged(sender As Object, e As DataGridViewCellEventArgs)
+        If e.RowIndex < 0 Then Return
+        If dgvDeptAllocation.Columns(e.ColumnIndex).Name <> "DeptName" Then Return
+
+        Dim deptName As String = If(dgvDeptAllocation.Rows(e.RowIndex).Cells("DeptName").Value?.ToString(), "")
+        Dim deptCd As String = ""
+        If _deptTable IsNot Nothing Then
+            For Each row As Data.DataRow In _deptTable.Rows
+                If row("dept_nm").ToString() = deptName Then
+                    deptCd = row("dept_cd").ToString()
+                    Exit For
+                End If
+            Next
+        End If
+        dgvDeptAllocation.Rows(e.RowIndex).Cells("DeptCd").Value = deptCd
     End Sub
 
-    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
-        ' --- 入力バリデーション ---
-        If cmbAccountClass.SelectedIndex < 0 Then
-            MessageBox.Show("計上区分を選択してください。", "入力エラー",
+    Private Sub btnAddDept_Click(sender As Object, e As EventArgs) Handles btnAddDept.Click
+        dgvDeptAllocation.Rows.Add("", "", 0D)
+    End Sub
+
+    Private Sub btnRemoveDept_Click(sender As Object, e As EventArgs) Handles btnRemoveDept.Click
+        If dgvDeptAllocation.SelectedRows.Count > 0 Then
+            For Each row As DataGridViewRow In dgvDeptAllocation.SelectedRows
+                If Not row.IsNewRow Then
+                    dgvDeptAllocation.Rows.Remove(row)
+                End If
+            Next
+            UpdateAllocationTotal()
+        End If
+    End Sub
+
+    Private Sub dgvDeptAllocation_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvDeptAllocation.CellValueChanged
+        If e.RowIndex >= 0 Then
+            UpdateAllocationTotal()
+        End If
+    End Sub
+
+    Private Sub dgvDeptAllocation_CurrentCellDirtyStateChanged(sender As Object, e As EventArgs) Handles dgvDeptAllocation.CurrentCellDirtyStateChanged
+        If dgvDeptAllocation.IsCurrentCellDirty Then
+            dgvDeptAllocation.CommitEdit(DataGridViewDataErrorContexts.Commit)
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' 配賦率合計を更新する
+    ''' </summary>
+    Private Sub UpdateAllocationTotal()
+        Dim total As Decimal = 0D
+        For Each row As DataGridViewRow In dgvDeptAllocation.Rows
+            If row.IsNewRow Then Continue For
+            Dim val As Object = row.Cells("AllocationRatio").Value
+            If val IsNot Nothing Then
+                Dim d As Decimal
+                If Decimal.TryParse(val.ToString(), d) Then
+                    total += d
+                End If
+            End If
+        Next
+        lblAllocationTotal.Text = String.Format("配賦率合計: {0:N2}%", total)
+
+        If total = 100D Then
+            lblAllocationTotal.ForeColor = Color.FromArgb(40, 167, 69)
+        Else
+            lblAllocationTotal.ForeColor = Color.FromArgb(220, 53, 69)
+        End If
+    End Sub
+
+    ' =============================================
+    ' ボタン
+    ' =============================================
+
+    Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+        ' バリデーション
+        If String.IsNullOrWhiteSpace(txtAssetName.Text) Then
+            MessageBox.Show("資産名を入力してください。", "入力エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            cmbAccountClass.Focus()
+            txtAssetName.Focus()
             Return
         End If
 
-        If String.IsNullOrWhiteSpace(txtAssetNo.Text) Then
-            MessageBox.Show("資産番号を入力してください。", "入力エラー",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            txtAssetNo.Focus()
+        ' 配賦率合計チェック
+        Dim total As Decimal = 0D
+        For Each row As DataGridViewRow In dgvDeptAllocation.Rows
+            If row.IsNewRow Then Continue For
+            Dim val As Object = row.Cells("AllocationRatio").Value
+            If val IsNot Nothing Then
+                Dim d As Decimal
+                If Decimal.TryParse(val.ToString(), d) Then total += d
+            End If
+        Next
+        If total <> 100D Then
+            MessageBox.Show("配賦率の合計が100%になるように設定してください。" & vbCrLf &
+                            String.Format("現在の合計: {0:N2}%", total),
+                            "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
 
-        If String.IsNullOrWhiteSpace(txtPropertyName.Text) Then
-            MessageBox.Show("資産名（物件名）を入力してください。", "入力エラー",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            txtPropertyName.Focus()
-            Return
-        End If
-
-        ' DB未接続（d_asset テーブル削除済み）
         Me.DialogResult = DialogResult.OK
         Me.Close()
     End Sub
@@ -502,6 +410,67 @@ Partial Public Class FrmAssetDetailEntry
     Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
         Me.DialogResult = DialogResult.Cancel
         Me.Close()
+    End Sub
+
+    ' =============================================
+    ' ReadOnlyモード
+    ' =============================================
+
+    Private Sub ApplyReadOnlyMode()
+        Dim readOnlyColor As Color = Color.FromArgb(233, 236, 239)
+
+        ' 基本情報
+        txtAssetName.ReadOnly = True
+        txtAssetName.BackColor = readOnlyColor
+        cmbCompany.Enabled = False
+        txtInstallLocation.ReadOnly = True
+        txtInstallLocation.BackColor = readOnlyColor
+        txtRemarks.ReadOnly = True
+        txtRemarks.BackColor = readOnlyColor
+
+        ' 配賦グリッド
+        dgvDeptAllocation.ReadOnly = True
+        btnAddDept.Visible = False
+        btnRemoveDept.Visible = False
+
+        ' 不動産固有
+        txtStructure.ReadOnly = True
+        txtStructure.BackColor = readOnlyColor
+        txtArea.ReadOnly = True
+        txtArea.BackColor = readOnlyColor
+        txtLayout.ReadOnly = True
+        txtLayout.BackColor = readOnlyColor
+        dtpCompletion.Enabled = False
+        txtLandlordName.ReadOnly = True
+        txtLandlordName.BackColor = readOnlyColor
+        txtBrokerCompany.ReadOnly = True
+        txtBrokerCompany.BackColor = readOnlyColor
+        txtUsageRestrictions.ReadOnly = True
+        txtUsageRestrictions.BackColor = readOnlyColor
+
+        ' 車両固有
+        txtChassisNo.ReadOnly = True
+        txtChassisNo.BackColor = readOnlyColor
+        txtRegistrationNo.ReadOnly = True
+        txtRegistrationNo.BackColor = readOnlyColor
+        txtVehicleType.ReadOnly = True
+        txtVehicleType.BackColor = readOnlyColor
+        dtpInspectionDate.Enabled = False
+        txtMileageLimit.ReadOnly = True
+        txtMileageLimit.BackColor = readOnlyColor
+
+        ' OA機器固有
+        txtModelNo.ReadOnly = True
+        txtModelNo.BackColor = readOnlyColor
+        txtSerialNo.ReadOnly = True
+        txtSerialNo.BackColor = readOnlyColor
+        dtpMaintenanceDate.Enabled = False
+        txtMaintenanceContract.ReadOnly = True
+        txtMaintenanceContract.BackColor = readOnlyColor
+
+        ' 追加ボタン非表示
+        btnAdd.Visible = False
+        Me.Text = "資産詳細（照会）"
     End Sub
 
 End Class

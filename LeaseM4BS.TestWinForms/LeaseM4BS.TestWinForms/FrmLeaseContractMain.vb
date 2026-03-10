@@ -1,6 +1,7 @@
 Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
+Imports LeaseM4BS.DataAccess
 
 Public Class FrmLeaseContractMain
     Inherits Form
@@ -20,26 +21,13 @@ Public Class FrmLeaseContractMain
     Private _isLoaded As Boolean = False
     Private _defaultTaxRate As Decimal = 0.10D
     Private _tooltipProvider As ToolTip
+    Private _masterData As MasterDataLoader
 
     ''' <summary>
     ''' 新規登録時に外部から設定される契約番号（自動採番値）
     ''' </summary>
     Public Property InitContractNo As String = ""
 
-    ''' <summary>
-    ''' 新規登録時に外部から設定される管理番号（自動採番値）
-    ''' </summary>
-    Public Property InitManagementNo As String = ""
-
-    ''' <summary>
-    ''' 新規登録時に外部から設定される稟議番号（自動採番値）
-    ''' </summary>
-    Public Property InitApprovalNo As String = ""
-
-    ''' <summary>
-    ''' 資産番号の自動採番用カウンタ
-    ''' </summary>
-    Private Shared _assetCounter As Integer = 0
 
     Private pnlHeader As Panel
     Private pnlBody As Panel
@@ -50,31 +38,24 @@ Public Class FrmLeaseContractMain
     Private pgSublease As TabPage
     Private pgJudgment As TabPage
 
-    Private txtUpdateCount As TextBox
-    Private txtChangeCount As TextBox
-    Private txtDrafter As TextBox
-    Private txtApprovalNo As TextBox
-    Private txtApprovalDate As TextBox
-    Private lblApprovalBadge As Label
-
     Private cmbContractType As ComboBox
     Private txtContractNo As TextBox
-    Private lblContractClass As Label
     Private cmbMgmtDeptCode As ComboBox
     Private txtMgmtDeptName As TextBox
-    Private txtManagementNo As TextBox
     Private txtContractName As TextBox
-    Private txtSupplier As TextBox
-    Private txtPayeeId As TextBox
-    Private cmbAccountTarget As ComboBox
-    Private dtpApplyDate As DateTimePicker
+    Private cmbSupplier As ComboBox
+    Private txtSupplierName As TextBox
+    Private cmbAssetCategory As ComboBox
     Private txtAssetNo As TextBox
     Private btnAssetSearch As Button
-    Private btnAddAsset As Button
     Private btnAssetNew As Button
     Private dgvAssets As DataGridView
     Private lblAssetCount As Label
     Private btnDeleteRow As Button
+
+    Private _contractTypeTable As Data.DataTable
+    Private _supplierTable As Data.DataTable
+    Private _deptTable As Data.DataTable
 
     Private dtpStartDate As DateTimePicker
     Private dtpEndDate As DateTimePicker
@@ -137,7 +118,33 @@ Public Class FrmLeaseContractMain
     Private _fontResultReason As Font
     Private _prevExemptEligible As Boolean = False
 
+    ''' <summary>
+    ''' 資産番号 → CTBレコード(種別固有データ含む)のマッピング
+    ''' </summary>
+    Private ReadOnly _assetCtbMap As New Dictionary(Of String, CtbRecord)
+
     Private lblJudgmentPreview As Label
+    Private btnRegister As Button
+
+    ''' <summary>
+    ''' 登録ボタン押下時に発火するイベント。契約一覧画面へデータを渡す。
+    ''' </summary>
+    Public Event ContractRegistered As EventHandler(Of ContractRegisteredEventArgs)
+
+    ''' <summary>
+    ''' 契約登録イベントの引数
+    ''' </summary>
+    Public Class ContractRegisteredEventArgs
+        Inherits EventArgs
+        Public Property MgmtDept As String
+        Public Property ContractType As String
+        Public Property ContractNo As String
+        Public Property ContractName As String
+        Public Property StartDate As String
+        Public Property EndDate As String
+        Public Property ContractPeriod As String
+        Public Property AssetQty As String
+    End Class
 
     Public Sub New()
         Me.Text = "新リース会計対応 リース契約管理"
@@ -161,11 +168,14 @@ Public Class FrmLeaseContractMain
         _fontResultBadge = New Font("Meiryo", 9.0F, FontStyle.Bold)
         _fontResultReason = New Font("Meiryo", 9.0F)
 
+        _masterData = New MasterDataLoader()
+
         BuildUI()
-        ApplyInitialValues()
 
         _isLoaded = True
         RecalcAll()
+
+        AddHandler Me.Shown, Sub(s, ev) ApplyInitialValues()
     End Sub
 
     ''' <summary>
@@ -175,12 +185,6 @@ Public Class FrmLeaseContractMain
     Private Sub ApplyInitialValues()
         If Not String.IsNullOrEmpty(InitContractNo) Then
             txtContractNo.Text = InitContractNo
-        End If
-        If Not String.IsNullOrEmpty(InitManagementNo) Then
-            txtManagementNo.Text = InitManagementNo
-        End If
-        If Not String.IsNullOrEmpty(InitApprovalNo) Then
-            txtApprovalNo.Text = InitApprovalNo
         End If
     End Sub
 
@@ -232,10 +236,187 @@ Public Class FrmLeaseContractMain
                 .Cursor = Cursors.Hand
             }
             btn.FlatAppearance.BorderSize = 0
+            If i = 0 Then
+                btnRegister = btn
+                AddHandler btn.Click, AddressOf OnRegisterClick
+            End If
             flowButtons.Controls.Add(btn)
         Next
 
         pnlHeader.Controls.Add(flowButtons)
+    End Sub
+
+    ''' <summary>
+    ''' 登録ボタンクリック時の処理
+    ''' </summary>
+    Private Sub OnRegisterClick(sender As Object, e As EventArgs)
+        ' 必須項目チェック
+        If String.IsNullOrWhiteSpace(txtContractNo.Text) Then
+            MessageBox.Show("契約番号が設定されていません。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+        If String.IsNullOrWhiteSpace(txtContractName.Text) Then
+            MessageBox.Show("契約名称を入力してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtContractName.Focus()
+            Return
+        End If
+
+        ' リース期間（月数）を計算
+        Dim leaseMonths As String = ""
+        If lblLeaseMonths.Text.Contains("ヶ月") Then
+            leaseMonths = lblLeaseMonths.Text.Replace("ヶ月", "").Trim()
+        End If
+
+        ' 管理部署名を取得
+        Dim deptName As String = ""
+        If cmbMgmtDeptCode.SelectedIndex >= 0 Then
+            deptName = txtMgmtDeptName.Text
+        ElseIf Not String.IsNullOrWhiteSpace(cmbMgmtDeptCode.Text) Then
+            deptName = cmbMgmtDeptCode.Text
+        End If
+
+        ' 資産数量をグリッドから取得
+        Dim assetCount As Integer = 0
+        If dgvAssets IsNot Nothing Then
+            For Each row As DataGridViewRow In dgvAssets.Rows
+                If Not row.IsNewRow AndAlso
+                   row.Cells("AssetNo").Value IsNot Nothing AndAlso
+                   Not String.IsNullOrWhiteSpace(row.Cells("AssetNo").Value.ToString()) Then
+                    assetCount += 1
+                End If
+            Next
+        End If
+
+        ' CTBレコード生成: 資産×配賦部門ごとに1レコード作成
+        Dim assetIdx As Integer = 0
+        Dim childIdx As Integer = 0
+        Dim propertyCounter As Integer = 1
+        Dim ctbCount As Integer = 0
+        Dim dbRecords As New List(Of CtbRecord)
+        Dim contractTypeCd As String = ""
+        If cmbContractType.SelectedIndex >= 0 AndAlso cmbContractType.SelectedIndex < _contractTypeTable.Rows.Count Then
+            contractTypeCd = _contractTypeTable.Rows(cmbContractType.SelectedIndex)("contract_type_cd").ToString()
+        End If
+        Dim supplierCd As String = ""
+        If cmbSupplier.SelectedIndex >= 0 AndAlso cmbSupplier.SelectedIndex < _supplierTable.Rows.Count Then
+            supplierCd = _supplierTable.Rows(cmbSupplier.SelectedIndex)("supplier_cd").ToString()
+        End If
+        Dim mgmtDeptCd As String = ""
+        If cmbMgmtDeptCode.SelectedIndex >= 0 AndAlso cmbMgmtDeptCode.SelectedIndex < _deptTable.Rows.Count Then
+            mgmtDeptCd = _deptTable.Rows(cmbMgmtDeptCode.SelectedIndex)("dept_cd").ToString()
+        End If
+        Dim freeMonths As Integer = CInt(numFreePeriod.Value)
+        Dim termMonthsVal As Integer = 0
+        Integer.TryParse(leaseMonths, termMonthsVal)
+
+        If dgvAssets IsNot Nothing Then
+            For Each row As DataGridViewRow In dgvAssets.Rows
+                If row.IsNewRow Then Continue For
+                Dim assetNoVal As String = If(row.Cells("AssetNo").Value?.ToString(), "")
+                If String.IsNullOrWhiteSpace(assetNoVal) Then Continue For
+
+                ' _assetCtbMapに保持済みの詳細データがあればそれを使う
+                Dim baseCtb As CtbRecord = Nothing
+                If _assetCtbMap.ContainsKey(assetNoVal) Then
+                    baseCtb = _assetCtbMap(assetNoVal)
+                Else
+                    baseCtb = New CtbRecord()
+                    baseCtb.AssetNo = assetNoVal
+                    baseCtb.AssetCategory = If(row.Cells("AssetCategory").Value?.ToString(), "")
+                    baseCtb.AssetName = If(row.Cells("AssetName").Value?.ToString(), "")
+                    baseCtb.InstallLocation = If(row.Cells("InstallLocation").Value?.ToString(), "")
+                End If
+
+                ' 配賦部門リストを取得
+                Dim allocations As List(Of CtbDeptAllocation) = baseCtb.DeptAllocations
+                If allocations Is Nothing OrElse allocations.Count = 0 Then
+                    ' 配賦情報なしの場合は1レコードだけ作成
+                    allocations = New List(Of CtbDeptAllocation)
+                    allocations.Add(New CtbDeptAllocation() With {.DeptName = "", .AllocationRatio = 100D})
+                End If
+
+                ' 配賦部門ごとに1レコード生成
+                assetIdx += 1
+                childIdx = 0
+                For Each alloc As CtbDeptAllocation In allocations
+                    childIdx += 1
+
+                    Dim ctb As New CtbRecord()
+                    ctb.ContractNo = txtContractNo.Text
+                    ctb.PropertyNo = propertyCounter
+                    propertyCounter += 1
+                    ctb.ContractName = txtContractName.Text
+                    ctb.ContractTypeCd = contractTypeCd
+                    ctb.SupplierCd = supplierCd
+                    ctb.MgmtDeptCd = mgmtDeptCd
+                    ctb.LeaseStartDate = dtpStartDate.Value
+                    ctb.LeaseEndDate = dtpEndDate.Value
+                    ctb.FreeRentMonths = freeMonths
+                    If termMonthsVal > 0 Then ctb.LeaseTermMonths = termMonthsVal
+
+                    ' 資産情報コピー
+                    ctb.AssetNo = baseCtb.AssetNo
+                    ctb.AssetCategory = baseCtb.AssetCategory
+                    ctb.AssetName = baseCtb.AssetName
+                    ctb.CompanyName = baseCtb.CompanyName
+                    ctb.InstallLocation = baseCtb.InstallLocation
+                    ctb.Remarks = baseCtb.Remarks
+
+                    ' 種別固有コピー
+                    ctb.ReStructure = baseCtb.ReStructure
+                    ctb.ReArea = baseCtb.ReArea
+                    ctb.ReLayout = baseCtb.ReLayout
+                    ctb.ReCompletionDate = baseCtb.ReCompletionDate
+                    ctb.ReLandlordName = baseCtb.ReLandlordName
+                    ctb.ReBrokerCompany = baseCtb.ReBrokerCompany
+                    ctb.ReUsageRestrictions = baseCtb.ReUsageRestrictions
+                    ctb.VhChassisNo = baseCtb.VhChassisNo
+                    ctb.VhRegistrationNo = baseCtb.VhRegistrationNo
+                    ctb.VhVehicleType = baseCtb.VhVehicleType
+                    ctb.VhInspectionDate = baseCtb.VhInspectionDate
+                    ctb.VhMileageLimit = baseCtb.VhMileageLimit
+                    ctb.OaModelNo = baseCtb.OaModelNo
+                    ctb.OaSerialNo = baseCtb.OaSerialNo
+                    ctb.OaMaintenanceDate = baseCtb.OaMaintenanceDate
+                    ctb.OaMaintenanceContract = baseCtb.OaMaintenanceContract
+
+                    ' 配賦情報（1レコードに1部門）
+                    ctb.DeptCd = alloc.DeptCd
+                    ctb.DeptName = alloc.DeptName
+                    ctb.AllocationRatio = alloc.AllocationRatio
+
+                    CtbDataStore.Instance.Add(ctb)
+                    dbRecords.Add(ctb)
+                    ctbCount += 1
+                Next
+            Next
+        End If
+
+        ' DB永続化
+        Try
+            Dim repo As New CtbRepository()
+            repo.InsertAll(dbRecords)
+        Catch ex As Exception
+            MessageBox.Show("DB登録でエラーが発生しました。メモリには保持されています。" & Environment.NewLine & ex.Message,
+                            "DB登録エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End Try
+
+        Dim args As New ContractRegisteredEventArgs() With {
+            .MgmtDept = If(Not String.IsNullOrEmpty(deptName), deptName, cmbMgmtDeptCode.Text),
+            .ContractType = contractTypeCd,
+            .ContractNo = txtContractNo.Text,
+            .ContractName = txtContractName.Text,
+            .StartDate = dtpStartDate.Value.ToString("yyyy/MM/dd"),
+            .EndDate = dtpEndDate.Value.ToString("yyyy/MM/dd"),
+            .ContractPeriod = leaseMonths,
+            .AssetQty = assetCount.ToString()
+        }
+
+        RaiseEvent ContractRegistered(Me, args)
+
+        MessageBox.Show("契約を登録しました。（CTBレコード: " & ctbCount.ToString() & "件）",
+                        "登録完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Me.Close()
     End Sub
 
     Private Function CreateHeaderLabel(text As String) As Label
@@ -336,46 +517,42 @@ Public Class FrmLeaseContractMain
         tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
         tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
 
-        cmbAccountTarget = New ComboBox() With {
-            .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT
-        }
-        dtpApplyDate = New DateTimePicker() With {
-            .Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short
-        }
         txtContractNo = New TextBox() With {
             .Dock = DockStyle.Fill, .ReadOnly = True,
             .BackColor = CLR_READONLY, .Text = "LC-2025-0001"
         }
         _tooltipProvider.SetToolTip(txtContractNo, "契約番号は自動採番されます")
         txtContractName = New TextBox() With {.Dock = DockStyle.Fill}
-        txtManagementNo = New TextBox() With {.Dock = DockStyle.Fill}
-        lblContractClass = New Label() With {
-            .Dock = DockStyle.Fill, .Text = "（自動判定）", .BackColor = CLR_READONLY,
-            .TextAlign = ContentAlignment.MiddleCenter, .Font = FNT_LABEL
-        }
-        _tooltipProvider.SetToolTip(lblContractClass, "リース判定タブの結果が自動反映されます")
         cmbContractType = New ComboBox() With {
             .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT
         }
-        cmbContractType.Items.AddRange({"普通賃貸", "定期賃貸"})
-        cmbContractType.SelectedIndex = 0
-        txtSupplier = New TextBox() With {.Dock = DockStyle.Fill}
-        txtPayeeId = New TextBox() With {.Dock = DockStyle.Fill}
+        _contractTypeTable = _masterData.LoadContractTypesTable()
+        For Each row As Data.DataRow In _contractTypeTable.Rows
+            cmbContractType.Items.Add(row("contract_type_nm").ToString())
+        Next
+        If cmbContractType.Items.Count > 0 Then cmbContractType.SelectedIndex = 0
 
-        txtUpdateCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "3"}
-        txtChangeCount = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "1"}
-        txtDrafter = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "山田太郎"}
-        txtApprovalNo = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "R2025-0123"}
-        txtApprovalDate = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY, .Text = "2025/01/15"}
-        lblApprovalBadge = New Label() With {
-            .Text = "承認済",
-            .BackColor = CLR_ACCENT,
-            .ForeColor = Color.White,
-            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
-            .TextAlign = ContentAlignment.MiddleCenter,
-            .Dock = DockStyle.Fill,
-            .Margin = New Padding(4)
+        Dim pnlSupplier As New TableLayoutPanel() With {
+            .Dock = DockStyle.Fill, .ColumnCount = 2, .RowCount = 1
         }
+        pnlSupplier.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+        pnlSupplier.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
+        cmbSupplier = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT}
+        txtSupplierName = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY}
+        _tooltipProvider.SetToolTip(cmbSupplier, "取引先マスタから選択")
+
+        _supplierTable = _masterData.LoadSuppliers()
+        For Each row As Data.DataRow In _supplierTable.Rows
+            cmbSupplier.Items.Add(row("supplier_cd").ToString() & " " & row("supplier_nm").ToString())
+        Next
+        AddHandler cmbSupplier.SelectedIndexChanged, Sub(s, ev)
+                                                          If cmbSupplier.SelectedIndex >= 0 AndAlso
+                                                             cmbSupplier.SelectedIndex < _supplierTable.Rows.Count Then
+                                                              txtSupplierName.Text = _supplierTable.Rows(cmbSupplier.SelectedIndex)("supplier_nm").ToString()
+                                                          End If
+                                                      End Sub
+        pnlSupplier.Controls.Add(cmbSupplier, 0, 0)
+        pnlSupplier.Controls.Add(txtSupplierName, 1, 0)
 
         Dim pnlMgmtDept As New TableLayoutPanel() With {
             .Dock = DockStyle.Fill, .ColumnCount = 2, .RowCount = 1
@@ -383,7 +560,18 @@ Public Class FrmLeaseContractMain
         pnlMgmtDept.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
         pnlMgmtDept.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
         cmbMgmtDeptCode = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDown}
-        txtMgmtDeptName = New TextBox() With {.Dock = DockStyle.Fill}
+        txtMgmtDeptName = New TextBox() With {.Dock = DockStyle.Fill, .ReadOnly = True, .BackColor = CLR_READONLY}
+
+        _deptTable = _masterData.LoadDepartments()
+        For Each row As Data.DataRow In _deptTable.Rows
+            cmbMgmtDeptCode.Items.Add(row("dept_cd").ToString() & " " & row("dept_nm").ToString())
+        Next
+        AddHandler cmbMgmtDeptCode.SelectedIndexChanged, Sub(s, ev)
+                                                              If cmbMgmtDeptCode.SelectedIndex >= 0 AndAlso
+                                                                 cmbMgmtDeptCode.SelectedIndex < _deptTable.Rows.Count Then
+                                                                  txtMgmtDeptName.Text = _deptTable.Rows(cmbMgmtDeptCode.SelectedIndex)("dept_nm").ToString()
+                                                              End If
+                                                          End Sub
         pnlMgmtDept.Controls.Add(cmbMgmtDeptCode, 0, 0)
         pnlMgmtDept.Controls.Add(txtMgmtDeptName, 1, 0)
 
@@ -413,59 +601,29 @@ Public Class FrmLeaseContractMain
                                                    RecalcAll()
                                                End Sub
 
+        ' Row 1: 契約番号, 契約名称
         Dim r As Integer = tblBasic.RowCount
-        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("計上対象"), 0, r)
-        tblBasic.Controls.Add(cmbAccountTarget, 1, r)
-        tblBasic.Controls.Add(CreateFieldLabel("適用日"), 2, r)
-        tblBasic.Controls.Add(dtpApplyDate, 3, r)
-        tblBasic.Controls.Add(CreateFieldLabel("更新回数"), 4, r)
-        tblBasic.Controls.Add(txtUpdateCount, 5, r)
-        tblBasic.Controls.Add(CreateFieldLabel("変更回数"), 6, r)
-        tblBasic.Controls.Add(txtChangeCount, 7, r)
-        tblBasic.RowCount += 1
-
-        r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
         tblBasic.Controls.Add(CreateFieldLabel("契約番号"), 0, r)
         tblBasic.Controls.Add(txtContractNo, 1, r)
         tblBasic.Controls.Add(CreateFieldLabel("契約名称"), 2, r)
         tblBasic.Controls.Add(txtContractName, 3, r)
-        tblBasic.Controls.Add(CreateFieldLabel("起案者"), 4, r)
-        tblBasic.Controls.Add(txtDrafter, 5, r)
-        tblBasic.Controls.Add(CreateFieldLabel("稟議No"), 6, r)
-        tblBasic.Controls.Add(txtApprovalNo, 7, r)
+        tblBasic.SetColumnSpan(txtContractName, 5)
         tblBasic.RowCount += 1
 
-        r = tblBasic.RowCount
-        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("管理番号"), 0, r)
-        tblBasic.Controls.Add(txtManagementNo, 1, r)
-        tblBasic.Controls.Add(CreateFieldLabel("契約区分"), 2, r)
-        tblBasic.Controls.Add(lblContractClass, 3, r)
-        tblBasic.Controls.Add(CreateFieldLabel("更新日"), 4, r)
-        tblBasic.Controls.Add(txtApprovalDate, 5, r)
-        tblBasic.Controls.Add(CreateFieldLabel("ステータス"), 6, r)
-        tblBasic.Controls.Add(lblApprovalBadge, 7, r)
-        tblBasic.RowCount += 1
-
+        ' Row 2: 契約種類, 取引先ID, 管理部署
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
         tblBasic.Controls.Add(CreateFieldLabel("契約種類"), 0, r)
         tblBasic.Controls.Add(cmbContractType, 1, r)
-        tblBasic.Controls.Add(CreateFieldLabel("取引先ID"), 2, r)
-        tblBasic.Controls.Add(txtSupplier, 3, r)
-        tblBasic.Controls.Add(CreateFieldLabel("支払先ID"), 4, r)
-        tblBasic.Controls.Add(txtPayeeId, 5, r)
+        tblBasic.Controls.Add(CreateFieldLabel("取引先"), 2, r)
+        tblBasic.Controls.Add(pnlSupplier, 3, r)
+        tblBasic.Controls.Add(CreateFieldLabel("管理部署"), 4, r)
+        tblBasic.Controls.Add(pnlMgmtDept, 5, r)
+        tblBasic.SetColumnSpan(pnlMgmtDept, 3)
         tblBasic.RowCount += 1
 
-        r = tblBasic.RowCount
-        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("契約管理所属"), 0, r)
-        tblBasic.Controls.Add(pnlMgmtDept, 1, r)
-        tblBasic.SetColumnSpan(pnlMgmtDept, 7)
-        tblBasic.RowCount += 1
-
+        ' Row 3: 契約開始日, 契約終了日
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
         tblBasic.Controls.Add(CreateFieldLabel("契約開始日"), 0, r)
@@ -476,6 +634,7 @@ Public Class FrmLeaseContractMain
         tblBasic.SetColumnSpan(dtpEndDate, 3)
         tblBasic.RowCount += 1
 
+        ' Row 4: 無償期間, リース期間
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
         tblBasic.Controls.Add(CreateFieldLabel("無償期間"), 0, r)
@@ -491,14 +650,24 @@ Public Class FrmLeaseContractMain
         Dim grpProperty As GroupBox = CreateSection("資産情報")
         Dim tblProp As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 6, .Padding = New Padding(8, 8, 8, 2)
+            .ColumnCount = 8, .Padding = New Padding(8, 8, 8, 2)
         }
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 40.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 0: 資産種類ラベル
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 1: コンボボックス
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 2: 資産番号ラベル
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 3: テキスト
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 4: 検索ボタン
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))  ' 5: 新規登録ボタン
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 6: 余白
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 7: 余白
+
+        cmbAssetCategory = New ComboBox() With {
+            .Dock = DockStyle.Fill,
+            .DropDownStyle = ComboBoxStyle.DropDownList,
+            .Font = FNT_INPUT
+        }
+        cmbAssetCategory.Items.AddRange(New String() {"不動産", "車両", "OA機器"})
+        cmbAssetCategory.SelectedIndex = 0
 
         txtAssetNo = New TextBox() With {.Dock = DockStyle.Fill}
         _tooltipProvider.SetToolTip(txtAssetNo, "資産番号を入力して検索、または＋新規登録で資産を作成")
@@ -515,18 +684,6 @@ Public Class FrmLeaseContractMain
         }
         btnAssetSearch.FlatAppearance.BorderSize = 0
 
-        btnAddAsset = New Button() With {
-            .Text = "追加",
-            .Dock = DockStyle.Fill,
-            .Height = 28,
-            .FlatStyle = FlatStyle.Flat,
-            .BackColor = Color.FromArgb(23, 162, 184),
-            .ForeColor = Color.White,
-            .Font = FNT_LABEL,
-            .Cursor = Cursors.Hand
-        }
-        btnAddAsset.FlatAppearance.BorderSize = 0
-
         btnAssetNew = New Button() With {
             .Text = "＋新規登録",
             .Dock = DockStyle.Fill,
@@ -540,17 +697,16 @@ Public Class FrmLeaseContractMain
         btnAssetNew.FlatAppearance.BorderSize = 0
 
         AddHandler btnAssetSearch.Click, AddressOf OnAssetSearchClick
-        AddHandler btnAddAsset.Click, AddressOf OnAddAssetClick
         AddHandler btnAssetNew.Click, AddressOf OnAssetNewClick
 
         Dim rAsset As Integer = tblProp.RowCount
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("資産番号"), 0, rAsset)
-        tblProp.Controls.Add(txtAssetNo, 1, rAsset)
-        tblProp.Controls.Add(btnAssetSearch, 2, rAsset)
-        tblProp.Controls.Add(btnAddAsset, 3, rAsset)
-        tblProp.Controls.Add(btnAssetNew, 4, rAsset)
-        tblProp.SetColumnSpan(btnAssetNew, 2)
+        tblProp.Controls.Add(CreateFieldLabel("資産種類"), 0, rAsset)
+        tblProp.Controls.Add(cmbAssetCategory, 1, rAsset)
+        tblProp.Controls.Add(CreateFieldLabel("資産番号"), 2, rAsset)
+        tblProp.Controls.Add(txtAssetNo, 3, rAsset)
+        tblProp.Controls.Add(btnAssetSearch, 4, rAsset)
+        tblProp.Controls.Add(btnAssetNew, 5, rAsset)
         tblProp.RowCount += 1
 
         btnDeleteRow = New Button() With {
@@ -580,9 +736,9 @@ Public Class FrmLeaseContractMain
         Dim rAssetBar As Integer = tblProp.RowCount
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
         tblProp.Controls.Add(lblAssetCount, 0, rAssetBar)
-        tblProp.SetColumnSpan(lblAssetCount, 4)
-        tblProp.Controls.Add(btnDeleteRow, 4, rAssetBar)
-        tblProp.SetColumnSpan(btnDeleteRow, 2)
+        tblProp.SetColumnSpan(lblAssetCount, 5)
+        tblProp.Controls.Add(btnDeleteRow, 5, rAssetBar)
+        tblProp.SetColumnSpan(btnDeleteRow, 3)
         tblProp.RowCount += 1
 
         dgvAssets = New DataGridView() With {
@@ -605,35 +761,23 @@ Public Class FrmLeaseContractMain
             .EnableHeadersVisualStyles = False
         }
         dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "削除フラグ", .Name = "DeleteCheck", .Width = 80,
+            .HeaderText = "削除フラグ", .Name = "DeleteCheck", .Width = 60,
             .MinimumWidth = 60, .SortMode = DataGridViewColumnSortMode.NotSortable
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 150, .MinimumWidth = 80
+            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 120, .MinimumWidth = 80
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "計上区分", .Name = "AccountClass", .Width = 180, .MinimumWidth = 90
+            .HeaderText = "資産種類", .Name = "AssetCategory", .Width = 90, .MinimumWidth = 70
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "資産名", .Name = "PropertyName", .Width = 400, .MinimumWidth = 150
+            .HeaderText = "資産名", .Name = "AssetName", .Width = 250, .MinimumWidth = 150
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "数量", .Name = "Quantity", .Width = 100, .MinimumWidth = 60
-        })
-        dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "中途解約", .Name = "EarlyTermination", .Width = 150, .MinimumWidth = 80
+            .HeaderText = "設置場所", .Name = "InstallLocation", .Width = 150, .MinimumWidth = 80
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "現金購入価額", .Name = "CashPrice", .Width = 250, .MinimumWidth = 100,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "月額リース料", .Name = "MonthlyLease", .Width = 200, .MinimumWidth = 100,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
+            .HeaderText = "配賦部門", .Name = "DeptAllocation", .Width = 250, .MinimumWidth = 120
         })
 
         dgvAssets.AllowUserToAddRows = True
@@ -694,7 +838,7 @@ Public Class FrmLeaseContractMain
         Dim colItem As New DataGridViewComboBoxColumn() With {
             .HeaderText = "費目", .Name = "CostItem", .FillWeight = 20
         }
-        colItem.Items.AddRange("敷金", "敷金償却額（返還不能分）", "礼金", "仲介手数料")
+        colItem.Items.AddRange(_masterData.LoadInitialCostItems())
 
         dgvInitialCosts.Columns.Add(colItem)
         dgvInitialCosts.Columns.Add(New DataGridViewTextBoxColumn() With {
@@ -721,7 +865,7 @@ Public Class FrmLeaseContractMain
         Dim colAcctTreat As New DataGridViewComboBoxColumn() With {
             .HeaderText = "会計処理", .Name = "AcctTreatment", .FillWeight = 20
         }
-        colAcctTreat.Items.AddRange("資産計上", "費用処理", "繰延処理", "預り金処理")
+        colAcctTreat.Items.AddRange(_masterData.LoadAcctTreatments())
         dgvInitialCosts.Columns.Add(colAcctTreat)
 
         dgvInitialCosts.Rows.Add("敷金", 2000000, 0, 2000000, "預り金処理")
@@ -809,7 +953,7 @@ Public Class FrmLeaseContractMain
         Dim colMItem As New DataGridViewComboBoxColumn() With {
             .HeaderText = "科目", .Name = "MItem", .FillWeight = 14
         }
-        colMItem.Items.AddRange("賃料", "管理費", "共益費")
+        colMItem.Items.AddRange(_masterData.LoadMonthlyItems())
         dgvMonthlyPayments.Columns.Add(colMItem)
         dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "支払額（税抜）", .Name = "MAmountExTax", .FillWeight = 14,
@@ -831,21 +975,23 @@ Public Class FrmLeaseContractMain
                 .BackColor = CLR_READONLY
             }
         })
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
+        Dim colBankAccount As New DataGridViewComboBoxColumn() With {
             .HeaderText = "振込先口座", .Name = "MBankAccount", .FillWeight = 18
-        })
+        }
+        colBankAccount.Items.AddRange(_masterData.LoadBankAccounts())
+        dgvMonthlyPayments.Columns.Add(colBankAccount)
         Dim colPayMethod As New DataGridViewComboBoxColumn() With {
             .HeaderText = "支払方法", .Name = "MPayMethod", .FillWeight = 12
         }
-        colPayMethod.Items.AddRange("振込", "口座振替", "手形", "現金")
+        colPayMethod.Items.AddRange(_masterData.LoadPaymentMethods())
         dgvMonthlyPayments.Columns.Add(colPayMethod)
         dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "支払日", .Name = "MPayDate", .FillWeight = 10
         })
 
-        dgvMonthlyPayments.Rows.Add("賃料", 500000, 50000, 550000, "三菱UFJ 本店 1234567", "振込", "毎月末")
-        dgvMonthlyPayments.Rows.Add("管理費", 50000, 5000, 55000, "三菱UFJ 本店 1234567", "振込", "毎月末")
-        dgvMonthlyPayments.Rows.Add("共益費", 30000, 3000, 33000, "三菱UFJ 本店 1234567", "振込", "毎月末")
+        dgvMonthlyPayments.Rows.Add("賃料", 500000, 50000, 550000, Nothing, "振込", "毎月末")
+        dgvMonthlyPayments.Rows.Add("管理費", 50000, 5000, 55000, Nothing, "振込", "毎月末")
+        dgvMonthlyPayments.Rows.Add("共益費", 30000, 3000, 33000, Nothing, "振込", "毎月末")
 
         AddHandler dgvMonthlyPayments.CellValueChanged, AddressOf OnMonthlyPaymentChanged
         AddHandler dgvMonthlyPayments.CellEndEdit, AddressOf OnMonthlyPaymentCellEndEdit
@@ -1535,7 +1681,6 @@ Public Class FrmLeaseContractMain
         End If
 
         lblResultReason.Text = String.Join(vbCrLf, reasonParts)
-        lblContractClass.Text = lblResultText.Text
         lblJudgmentPreview.Text = "リース判定: " & lblResultText.Text
     End Sub
 
@@ -1662,18 +1807,13 @@ Public Class FrmLeaseContractMain
             Return
         End If
 
-        Dim assetId As Integer
-        If Not Integer.TryParse(txtAssetNo.Text, assetId) Then
-            MessageBox.Show("資産番号は数値で入力してください。", "入力エラー",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
-
         Try
             Using frm As New FrmAssetDetailEntry()
-                frm.AssetId = assetId
-                frm.IsReadOnly = True
-                frm.ShowDialog(Me)
+                frm.InitAssetNo = txtAssetNo.Text
+                frm.AssetCategory = cmbAssetCategory.SelectedItem.ToString()
+                If frm.ShowDialog(Me) = DialogResult.OK Then
+                    AddAssetRow(frm)
+                End If
             End Using
         Catch ex As Exception
             MessageBox.Show("資産情報の取得に失敗しました。" & vbCrLf & ex.Message,
@@ -1681,57 +1821,65 @@ Public Class FrmLeaseContractMain
         End Try
     End Sub
 
-    Private Sub OnAddAssetClick(sender As Object, e As EventArgs)
-        If String.IsNullOrWhiteSpace(txtAssetNo.Text) Then
-            MessageBox.Show("資産番号を入力してください。", "入力エラー",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
-
-        Dim assetId As Integer
-        If Not Integer.TryParse(txtAssetNo.Text, assetId) Then
-            MessageBox.Show("資産番号は数値で入力してください。", "入力エラー",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
-
-        For Each row As DataGridViewRow In dgvAssets.Rows
-            If row.IsNewRow Then Continue For
-            If row.Cells("AssetNo").Value IsNot Nothing AndAlso
-               Not String.IsNullOrEmpty(row.Cells("AssetNo").Value.ToString()) AndAlso
-               row.Cells("AssetNo").Value.ToString() = assetId.ToString() Then
-                MessageBox.Show("この資産番号は既に追加されています。", "重複エラー",
-                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
-            End If
-        Next
-
-        AddAssetRow(assetId, "", "", "1", False, "", "")
-        txtAssetNo.Text = ""
-    End Sub
-
     Private Sub OnAssetNewClick(sender As Object, e As EventArgs)
         Using frm As New FrmAssetDetailEntry()
-            ' 資産番号の自動採番
-            _assetCounter += 1
-            frm.InitAssetNo = String.Format("ASSET-{0:D4}", _assetCounter)
+            frm.InitAssetNo = GetNextAssetNo()
+            frm.AssetCategory = cmbAssetCategory.SelectedItem.ToString()
             If frm.ShowDialog(Me) = DialogResult.OK Then
-                AddAssetRow(
-                    frm.AssetNo,
-                    frm.AccountClass,
-                    frm.PropertyName,
-                    frm.Quantity.ToString(),
-                    False,
-                    frm.CashPrice,
-                    frm.MonthlyLease)
+                AddAssetRow(frm)
             End If
         End Using
     End Sub
 
-    Private Sub AddAssetRow(assetNo As String, accountClass As String,
-                            propertyName As String, quantity As String,
-                            earlyTermination As Boolean,
-                            cashPrice As String, monthlyLease As String)
+    ''' <summary>
+    ''' DBとメモリストアと画面上の未登録資産から次の資産番号を生成する
+    ''' </summary>
+    Private Function GetNextAssetNo() As String
+        Dim maxCounter As Integer = 0
+
+        ' DBから最大カウンタを取得
+        Try
+            Dim connMgr As New LeaseM4BS.DataAccess.DbConnectionManager()
+            Using conn = connMgr.GetConnection()
+                Using cmd As New Npgsql.NpgsqlCommand(
+                    "SELECT asset_no FROM ctb_lease_integrated WHERE asset_no LIKE 'ASSET-%'", conn)
+                    Using reader = cmd.ExecuteReader()
+                        While reader.Read()
+                            If Not reader.IsDBNull(0) Then
+                                Dim num As Integer = ParseAssetCounter(reader.GetString(0))
+                                If num > maxCounter Then maxCounter = num
+                            End If
+                        End While
+                    End Using
+                End Using
+            End Using
+        Catch
+        End Try
+
+        ' メモリストアも考慮
+        For Each rec In CtbDataStore.Instance.GetAll()
+            Dim num As Integer = ParseAssetCounter(rec.AssetNo)
+            If num > maxCounter Then maxCounter = num
+        Next
+
+        ' 画面上の未登録資産（_assetCtbMap）も考慮
+        For Each key In _assetCtbMap.Keys
+            Dim num As Integer = ParseAssetCounter(key)
+            If num > maxCounter Then maxCounter = num
+        Next
+
+        Return String.Format("ASSET-{0:D4}", maxCounter + 1)
+    End Function
+
+    Private Shared Function ParseAssetCounter(assetNo As String) As Integer
+        If String.IsNullOrEmpty(assetNo) OrElse Not assetNo.StartsWith("ASSET-") Then Return 0
+        Dim suffix As String = assetNo.Substring(6)
+        Dim num As Integer
+        If Integer.TryParse(suffix, num) Then Return num
+        Return 0
+    End Function
+
+    Private Sub AddAssetRow(frm As FrmAssetDetailEntry)
         Dim emptyRowIndex As Integer = -1
         For i As Integer = 0 To dgvAssets.Rows.Count - 1
             Dim row As DataGridViewRow = dgvAssets.Rows(i)
@@ -1745,24 +1893,56 @@ Public Class FrmLeaseContractMain
 
         If emptyRowIndex >= 0 Then
             Dim row As DataGridViewRow = dgvAssets.Rows(emptyRowIndex)
-            row.Cells("AssetNo").Value = assetNo
-            row.Cells("AccountClass").Value = accountClass
-            row.Cells("PropertyName").Value = propertyName
-            row.Cells("Quantity").Value = quantity
-            row.Cells("EarlyTermination").Value = earlyTermination
-            row.Cells("CashPrice").Value = cashPrice
-            row.Cells("MonthlyLease").Value = monthlyLease
+            row.Cells("AssetNo").Value = frm.AssetNo
+            row.Cells("AssetCategory").Value = frm.AssetCategory
+            row.Cells("AssetName").Value = frm.AssetName
+            row.Cells("InstallLocation").Value = frm.InstallLocation
+            row.Cells("DeptAllocation").Value = frm.DeptAllocationSummary
         Else
             dgvAssets.Rows.Add(
                 False,
-                assetNo,
-                accountClass,
-                propertyName,
-                quantity,
-                earlyTermination,
-                cashPrice,
-                monthlyLease)
+                frm.AssetNo,
+                frm.AssetCategory,
+                frm.AssetName,
+                frm.InstallLocation,
+                frm.DeptAllocationSummary)
         End If
+
+        ' 資産詳細データをCTBレコードとして保持
+        Dim ctb As New CtbRecord()
+        ctb.AssetNo = frm.AssetNo
+        ctb.AssetCategory = frm.AssetCategory
+        ctb.AssetName = frm.AssetName
+        ctb.CompanyName = frm.CompanyNameValue
+        ctb.InstallLocation = frm.InstallLocation
+        ctb.Remarks = frm.RemarksValue
+        ctb.DeptAllocations = frm.DeptAllocationList
+
+        ' 種別固有データ
+        Select Case frm.AssetCategory
+            Case "不動産"
+                ctb.ReStructure = frm.ReStructure
+                ctb.ReArea = frm.ReArea
+                ctb.ReLayout = frm.ReLayout
+                ctb.ReCompletionDate = frm.ReCompletionDate
+                ctb.ReLandlordName = frm.ReLandlordName
+                ctb.ReBrokerCompany = frm.ReBrokerCompany
+                ctb.ReUsageRestrictions = frm.ReUsageRestrictions
+            Case "車両"
+                ctb.VhChassisNo = frm.VhChassisNo
+                ctb.VhRegistrationNo = frm.VhRegistrationNo
+                ctb.VhVehicleType = frm.VhVehicleType
+                ctb.VhInspectionDate = frm.VhInspectionDate
+                ctb.VhMileageLimit = frm.VhMileageLimit
+            Case "OA機器"
+                ctb.OaModelNo = frm.OaModelNo
+                ctb.OaSerialNo = frm.OaSerialNo
+                ctb.OaMaintenanceDate = frm.OaMaintenanceDate
+                ctb.OaMaintenanceContract = frm.OaMaintenanceContract
+        End Select
+
+        _assetCtbMap(frm.AssetNo) = ctb
+
         UpdateAssetCount()
     End Sub
 

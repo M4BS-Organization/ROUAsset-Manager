@@ -24,6 +24,7 @@ Partial Class FrmFlexMenu
         Me.btnMonthlyAccounting = New System.Windows.Forms.Button()
         Me.btnPeriodBalance = New System.Windows.Forms.Button()
         Me.btnTaxAdjustment = New System.Windows.Forms.Button()
+        Me.btnMaster = New System.Windows.Forms.Button()
         Me.pnlContent = New System.Windows.Forms.Panel()
         Me.pnlMenuBar.SuspendLayout()
         Me.SuspendLayout()
@@ -47,6 +48,7 @@ Partial Class FrmFlexMenu
         Me.flowMenu.Controls.Add(Me.btnMonthlyAccounting)
         Me.flowMenu.Controls.Add(Me.btnPeriodBalance)
         Me.flowMenu.Controls.Add(Me.btnTaxAdjustment)
+        Me.flowMenu.Controls.Add(Me.btnMaster)
         Me.flowMenu.Dock = System.Windows.Forms.DockStyle.Fill
         Me.flowMenu.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight
         Me.flowMenu.Location = New System.Drawing.Point(4, 4)
@@ -139,6 +141,20 @@ Partial Class FrmFlexMenu
         Me.btnTaxAdjustment.Text = "税法調整(フレックス)"
         Me.btnTaxAdjustment.UseVisualStyleBackColor = True
         '
+        ' btnMaster
+        '
+        Me.btnMaster.FlatAppearance.BorderSize = 0
+        Me.btnMaster.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnMaster.Font = New System.Drawing.Font("Meiryo", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.btnMaster.ForeColor = System.Drawing.Color.White
+        Me.btnMaster.Location = New System.Drawing.Point(1042, 0)
+        Me.btnMaster.Margin = New System.Windows.Forms.Padding(0, 0, 2, 0)
+        Me.btnMaster.Name = "btnMaster"
+        Me.btnMaster.Size = New System.Drawing.Size(100, 32)
+        Me.btnMaster.TabIndex = 6
+        Me.btnMaster.Text = "マスタ"
+        Me.btnMaster.UseVisualStyleBackColor = True
+        '
         ' pnlContent
         '
         Me.pnlContent.BackColor = System.Drawing.Color.FromArgb(CType(248, Integer), CType(249, Integer), CType(250, Integer))
@@ -173,6 +189,7 @@ Partial Class FrmFlexMenu
     Friend WithEvents btnMonthlyAccounting As System.Windows.Forms.Button
     Friend WithEvents btnPeriodBalance As System.Windows.Forms.Button
     Friend WithEvents btnTaxAdjustment As System.Windows.Forms.Button
+    Friend WithEvents btnMaster As System.Windows.Forms.Button
     Friend WithEvents pnlContent As System.Windows.Forms.Panel
 
 End Class
