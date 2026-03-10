@@ -450,10 +450,9 @@ Public Class FrmLeaseContractMain
         Dim tblBodyMain As New TableLayoutPanel() With {
             .Dock = DockStyle.Fill,
             .ColumnCount = 1,
-            .RowCount = 2
+            .RowCount = 1
         }
         tblBodyMain.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
-        tblBodyMain.RowStyles.Add(New RowStyle(SizeType.Absolute, 30.0F))
 
         tabMain = New TabControl() With {
             .Dock = DockStyle.Fill,
@@ -464,29 +463,15 @@ Public Class FrmLeaseContractMain
         pgInitial = New TabPage("初回金") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
         pgAccounting = New TabPage("会計") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
         pgSublease = New TabPage("転貸") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
-        pgJudgment = New TabPage("リース判定") With {.BackColor = CLR_BG, .Padding = New Padding(6)}
 
         InitTabContract()
         InitTabInitialCost()
         InitTabAccounting()
         InitTabSublease()
-        InitTabJudge_Pro()
 
-        tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
-
-        lblJudgmentPreview = New Label() With {
-            .Dock = DockStyle.Fill,
-            .Text = "リース判定: ---",
-            .Font = New Font("Meiryo", 9.0F, FontStyle.Bold),
-            .ForeColor = CLR_HEADER,
-            .BackColor = Color.FromArgb(230, 240, 250),
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Padding = New Padding(10, 0, 0, 0)
-        }
-        _tooltipProvider.SetToolTip(lblJudgmentPreview, "各タブの入力値からリアルタイム算出された判定結果です")
+        tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease})
 
         tblBodyMain.Controls.Add(tabMain, 0, 0)
-        tblBodyMain.Controls.Add(lblJudgmentPreview, 0, 1)
 
         pnlBody.Controls.Add(tblBodyMain)
     End Sub
@@ -498,8 +483,9 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Top,
             .AutoSize = True,
             .ColumnCount = 1,
-            .RowCount = 2
+            .RowCount = 3
         }
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
 
@@ -796,8 +782,118 @@ Public Class FrmLeaseContractMain
         grpProperty.Controls.Add(pnlGrid)
         grpProperty.Controls.Add(tblProp)
 
+        ' === 月額支払明細（会計タブから移動） ===
+        Dim grpMonthly As GroupBox = CreateSection("月額支払明細")
+        grpMonthly.Height = 260
+        grpMonthly.AutoSize = False
+
+        Dim pnlMonthlyGrid As New Panel() With {.Dock = DockStyle.Fill}
+
+        dgvMonthlyPayments = New DataGridView() With {
+            .Dock = DockStyle.Fill,
+            .BackgroundColor = CLR_CARD,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .AllowUserToAddRows = True,
+            .RowHeadersVisible = False,
+            .BorderStyle = BorderStyle.None,
+            .GridColor = CLR_BORDER,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
+            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
+                .BackColor = Color.FromArgb(240, 244, 248),
+                .Font = FNT_LABEL,
+                .ForeColor = CLR_LABEL,
+                .Alignment = DataGridViewContentAlignment.MiddleCenter
+            },
+            .EnableHeadersVisualStyles = False
+        }
+
+        Dim colMItem As New DataGridViewComboBoxColumn() With {
+            .HeaderText = "科目", .Name = "MItem", .FillWeight = 14
+        }
+        colMItem.Items.AddRange(_masterData.LoadMonthlyItems())
+        dgvMonthlyPayments.Columns.Add(colMItem)
+        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "支払額（税抜）", .Name = "MAmountExTax", .FillWeight = 14,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
+            }
+        })
+        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "消費税", .Name = "MTax", .FillWeight = 12, .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0",
+                .BackColor = CLR_READONLY
+            }
+        })
+        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "税込合計", .Name = "MTotalIncTax", .FillWeight = 14, .ReadOnly = True,
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0",
+                .BackColor = CLR_READONLY
+            }
+        })
+        Dim colBankAccount As New DataGridViewComboBoxColumn() With {
+            .HeaderText = "振込先口座", .Name = "MBankAccount", .FillWeight = 18
+        }
+        colBankAccount.Items.AddRange(_masterData.LoadBankAccounts())
+        dgvMonthlyPayments.Columns.Add(colBankAccount)
+        Dim colPayMethod As New DataGridViewComboBoxColumn() With {
+            .HeaderText = "支払方法", .Name = "MPayMethod", .FillWeight = 12
+        }
+        colPayMethod.Items.AddRange(_masterData.LoadPaymentMethods())
+        dgvMonthlyPayments.Columns.Add(colPayMethod)
+        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "支払日", .Name = "MPayDate", .FillWeight = 10
+        })
+
+        dgvMonthlyPayments.Rows.Add("賃料", 500000, 50000, 550000, Nothing, "振込", "毎月末")
+        dgvMonthlyPayments.Rows.Add("管理費", 50000, 5000, 55000, Nothing, "振込", "毎月末")
+        dgvMonthlyPayments.Rows.Add("共益費", 30000, 3000, 33000, Nothing, "振込", "毎月末")
+
+        AddHandler dgvMonthlyPayments.CellValueChanged, AddressOf OnMonthlyPaymentChanged
+        AddHandler dgvMonthlyPayments.CellEndEdit, AddressOf OnMonthlyPaymentCellEndEdit
+
+        Dim pnlTotal As New Panel() With {
+            .Dock = DockStyle.Bottom, .Height = 30,
+            .BackColor = Color.FromArgb(230, 240, 250)
+        }
+        Dim flowTotal As New FlowLayoutPanel() With {
+            .Dock = DockStyle.Fill,
+            .FlowDirection = FlowDirection.LeftToRight,
+            .WrapContents = False,
+            .Padding = New Padding(4, 4, 0, 0)
+        }
+        flowTotal.Controls.Add(New Label() With {
+            .Text = "月額合計:", .Font = FNT_LABEL, .AutoSize = True,
+            .Padding = New Padding(0, 2, 10, 0)
+        })
+        lblMonthlyTotalExTax = New Label() With {
+            .Text = "税抜: 580,000", .Font = FNT_LABEL, .AutoSize = True,
+            .Padding = New Padding(0, 2, 20, 0)
+        }
+        _tooltipProvider.SetToolTip(lblMonthlyTotalExTax, "月額支払明細の税抜金額合計")
+        lblMonthlyTotalTax = New Label() With {
+            .Text = "税: 58,000", .Font = FNT_LABEL, .AutoSize = True,
+            .Padding = New Padding(0, 2, 20, 0)
+        }
+        lblMonthlyTotalIncTax = New Label() With {
+            .Text = "税込: 638,000",
+            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
+            .AutoSize = True, .ForeColor = CLR_HEADER,
+            .Padding = New Padding(0, 1, 0, 0)
+        }
+        flowTotal.Controls.Add(lblMonthlyTotalExTax)
+        flowTotal.Controls.Add(lblMonthlyTotalTax)
+        flowTotal.Controls.Add(lblMonthlyTotalIncTax)
+        pnlTotal.Controls.Add(flowTotal)
+
+        pnlMonthlyGrid.Controls.Add(dgvMonthlyPayments)
+        pnlMonthlyGrid.Controls.Add(pnlTotal)
+        grpMonthly.Controls.Add(pnlMonthlyGrid)
+
         mainTbl.Controls.Add(grpBasic, 0, 0)
         mainTbl.Controls.Add(grpProperty, 0, 1)
+        mainTbl.Controls.Add(grpMonthly, 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgContract.Controls.Add(scroll)
@@ -917,192 +1013,9 @@ Public Class FrmLeaseContractMain
     End Sub
 
     Private Sub InitTabAccounting()
-        Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(6)}
-
-        Dim mainTbl As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 2
-        }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-
-        Dim grpMonthly As GroupBox = CreateSection("月額支払明細")
-        grpMonthly.Height = 260
-        grpMonthly.AutoSize = False
-
-        Dim pnlGrid As New Panel() With {.Dock = DockStyle.Fill}
-
-        dgvMonthlyPayments = New DataGridView() With {
-            .Dock = DockStyle.Fill,
-            .BackgroundColor = CLR_CARD,
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            .AllowUserToAddRows = True,
-            .RowHeadersVisible = False,
-            .BorderStyle = BorderStyle.None,
-            .GridColor = CLR_BORDER,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
-            .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
-                .BackColor = Color.FromArgb(240, 244, 248),
-                .Font = FNT_LABEL,
-                .ForeColor = CLR_LABEL,
-                .Alignment = DataGridViewContentAlignment.MiddleCenter
-            },
-            .EnableHeadersVisualStyles = False
-        }
-
-        Dim colMItem As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "科目", .Name = "MItem", .FillWeight = 14
-        }
-        colMItem.Items.AddRange(_masterData.LoadMonthlyItems())
-        dgvMonthlyPayments.Columns.Add(colMItem)
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "支払額（税抜）", .Name = "MAmountExTax", .FillWeight = 14,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0"
-            }
-        })
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "消費税", .Name = "MTax", .FillWeight = 12, .ReadOnly = True,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0",
-                .BackColor = CLR_READONLY
-            }
-        })
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "税込合計", .Name = "MTotalIncTax", .FillWeight = 14, .ReadOnly = True,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {
-                .Alignment = DataGridViewContentAlignment.MiddleRight, .Format = "N0",
-                .BackColor = CLR_READONLY
-            }
-        })
-        Dim colBankAccount As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "振込先口座", .Name = "MBankAccount", .FillWeight = 18
-        }
-        colBankAccount.Items.AddRange(_masterData.LoadBankAccounts())
-        dgvMonthlyPayments.Columns.Add(colBankAccount)
-        Dim colPayMethod As New DataGridViewComboBoxColumn() With {
-            .HeaderText = "支払方法", .Name = "MPayMethod", .FillWeight = 12
-        }
-        colPayMethod.Items.AddRange(_masterData.LoadPaymentMethods())
-        dgvMonthlyPayments.Columns.Add(colPayMethod)
-        dgvMonthlyPayments.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "支払日", .Name = "MPayDate", .FillWeight = 10
-        })
-
-        dgvMonthlyPayments.Rows.Add("賃料", 500000, 50000, 550000, Nothing, "振込", "毎月末")
-        dgvMonthlyPayments.Rows.Add("管理費", 50000, 5000, 55000, Nothing, "振込", "毎月末")
-        dgvMonthlyPayments.Rows.Add("共益費", 30000, 3000, 33000, Nothing, "振込", "毎月末")
-
-        AddHandler dgvMonthlyPayments.CellValueChanged, AddressOf OnMonthlyPaymentChanged
-        AddHandler dgvMonthlyPayments.CellEndEdit, AddressOf OnMonthlyPaymentCellEndEdit
-
-        Dim pnlTotal As New Panel() With {
-            .Dock = DockStyle.Bottom, .Height = 30,
-            .BackColor = Color.FromArgb(230, 240, 250)
-        }
-        Dim flowTotal As New FlowLayoutPanel() With {
-            .Dock = DockStyle.Fill,
-            .FlowDirection = FlowDirection.LeftToRight,
-            .WrapContents = False,
-            .Padding = New Padding(4, 4, 0, 0)
-        }
-        flowTotal.Controls.Add(New Label() With {
-            .Text = "月額合計:", .Font = FNT_LABEL, .AutoSize = True,
-            .Padding = New Padding(0, 2, 10, 0)
-        })
-        lblMonthlyTotalExTax = New Label() With {
-            .Text = "税抜: 580,000", .Font = FNT_LABEL, .AutoSize = True,
-            .Padding = New Padding(0, 2, 20, 0)
-        }
-        _tooltipProvider.SetToolTip(lblMonthlyTotalExTax, "月額支払明細の税抜金額合計")
-        lblMonthlyTotalTax = New Label() With {
-            .Text = "税: 58,000", .Font = FNT_LABEL, .AutoSize = True,
-            .Padding = New Padding(0, 2, 20, 0)
-        }
-        lblMonthlyTotalIncTax = New Label() With {
-            .Text = "税込: 638,000",
-            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
-            .AutoSize = True, .ForeColor = CLR_HEADER,
-            .Padding = New Padding(0, 1, 0, 0)
-        }
-        flowTotal.Controls.Add(lblMonthlyTotalExTax)
-        flowTotal.Controls.Add(lblMonthlyTotalTax)
-        flowTotal.Controls.Add(lblMonthlyTotalIncTax)
-        pnlTotal.Controls.Add(flowTotal)
-
-        pnlGrid.Controls.Add(dgvMonthlyPayments)
-        pnlGrid.Controls.Add(pnlTotal)
-        grpMonthly.Controls.Add(pnlGrid)
-
-        Dim grpFinancial As GroupBox = CreateSection("財務パラメータ")
-        Dim tblFin As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
-        }
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 160.0F))
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 160.0F))
-        tblFin.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        numFairValue = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 99999999999D,
-            .ThousandsSeparator = True, .TextAlign = HorizontalAlignment.Right,
-            .Value = 50000000
-        }
-        _tooltipProvider.SetToolTip(numFairValue, "原資産の見積公正価値。PV割合判定の分母となります")
-        numEconomicLife = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 100,
-            .TextAlign = HorizontalAlignment.Right, .Value = 47
-        }
-        _tooltipProvider.SetToolTip(numEconomicLife, "経済的耐用年数（年）。リース期間割合の分母となります")
-        numImplicitRate = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .DecimalPlaces = 2, .Maximum = 100,
-            .Increment = 0.01D, .TextAlign = HorizontalAlignment.Right
-        }
-        _tooltipProvider.SetToolTip(numImplicitRate, "リースの計算利子率。0の場合はIBRが自動適用されます")
-        numIBR = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .DecimalPlaces = 2, .Maximum = 100,
-            .Increment = 0.01D, .TextAlign = HorizontalAlignment.Right,
-            .Value = 2.5D
-        }
-
-        lblAppliedRate = New Label() With {
-            .Dock = DockStyle.Fill, .Text = "適用割引率: IBR 2.50%",
-            .BackColor = Color.FromArgb(255, 248, 220),
-            .TextAlign = ContentAlignment.MiddleCenter,
-            .Font = New Font("Meiryo", 9.0F, FontStyle.Bold),
-            .ForeColor = Color.FromArgb(133, 100, 4)
-        }
-        _tooltipProvider.SetToolTip(lblAppliedRate, "計算利子率が0またはnullの場合、自動的にIBRが適用されます")
-
-        AddHandler numImplicitRate.ValueChanged, Sub(s, e)
-                                                     UpdateAppliedRate()
-                                                     RecalcAll()
-                                                 End Sub
-        AddHandler numIBR.ValueChanged, Sub(s, e)
-                                            UpdateAppliedRate()
-                                            RecalcAll()
-                                        End Sub
-        AddHandler numFairValue.ValueChanged, Sub(s, e) RecalcAll()
-        AddHandler numEconomicLife.ValueChanged, Sub(s, e) RecalcAll()
-
-        AddFieldRow(tblFin, "原資産見積公正価値", numFairValue, "経済的耐用年数(年)", numEconomicLife)
-        AddFieldRow(tblFin, "リース計算利子率(%)", numImplicitRate, "追加借入利子率IBR(%)", numIBR)
-
-        Dim rowRate As Integer = tblFin.RowCount
-        tblFin.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblFin.Controls.Add(lblAppliedRate, 0, rowRate)
-        tblFin.SetColumnSpan(lblAppliedRate, 4)
-        tblFin.RowCount += 1
-
-        grpFinancial.Controls.Add(tblFin)
-
-        mainTbl.Controls.Add(grpMonthly, 0, 0)
-        mainTbl.Controls.Add(grpFinancial, 0, 1)
-
-        scroll.Controls.Add(mainTbl)
-        pgAccounting.Controls.Add(scroll)
+        ' 会計タブは現在空（月次支払明細・財務パラメータは契約タブへ移動済み）
     End Sub
+
 
     Private Sub InitTabSublease()
         Dim scroll As New Panel() With {.Dock = DockStyle.Fill, .AutoScroll = True, .Padding = New Padding(6)}
@@ -1445,10 +1358,7 @@ Public Class FrmLeaseContractMain
         If Not _isLoaded Then Return
 
         CalcLeaseMonths()
-        UpdateAppliedRate()
         CalcMonthlyTotals()
-
-        RecalcJudge()
     End Sub
 
     Private Sub CalcLeaseMonths()
@@ -1471,6 +1381,7 @@ Public Class FrmLeaseContractMain
 
     Private Sub UpdateAppliedRate()
         If Not _isLoaded Then Return
+        If numImplicitRate Is Nothing OrElse lblAppliedRate Is Nothing Then Return
         If numImplicitRate.Value > 0 Then
             lblAppliedRate.Text = String.Format("適用割引率: 計算利子率 {0:F2}%", numImplicitRate.Value)
             _tooltipProvider.SetToolTip(lblAppliedRate, "リースの計算利子率が設定されているため、こちらを適用")
