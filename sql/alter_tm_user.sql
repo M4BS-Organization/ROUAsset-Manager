@@ -7,9 +7,9 @@ ALTER TABLE tm_USER ADD COLUMN last_login_at TIMESTAMP;
 ALTER TABLE tm_USER ADD COLUMN failed_login_count INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE tm_USER ADD COLUMN locked_until  TIMESTAMP;
 
--- 既存行マイグレーション
+-- 既存行マイグレーション（仮パスワード: changeme → 初回ログイン後に変更を推奨）
 UPDATE tm_USER SET login_id = user_name WHERE login_id IS NULL;
-UPDATE tm_USER SET password_hash = '$2b$12$placeholder' WHERE password_hash IS NULL;
+UPDATE tm_USER SET password_hash = '100000:u6HesG1k6IVNvG8aYkNI7g==:wtMlizpL9uT+pMcdrArzOtZs77p7nzaPLuUWyPWeEbE=' WHERE password_hash IS NULL;
 
 -- NOT NULL 制約
 ALTER TABLE tm_USER ALTER COLUMN login_id      SET NOT NULL;

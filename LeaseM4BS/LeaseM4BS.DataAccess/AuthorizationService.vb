@@ -20,6 +20,8 @@ Public Class AuthorizationService
         End Get
     End Property
 
+    ''' <summary>メニュー権限マップ（キー = FrmFlexMenu のボタン Name プロパティ）</summary>
+    ''' <remarks>将来的に抽象的な権限名に置き換え、UI層でマッピングする設計も検討</remarks>
     Private Shared ReadOnly _menuPermissions As New Dictionary(Of String, String()) From {
         {"btnContract",          New String() {"admin", "accounting", "general_affairs", "viewer"}},
         {"btnROUAsset",          New String() {"admin", "accounting", "general_affairs", "viewer"}},

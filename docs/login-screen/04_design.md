@@ -4,6 +4,12 @@
 > **対象:** LeaseM4BS ログイン画面実装（ISS-006）
 > **入力資料:** 01_code_research.md / 02_doc_research.md / 03_requirements.md / ログイン画面_実装計画.md
 
+> **⚠ 実装時の変更（2026-03-11）:**
+> BCrypt.Net-Next 4.1.0 は .NET Framework 4.7.2 で System.Memory 4.0.5.0 のアセンブリ解決に失敗するため（FileLoadException）、
+> 外部依存ゼロの **PBKDF2-SHA256**（`Rfc2898DeriveBytes`, 100,000 iterations）に置換した。
+> 本設計書中の BCrypt 関連記述は PBKDF2 に読み替えること。
+> 実装クラス: `PasswordHasher.vb`（`HashPassword` / `Verify`）、ハッシュ形式: `iterations:base64salt:base64hash`
+
 ---
 
 ## 1. 設計方針
