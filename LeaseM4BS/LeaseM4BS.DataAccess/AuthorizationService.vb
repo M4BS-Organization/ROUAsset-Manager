@@ -2,7 +2,6 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Data
 Imports Npgsql
-Imports BCryptNet = BCrypt.Net.BCrypt
 
 ''' <summary>認証・権限チェックサービス（シングルトン）</summary>
 Public Class AuthorizationService
@@ -55,7 +54,7 @@ Public Class AuthorizationService
             End If
 
             Dim storedHash As String = CStr(row("password_hash"))
-            If Not BCryptNet.Verify(password, storedHash) Then
+            If Not PasswordHasher.Verify(password, storedHash) Then
                 crud.ExecuteNonQuery(
                     "UPDATE tm_USER SET failed_login_count = failed_login_count + 1 " &
                     "WHERE login_id = @login_id",
