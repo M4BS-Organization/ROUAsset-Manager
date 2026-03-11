@@ -1,6 +1,7 @@
 Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
+Imports LeaseM4BS.DataAccess
 
 ''' <summary>
 ''' フレックスメニュー画面
@@ -23,11 +24,22 @@ Partial Public Class FrmFlexMenu
     ''' </summary>
     Private _currentContent As UserControl = Nothing
 
+    Private _currentUser As UserInfo
+
     Public Sub New()
         InitializeComponent()
         SetupMenuButtons()
         ' デフォルトで契約書（フレックス）を表示
         SwitchContent(btnContract)
+    End Sub
+
+    ''' <summary>ログイン後に使用するコンストラクタ</summary>
+    Public Sub New(currentUser As UserInfo)
+        InitializeComponent()
+        _currentUser = currentUser
+        SetupMenuButtons()
+        ApplyPermissions()
+        SwitchContent(GetFirstAccessibleButton())
     End Sub
 
     ''' <summary>
@@ -107,6 +119,25 @@ Partial Public Class FrmFlexMenu
             Return New FrmFlexMaster()
         End If
         Return Nothing
+    End Function
+
+    ''' <summary>ロールに基づいて各メニューボタンの Enabled を設定</summary>
+    Private Sub ApplyPermissions()
+        For Each btn In {btnContract, btnROUAsset, btnMonthlyPayments,
+                         btnMonthlyAccounting, btnPeriodBalance,
+                         btnTaxAdjustment, btnMaster}
+            btn.Enabled = AuthorizationService.Current.HasAccess(btn.Name)
+        Next
+    End Sub
+
+    ''' <summary>Enabled=True の最初のメニューボタンを返す</summary>
+    Private Function GetFirstAccessibleButton() As Button
+        For Each btn In {btnContract, btnROUAsset, btnMonthlyPayments,
+                         btnMonthlyAccounting, btnPeriodBalance,
+                         btnTaxAdjustment, btnMaster}
+            If btn.Enabled Then Return btn
+        Next
+        Return btnContract
     End Function
 
 End Class
