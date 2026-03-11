@@ -89,6 +89,13 @@ CREATE TABLE IF NOT EXISTS tw_lease_accounting (
     alloc_total             NUMERIC(15,2)   NULL,
     maintenance_cost        NUMERIC(15,2)   NULL,
     distribution_rate       NUMERIC(5,2)    NULL,
+    accum_depreciation      NUMERIC(15,2)   NULL DEFAULT 0,
+    book_value              NUMERIC(15,2)   NULL DEFAULT 0,
+    useful_life             INTEGER         NULL,
+    depreciation_method     VARCHAR(20)     NULL,
+    initial_direct_cost     NUMERIC(15,2)   NULL DEFAULT 0,
+    restoration_cost        NUMERIC(15,2)   NULL DEFAULT 0,
+    lease_incentive         NUMERIC(15,2)   NULL DEFAULT 0,
     renewal_forecast_count  INTEGER         NULL,
     renewal_pay_date        DATE            NULL,
     calculated_at           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -144,6 +151,10 @@ CREATE TABLE IF NOT EXISTS tw_lease_payment_actual (
     payment_date        DATE            NULL,
     payment_method_cd   VARCHAR(10)     NULL REFERENCES m_payment_method(payment_method_cd),
     remarks             VARCHAR(500)    NULL,
+    tax_amount          NUMERIC(15,2)   NULL DEFAULT 0,
+    total_amount        NUMERIC(15,2)   NULL DEFAULT 0,
+    supplier_name       VARCHAR(200)    NULL,
+    status              VARCHAR(20)     NULL DEFAULT '未処理',
     created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP       NULL
 );
@@ -162,7 +173,51 @@ CREATE TABLE IF NOT EXISTS tw_lease_journal (
     credit_amount       NUMERIC(15,2)   NOT NULL DEFAULT 0,
     description         VARCHAR(500)    NULL,
     asbj_reference      VARCHAR(100)    NULL,
+    status              VARCHAR(20)     NULL DEFAULT '未処理',
     generated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- tw_lease_period_balance: 期間残高テーブル（FrmFlexPeriodBalance画面用）
+CREATE TABLE IF NOT EXISTS tw_lease_period_balance (
+    balance_id          SERIAL          PRIMARY KEY,
+    fiscal_year         VARCHAR(4)      NOT NULL,
+    quarter             VARCHAR(4)      NULL,
+    account_item        VARCHAR(100)    NOT NULL,
+    opening_balance     NUMERIC(15,2)   NULL DEFAULT 0,
+    increase_amount     NUMERIC(15,2)   NULL DEFAULT 0,
+    change_adjustment   NUMERIC(15,2)   NULL DEFAULT 0,
+    decrease_amount     NUMERIC(15,2)   NULL DEFAULT 0,
+    closing_balance     NUMERIC(15,2)   NULL DEFAULT 0,
+    display_order       INTEGER         NULL DEFAULT 0,
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- tw_lease_balance_breakdown: 残高内訳テーブル（FrmFlexPeriodBalance画面用）
+CREATE TABLE IF NOT EXISTS tw_lease_balance_breakdown (
+    breakdown_id        SERIAL          PRIMARY KEY,
+    fiscal_year         VARCHAR(4)      NOT NULL,
+    account_item        VARCHAR(100)    NOT NULL,
+    contract_id         INTEGER         NOT NULL REFERENCES tw_lease_contract(contract_id),
+    opening_balance     NUMERIC(15,2)   NULL DEFAULT 0,
+    increase_amount     NUMERIC(15,2)   NULL DEFAULT 0,
+    decrease_amount     NUMERIC(15,2)   NULL DEFAULT 0,
+    closing_balance     NUMERIC(15,2)   NULL DEFAULT 0,
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- tw_lease_tax_adjustment: 税務調整テーブル（FrmFlexTaxAdjustment画面用）
+CREATE TABLE IF NOT EXISTS tw_lease_tax_adjustment (
+    tax_adj_id          SERIAL          PRIMARY KEY,
+    fiscal_year         VARCHAR(4)      NOT NULL,
+    contract_id         INTEGER         NOT NULL REFERENCES tw_lease_contract(contract_id),
+    adjustment_type     VARCHAR(50)     NOT NULL,
+    accounting_amount   NUMERIC(15,2)   NULL DEFAULT 0,
+    tax_amount          NUMERIC(15,2)   NULL DEFAULT 0,
+    difference_amount   NUMERIC(15,2)   NULL DEFAULT 0,
+    temp_or_permanent   VARCHAR(10)     NULL,
+    adjustment_reason   VARCHAR(500)    NULL,
+    status              VARCHAR(20)     NULL DEFAULT '未処理',
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- インデックス
@@ -175,3 +230,8 @@ CREATE INDEX IF NOT EXISTS idx_tw_payment_actual_contract ON tw_lease_payment_ac
 CREATE INDEX IF NOT EXISTS idx_tw_payment_actual_ym ON tw_lease_payment_actual(payment_ym);
 CREATE INDEX IF NOT EXISTS idx_tw_journal_contract ON tw_lease_journal(contract_id);
 CREATE INDEX IF NOT EXISTS idx_tw_journal_ym ON tw_lease_journal(journal_ym);
+CREATE INDEX IF NOT EXISTS idx_tw_period_balance_year ON tw_lease_period_balance(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_tw_balance_breakdown_year ON tw_lease_balance_breakdown(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_tw_balance_breakdown_contract ON tw_lease_balance_breakdown(contract_id);
+CREATE INDEX IF NOT EXISTS idx_tw_tax_adjustment_year ON tw_lease_tax_adjustment(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_tw_tax_adjustment_contract ON tw_lease_tax_adjustment(contract_id);

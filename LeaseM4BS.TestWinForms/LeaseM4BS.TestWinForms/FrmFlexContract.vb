@@ -8,21 +8,195 @@ Imports System.Windows.Forms
 ''' </summary>
 Partial Public Class FrmFlexContract
 
-    Private ReadOnly CLR_HEADER As Color = Color.FromArgb(0, 51, 102)
+    Private ReadOnly CLR_HEADER As Color = Color.FromArgb(41, 128, 185)
+    Private ReadOnly CLR_BG As Color = Color.FromArgb(236, 240, 241)
     Private ReadOnly CLR_CARD As Color = Color.White
     Private ReadOnly CLR_LABEL As Color = Color.FromArgb(73, 80, 87)
     Private ReadOnly CLR_TEXT As Color = Color.FromArgb(33, 37, 41)
     Private ReadOnly CLR_BORDER As Color = Color.FromArgb(222, 226, 230)
-    Private ReadOnly CLR_ACCENT As Color = Color.FromArgb(0, 123, 255)
 
     Private ReadOnly FNT_LABEL As New Font("Meiryo", 9.0F, FontStyle.Bold)
+    Private ReadOnly FNT_INPUT As New Font("Meiryo", 9.75F, FontStyle.Regular)
     Private ReadOnly FNT_SECTION As New Font("Meiryo", 10.0F, FontStyle.Bold)
+    Private ReadOnly FNT_TITLE As New Font("Meiryo", 12.0F, FontStyle.Bold)
+
+    Private pnlHeader As Panel
+    Private txtContractNo As TextBox
+    Private btnSearch As Button
+    Private btnNewEntry As Button
+    Private btnEdit As Button
+    Private btnInquiry As Button
+    Private dgvContractList As DataGridView
 
     Public Sub New()
         InitializeComponent()
+        Me.BackColor = CLR_BG
+        Me.Padding = New Padding(8, 0, 8, 8)
+
+        ' プレースホルダーラベルを非表示
+        If lblPlaceholder IsNot Nothing Then lblPlaceholder.Visible = False
+
+        BuildUI()
         ApplyGridStyles()
         LoadCtbData()
     End Sub
+
+    Private Sub BuildUI()
+        ' === ヘッダーパネル ===
+        pnlHeader = New Panel() With {
+            .Dock = DockStyle.Top,
+            .Height = 60,
+            .BackColor = CLR_HEADER,
+            .Padding = New Padding(12, 8, 12, 8)
+        }
+
+        Dim lblTitle As New Label() With {
+            .Text = "契約書一覧",
+            .Font = FNT_TITLE,
+            .ForeColor = Color.White,
+            .AutoSize = True,
+            .Location = New Point(12, 6)
+        }
+        pnlHeader.Controls.Add(lblTitle)
+
+        Dim lblContractNo As New Label() With {
+            .Text = "契約番号:",
+            .Font = FNT_LABEL,
+            .ForeColor = Color.White,
+            .AutoSize = True,
+            .Location = New Point(12, 35)
+        }
+        pnlHeader.Controls.Add(lblContractNo)
+
+        txtContractNo = New TextBox() With {
+            .Font = FNT_INPUT,
+            .Size = New Size(150, 24),
+            .Location = New Point(84, 32)
+        }
+        pnlHeader.Controls.Add(txtContractNo)
+
+        btnSearch = New Button() With {
+            .Text = "検索",
+            .Font = FNT_LABEL,
+            .Size = New Size(70, 26),
+            .Location = New Point(244, 31),
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.White,
+            .ForeColor = CLR_HEADER
+        }
+        AddHandler btnSearch.Click, AddressOf BtnSearch_Click
+        pnlHeader.Controls.Add(btnSearch)
+
+        ' 右側ボタン群
+        btnNewEntry = New Button() With {
+            .Text = "新規登録",
+            .Font = FNT_LABEL,
+            .Size = New Size(90, 26),
+            .Location = New Point(pnlHeader.Width - 290, 31),
+            .Anchor = AnchorStyles.Top Or AnchorStyles.Right,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(39, 174, 96),
+            .ForeColor = Color.White
+        }
+        AddHandler btnNewEntry.Click, AddressOf BtnNewEntry_Click
+        pnlHeader.Controls.Add(btnNewEntry)
+
+        btnEdit = New Button() With {
+            .Text = "変更",
+            .Font = FNT_LABEL,
+            .Size = New Size(80, 26),
+            .Location = New Point(pnlHeader.Width - 190, 31),
+            .Anchor = AnchorStyles.Top Or AnchorStyles.Right,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(243, 156, 18),
+            .ForeColor = Color.White
+        }
+        AddHandler btnEdit.Click, AddressOf BtnEdit_Click
+        pnlHeader.Controls.Add(btnEdit)
+
+        btnInquiry = New Button() With {
+            .Text = "照会",
+            .Font = FNT_LABEL,
+            .Size = New Size(80, 26),
+            .Location = New Point(pnlHeader.Width - 100, 31),
+            .Anchor = AnchorStyles.Top Or AnchorStyles.Right,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(142, 68, 173),
+            .ForeColor = Color.White
+        }
+        AddHandler btnInquiry.Click, AddressOf BtnInquiry_Click
+        pnlHeader.Controls.Add(btnInquiry)
+
+        Me.Controls.Add(pnlHeader)
+
+        ' === DataGridView (中央) ===
+        dgvContractList = New DataGridView() With {
+            .Dock = DockStyle.Fill,
+            .ReadOnly = True,
+            .AllowUserToAddRows = False,
+            .AllowUserToDeleteRows = False,
+            .SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            .MultiSelect = False,
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            .BackgroundColor = CLR_CARD,
+            .BorderStyle = BorderStyle.None,
+            .RowHeadersVisible = False,
+            .Font = FNT_INPUT
+        }
+        AddGridColumns()
+        AddHandler dgvContractList.CellDoubleClick, AddressOf DgvContractList_CellDoubleClick
+        Me.Controls.Add(dgvContractList)
+
+        ' 順序調整
+        dgvContractList.BringToFront()
+    End Sub
+
+    Private Sub AddGridColumns()
+        dgvContractList.Columns.Add("colCtbId", "管理ID")
+        dgvContractList.Columns.Add("colContractNo", "契約番号")
+        dgvContractList.Columns.Add("colPropertyNo", "物件No")
+        dgvContractList.Columns.Add("colContractName", "契約名")
+        dgvContractList.Columns.Add("colAssetNo", "資産番号")
+        dgvContractList.Columns.Add("colAssetName", "資産名")
+        dgvContractList.Columns.Add("colAssetCategory", "資産種類")
+        dgvContractList.Columns.Add("colStartDate", "開始日")
+        dgvContractList.Columns.Add("colEndDate", "終了日")
+        dgvContractList.Columns.Add("colContractPeriod", "期間(月)")
+        dgvContractList.Columns.Add("colDeptName", "配賦部門")
+        dgvContractList.Columns.Add("colAllocationRatio", "配賦率(%)")
+        dgvContractList.Columns.Add("colTotalPayment", "合計支払額")
+        dgvContractList.Columns.Add("colSplitStatus", "状況")
+
+        ' 右寄せ
+        For Each col As String In {"colCtbId", "colPropertyNo", "colContractPeriod", "colAllocationRatio", "colTotalPayment"}
+            dgvContractList.Columns(col).DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' DataGridView のヘッダースタイルを設定する
+    ''' </summary>
+    Private Sub ApplyGridStyles()
+        dgvContractList.ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
+            .BackColor = Color.FromArgb(240, 244, 248),
+            .Font = FNT_LABEL,
+            .ForeColor = CLR_LABEL,
+            .Alignment = DataGridViewContentAlignment.MiddleCenter
+        }
+        dgvContractList.DefaultCellStyle = New DataGridViewCellStyle() With {
+            .Font = FNT_INPUT,
+            .ForeColor = CLR_TEXT,
+            .SelectionBackColor = Color.FromArgb(209, 226, 243),
+            .SelectionForeColor = CLR_TEXT
+        }
+        dgvContractList.AlternatingRowsDefaultCellStyle = New DataGridViewCellStyle() With {
+            .BackColor = Color.FromArgb(248, 249, 250)
+        }
+    End Sub
+
+    ' =====================================================
+    ' CTBデータロジック（変更なし）
+    ' =====================================================
 
     ''' <summary>
     ''' DBとメモリストアから次の契約番号を生成する
@@ -71,27 +245,6 @@ Partial Public Class FrmFlexContract
     End Function
 
     ''' <summary>
-    ''' DataGridView のヘッダースタイルを設定する
-    ''' </summary>
-    Private Sub ApplyGridStyles()
-        dgvContractList.ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
-            .BackColor = Color.FromArgb(240, 244, 248),
-            .Font = New Font("Meiryo", 9.0F, FontStyle.Bold),
-            .ForeColor = CLR_LABEL,
-            .Alignment = DataGridViewContentAlignment.MiddleCenter
-        }
-        dgvContractList.DefaultCellStyle = New DataGridViewCellStyle() With {
-            .Font = New Font("Meiryo", 9.75F, FontStyle.Regular),
-            .ForeColor = CLR_TEXT,
-            .SelectionBackColor = Color.FromArgb(209, 226, 243),
-            .SelectionForeColor = CLR_TEXT
-        }
-        dgvContractList.AlternatingRowsDefaultCellStyle = New DataGridViewCellStyle() With {
-            .BackColor = Color.FromArgb(248, 249, 250)
-        }
-    End Sub
-
-    ''' <summary>
     ''' CTBデータストアからレコードを読み込んでグリッドに表示する
     ''' </summary>
     Private Sub LoadCtbData()
@@ -131,30 +284,21 @@ Partial Public Class FrmFlexContract
             dgvRow.Cells("colTotalPayment").Value = rec.TotalPayment
             dgvRow.Cells("colSplitStatus").Value = If(rec.SplitStatus = "unsplit", "未分割", "分割済")
         Next
-
-        ' データが0件の場合、案内メッセージ表示用の空行は追加しない
     End Sub
 
-    ''' <summary>
-    ''' 検索ボタンクリック時の処理
-    ''' </summary>
-    Private Sub btnSearch_Click(sender As Object, e As EventArgs) Handles btnSearch.Click
-        SearchContracts()
+    ' =====================================================
+    ' イベントハンドラ
+    ' =====================================================
+
+    Private Sub BtnSearch_Click(sender As Object, e As EventArgs)
+        LoadCtbData()
     End Sub
 
-    ''' <summary>
-    ''' 新規登録ボタンクリック時の処理
-    ''' FrmLeaseContractMain を新規作成モードで開く
-    ''' </summary>
-    Private Sub btnNewEntry_Click(sender As Object, e As EventArgs) Handles btnNewEntry.Click
+    Private Sub BtnNewEntry_Click(sender As Object, e As EventArgs)
         OpenContractMain("", ContractOpenMode.NewEntry)
     End Sub
 
-    ''' <summary>
-    ''' 変更ボタンクリック時の処理
-    ''' グリッドで選択されている行の契約番号を取得し、FrmLeaseContractMain を編集モードで開く
-    ''' </summary>
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub BtnEdit_Click(sender As Object, e As EventArgs)
         Dim contractNo As String = GetSelectedContractNo()
         If String.IsNullOrEmpty(contractNo) Then
             MessageBox.Show(
@@ -167,11 +311,7 @@ Partial Public Class FrmFlexContract
         OpenContractMain(contractNo, ContractOpenMode.Edit)
     End Sub
 
-    ''' <summary>
-    ''' 照会ボタンクリック時の処理
-    ''' グリッドで選択されている行の契約番号を取得し、FrmLeaseContractMain を読み取り専用モードで開く
-    ''' </summary>
-    Private Sub btnInquiry_Click(sender As Object, e As EventArgs) Handles btnInquiry.Click
+    Private Sub BtnInquiry_Click(sender As Object, e As EventArgs)
         Dim contractNo As String = GetSelectedContractNo()
         If String.IsNullOrEmpty(contractNo) Then
             MessageBox.Show(
@@ -184,29 +324,7 @@ Partial Public Class FrmFlexContract
         OpenContractMain(contractNo, ContractOpenMode.Inquiry)
     End Sub
 
-    ''' <summary>
-    ''' グリッドで選択されている行の契約番号を取得する
-    ''' </summary>
-    Private Function GetSelectedContractNo() As String
-        If dgvContractList.SelectedRows.Count = 0 Then Return ""
-        Dim row As DataGridViewRow = dgvContractList.SelectedRows(0)
-        If row.Cells("colContractNo").Value IsNot Nothing Then
-            Return row.Cells("colContractNo").Value.ToString()
-        End If
-        Return ""
-    End Function
-
-    ''' <summary>
-    ''' 検索条件に基づいて契約一覧を取得・表示する
-    ''' </summary>
-    Private Sub SearchContracts()
-        LoadCtbData()
-    End Sub
-
-    ''' <summary>
-    ''' グリッド行ダブルクリック時に FrmLeaseContractMain を編集モードで開く
-    ''' </summary>
-    Private Sub dgvContractList_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvContractList.CellDoubleClick
+    Private Sub DgvContractList_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs)
         If e.RowIndex < 0 Then Return
 
         Dim row As DataGridViewRow = dgvContractList.Rows(e.RowIndex)
@@ -218,16 +336,25 @@ Partial Public Class FrmFlexContract
         OpenContractMain(contractNo, ContractOpenMode.Edit)
     End Sub
 
-    ''' <summary>
-    ''' FrmLeaseContractMain を指定モードで開く
-    ''' </summary>
+    ' =====================================================
+    ' ヘルパー
+    ' =====================================================
+
+    Private Function GetSelectedContractNo() As String
+        If dgvContractList.SelectedRows.Count = 0 Then Return ""
+        Dim row As DataGridViewRow = dgvContractList.SelectedRows(0)
+        If row.Cells("colContractNo").Value IsNot Nothing Then
+            Return row.Cells("colContractNo").Value.ToString()
+        End If
+        Return ""
+    End Function
+
     Private Sub OpenContractMain(contractNo As String, mode As ContractOpenMode)
         Try
             Dim frm As New FrmLeaseContractMain()
 
             Select Case mode
                 Case ContractOpenMode.NewEntry
-                    ' 新規登録時: 契約番号を自動採番してセット
                     frm.InitContractNo = GetNextContractNo()
                     frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
                     frm.Tag = ""
@@ -237,7 +364,6 @@ Partial Public Class FrmFlexContract
                 Case ContractOpenMode.Inquiry
                     frm.Text = "新リース会計対応 リース契約管理 - 照会 - " & contractNo
                     frm.Tag = contractNo
-                    ' TODO: 将来的に ReadOnly モードの制御を追加
             End Select
 
             AddHandler frm.ContractRegistered, AddressOf OnContractRegistered
@@ -251,19 +377,13 @@ Partial Public Class FrmFlexContract
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 契約登録イベントハンドラ: 登録完了後にCTBデータストアから一覧を再読込する
-    ''' </summary>
     Private Sub OnContractRegistered(sender As Object, e As FrmLeaseContractMain.ContractRegisteredEventArgs)
         LoadCtbData()
     End Sub
 
     Private Enum ContractOpenMode
-        ''' <summary>新規登録</summary>
         NewEntry
-        ''' <summary>変更（編集）</summary>
         Edit
-        ''' <summary>照会（読み取り専用）</summary>
         Inquiry
     End Enum
 

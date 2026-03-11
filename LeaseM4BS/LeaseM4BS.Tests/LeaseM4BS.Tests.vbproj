@@ -114,6 +114,8 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccountingCalcTests.vb" />
+    <Compile Include="LeaseJudgmentTests.vb" />
     <Compile Include="Placeholder.vb" />
   </ItemGroup>
   <ItemGroup>
