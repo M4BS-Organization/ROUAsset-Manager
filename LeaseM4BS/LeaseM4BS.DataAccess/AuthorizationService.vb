@@ -48,11 +48,6 @@ Public Class AuthorizationService
             End If
 
             Dim row As DataRow = dt.Rows(0)
-            Dim isActive As Boolean = CType(row("is_active"), Boolean)
-            If Not isActive Then
-                Return AuthResult.AccountDisabled
-            End If
-
             Dim storedHash As String = CStr(row("password_hash"))
             If Not PasswordHasher.Verify(password, storedHash) Then
                 crud.ExecuteNonQuery(
@@ -62,6 +57,11 @@ Public Class AuthorizationService
                         New NpgsqlParameter("@login_id", loginId)
                     })
                 Return AuthResult.InvalidPassword
+            End If
+
+            Dim isActive As Boolean = CType(row("is_active"), Boolean)
+            If Not isActive Then
+                Return AuthResult.AccountDisabled
             End If
 
             crud.ExecuteNonQuery(

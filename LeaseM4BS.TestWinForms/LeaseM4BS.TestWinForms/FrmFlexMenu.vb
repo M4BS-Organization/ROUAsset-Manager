@@ -39,7 +39,8 @@ Partial Public Class FrmFlexMenu
         _currentUser = currentUser
         SetupMenuButtons()
         ApplyPermissions()
-        SwitchContent(GetFirstAccessibleButton())
+        Dim firstBtn As Button = GetFirstAccessibleButton()
+        If firstBtn IsNot Nothing Then SwitchContent(firstBtn)
     End Sub
 
     ''' <summary>
@@ -130,14 +131,14 @@ Partial Public Class FrmFlexMenu
         Next
     End Sub
 
-    ''' <summary>Enabled=True の最初のメニューボタンを返す</summary>
+    ''' <summary>Enabled=True の最初のメニューボタンを返す（全無効時はNothing）</summary>
     Private Function GetFirstAccessibleButton() As Button
         For Each btn In {btnContract, btnROUAsset, btnMonthlyPayments,
                          btnMonthlyAccounting, btnPeriodBalance,
                          btnTaxAdjustment, btnMaster}
             If btn.Enabled Then Return btn
         Next
-        Return btnContract
+        Return Nothing
     End Function
 
 End Class

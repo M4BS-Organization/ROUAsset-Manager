@@ -16,7 +16,8 @@ Partial Public Class FrmLogin
 
     Private Sub btnLogin_Click(sender As Object, e As EventArgs) Handles btnLogin.Click
         ' バリデーション
-        If String.IsNullOrEmpty(txtLoginId.Text.Trim()) Then
+        Dim loginId As String = txtLoginId.Text.Trim()
+        If String.IsNullOrEmpty(loginId) Then
             lblError.Text = "ログインIDを入力してください"
             txtLoginId.Focus()
             Return
@@ -30,7 +31,7 @@ Partial Public Class FrmLogin
         lblError.Text = ""
         Try
             Dim result As AuthResult = AuthorizationService.Current.Authenticate(
-                txtLoginId.Text.Trim(), txtPassword.Text)
+                loginId, txtPassword.Text)
 
             Select Case result
                 Case AuthResult.Success
