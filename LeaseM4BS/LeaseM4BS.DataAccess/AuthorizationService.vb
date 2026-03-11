@@ -54,20 +54,18 @@ Public Class AuthorizationService
             Dim storedHash As String = CStr(row("password_hash"))
             Dim passwordValid As Boolean = PasswordHasher.Verify(password, storedHash)
 
-            If Not passwordValid Then
-                If isActive Then
-                    crud.ExecuteNonQuery(
-                        "UPDATE tm_USER SET failed_login_count = failed_login_count + 1 " &
-                        "WHERE login_id = @login_id",
-                        New List(Of NpgsqlParameter) From {
-                            New NpgsqlParameter("@login_id", loginId)
-                        })
-                End If
-                Return AuthResult.InvalidPassword
-            End If
-
             If Not isActive Then
                 Return AuthResult.AccountDisabled
+            End If
+
+            If Not passwordValid Then
+                crud.ExecuteNonQuery(
+                    "UPDATE tm_USER SET failed_login_count = failed_login_count + 1 " &
+                    "WHERE login_id = @login_id",
+                    New List(Of NpgsqlParameter) From {
+                        New NpgsqlParameter("@login_id", loginId)
+                    })
+                Return AuthResult.InvalidPassword
             End If
 
             crud.ExecuteNonQuery(

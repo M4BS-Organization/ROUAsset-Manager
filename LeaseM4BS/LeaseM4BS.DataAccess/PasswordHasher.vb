@@ -41,7 +41,7 @@ Public NotInheritable Class PasswordHasher
                 Dim actualHash As Byte() = pbkdf2.GetBytes(expectedHash.Length)
                 Return SlowEquals(expectedHash, actualHash)
             End Using
-        Catch ex As FormatException
+        Catch ex As Exception
             Return False
         End Try
     End Function
