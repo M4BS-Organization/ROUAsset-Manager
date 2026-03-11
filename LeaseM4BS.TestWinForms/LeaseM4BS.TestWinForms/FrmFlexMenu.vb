@@ -1,6 +1,7 @@
 Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
+Imports LeaseM4BS.DataAccess
 
 ''' <summary>
 ''' フレックスメニュー画面
@@ -23,6 +24,9 @@ Partial Public Class FrmFlexMenu
     ''' </summary>
     Private _currentContent As UserControl = Nothing
 
+    Private _currentUser As UserInfo
+    Private _menuButtons As Button()
+
     Public Sub New()
         InitializeComponent()
         SetupMenuButtons()
@@ -30,17 +34,27 @@ Partial Public Class FrmFlexMenu
         SwitchContent(btnContract)
     End Sub
 
+    ''' <summary>ログイン後に使用するコンストラクタ</summary>
+    Public Sub New(currentUser As UserInfo)
+        InitializeComponent()
+        _currentUser = currentUser
+        SetupMenuButtons()
+        ApplyPermissions()
+        Dim firstBtn As Button = GetFirstAccessibleButton()
+        If firstBtn IsNot Nothing Then SwitchContent(firstBtn)
+    End Sub
+
     ''' <summary>
     ''' メニューボタンの共通イベントハンドラを設定する
     ''' </summary>
     Private Sub SetupMenuButtons()
-        Dim menuButtons() As Button = {
+        _menuButtons = {
             btnContract, btnROUAsset, btnMonthlyPayments,
             btnMonthlyAccounting, btnPeriodBalance, btnTaxAdjustment,
             btnMaster
         }
 
-        For Each btn As Button In menuButtons
+        For Each btn As Button In _menuButtons
             btn.Cursor = Cursors.Hand
             btn.BackColor = CLR_HEADER
             btn.FlatAppearance.MouseOverBackColor = CLR_HOVER
@@ -106,6 +120,21 @@ Partial Public Class FrmFlexMenu
         ElseIf menuButton Is btnMaster Then
             Return New FrmFlexMaster()
         End If
+        Return Nothing
+    End Function
+
+    ''' <summary>ロールに基づいて各メニューボタンの Enabled を設定</summary>
+    Private Sub ApplyPermissions()
+        For Each btn In _menuButtons
+            btn.Enabled = AuthorizationService.Current.HasAccess(btn.Name)
+        Next
+    End Sub
+
+    ''' <summary>Enabled=True の最初のメニューボタンを返す（全無効時はNothing）</summary>
+    Private Function GetFirstAccessibleButton() As Button
+        For Each btn In _menuButtons
+            If btn.Enabled Then Return btn
+        Next
         Return Nothing
     End Function
 

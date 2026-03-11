@@ -113,6 +113,10 @@
     <Compile Include="CrudHelper.vb" />
     <Compile Include="DbConnectionManager.vb" />
     <Compile Include="MasterDataLoader.vb" />
+    <Compile Include="AuthResult.vb" />
+    <Compile Include="UserInfo.vb" />
+    <Compile Include="PasswordHasher.vb" />
+    <Compile Include="AuthorizationService.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
