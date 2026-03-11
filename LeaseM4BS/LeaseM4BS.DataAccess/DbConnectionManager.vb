@@ -73,7 +73,7 @@ Public Class DbConnectionManager
 
             ' デフォルト接続文字列（開発環境用）
             ' 本番環境では必ず設定ファイルまたは環境変数で上書きしてください
-            Return "Host=localhost;Port=5432;Database=lease_m4bs;Username=manager;Password=pass;Timeout=3;Command Timeout=5"
+            Return "Host=localhost;Port=5432;Database=lease_new;Username=manager;Password=pass;Timeout=3;Command Timeout=5"
 
         Catch ex As Exception
             Throw New InvalidOperationException("接続文字列の取得に失敗しました。App.config を確認してください。", ex)

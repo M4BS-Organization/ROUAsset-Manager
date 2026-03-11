@@ -174,39 +174,6 @@ Public Class FrmLeaseContractMain
     ''' </summary>
     Private ReadOnly _assetCtbMap As New Dictionary(Of String, CtbRecord)
 
-    ' === 判定タブ: 契約詳細・関係者情報 (grpParty) ===
-    Private txtLenderName As TextBox
-    Private txtLenderAddr As TextBox
-    Private txtLenderAccount As TextBox
-    Private txtAgentName As TextBox
-    Private txtAgentAddr As TextBox
-    Private txtBrokerName As TextBox
-    Private txtBrokerAddr As TextBox
-    Private txtBrokerAccount As TextBox
-    Private txtBorrowerName As TextBox
-    Private txtBorrowerAddr As TextBox
-    Private txtBorrowerAccount As TextBox
-    Private txtGuarantor1 As TextBox
-    Private txtGuarantor2 As TextBox
-    Private dtpPartyStartDate As DateTimePicker
-    Private dtpPartyEndDate As DateTimePicker
-    Private numPartyContractMonths As NumericUpDown
-    Private txtNonCancelPeriod As TextBox
-    Private cboCancelOption As ComboBox
-    Private cboExtendOption As ComboBox
-    Private numRenewalCount As NumericUpDown
-
-    ' === 判定タブ: 会計判定結果 (pnlResult) ===
-    Private lblTotalPayment As Label
-    Private lblTotalCount As Label
-    Private lblRouAsset As Label
-    Private lblLeaseLiab As Label
-    Private lblDeposit As Label
-    Private lblPrepaidRent As Label
-    Private lblEquipmentCost As Label
-    Private txtResultDiscountRate As TextBox
-    Private lblPresentValue As Label
-
     Private lblJudgmentPreview As Label
     Private btnRegister As Button
 
@@ -1697,10 +1664,8 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Top,
             .AutoSize = True,
             .ColumnCount = 1,
-            .RowCount = 5
+            .RowCount = 3
         }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
@@ -1924,130 +1889,9 @@ Public Class FrmLeaseContractMain
         tlpResult.Controls.Add(lblResultReason, 0, 1)
         grpResult.Controls.Add(tlpResult)
 
-        ' =============================================
-        ' セクション3: 契約詳細・関係者情報 (grpParty)
-        ' =============================================
-        Dim grpParty As GroupBox = CreateSection("契約詳細・関係者情報")
-        Dim tlpParty As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(8)
-        }
-        tlpParty.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 110.0F))
-        tlpParty.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tlpParty.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 110.0F))
-        tlpParty.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        ' --- 貸主 ---
-        AddSectionLabel(tlpParty, "■ 貸主")
-        txtLenderName = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        txtLenderAddr = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "貸主名", txtLenderName, "住所", txtLenderAddr)
-        txtLenderAccount = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "口座情報", txtLenderAccount, Nothing, Nothing)
-
-        ' --- 代行者 ---
-        AddSectionLabel(tlpParty, "■ 代行者")
-        txtAgentName = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        txtAgentAddr = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "代行者名", txtAgentName, "住所", txtAgentAddr)
-
-        ' --- 仲介者 ---
-        AddSectionLabel(tlpParty, "■ 仲介者")
-        txtBrokerName = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        txtBrokerAddr = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "仲介者名", txtBrokerName, "住所", txtBrokerAddr)
-        txtBrokerAccount = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "口座情報", txtBrokerAccount, Nothing, Nothing)
-
-        ' --- 借主 ---
-        AddSectionLabel(tlpParty, "■ 借主")
-        txtBorrowerName = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        txtBorrowerAddr = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "借主名", txtBorrowerName, "住所", txtBorrowerAddr)
-        txtBorrowerAccount = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "口座情報", txtBorrowerAccount, Nothing, Nothing)
-
-        ' --- 連帯保証人 ---
-        AddSectionLabel(tlpParty, "■ 連帯保証人")
-        txtGuarantor1 = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        txtGuarantor2 = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "保証人1", txtGuarantor1, "保証人2", txtGuarantor2)
-
-        ' --- 契約期間・解約・延長 ---
-        AddSectionLabel(tlpParty, "■ 契約期間")
-        dtpPartyStartDate = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        dtpPartyEndDate = New DateTimePicker() With {.Format = DateTimePickerFormat.Short, .Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "開始日", dtpPartyStartDate, "終了日", dtpPartyEndDate)
-
-        numPartyContractMonths = New NumericUpDown() With {.Dock = DockStyle.Fill, .Minimum = 0, .Maximum = 9999, .Value = 0, .Font = FNT_INPUT, .TextAlign = HorizontalAlignment.Right}
-        txtNonCancelPeriod = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT}
-        AddFieldRow(tlpParty, "契約月数", numPartyContractMonths, "解約不能期間", txtNonCancelPeriod)
-
-        cboCancelOption = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT}
-        cboCancelOption.Items.AddRange({"なし", "あり（違約金あり）", "あり（違約金なし）"})
-        cboCancelOption.SelectedIndex = 0
-        cboExtendOption = New ComboBox() With {.Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT}
-        cboExtendOption.Items.AddRange({"なし", "自動更新", "合意更新"})
-        cboExtendOption.SelectedIndex = 0
-        AddFieldRow(tlpParty, "解約オプション", cboCancelOption, "延長オプション", cboExtendOption)
-
-        numRenewalCount = New NumericUpDown() With {.Dock = DockStyle.Fill, .Minimum = 0, .Maximum = 999, .Value = 0, .Font = FNT_INPUT, .TextAlign = HorizontalAlignment.Right}
-        AddFieldRow(tlpParty, "更新回数", numRenewalCount, Nothing, Nothing)
-
-        grpParty.Controls.Add(tlpParty)
-
-        ' =============================================
-        ' セクション5: 会計判定結果 (pnlResult)
-        ' =============================================
-        Dim pnlResult As GroupBox = CreateSection("会計判定結果")
-        pnlResult.BackColor = Color.FromArgb(240, 248, 255)
-        Dim tlpAccResult As New TableLayoutPanel() With {
-            .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 4, .Padding = New Padding(10)
-        }
-        tlpAccResult.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 130.0F))
-        tlpAccResult.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-        tlpAccResult.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 130.0F))
-        tlpAccResult.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
-
-        ' --- 支払サマリ ---
-        AddSectionLabel(tlpAccResult, "■ 支払サマリ")
-        lblTotalPayment = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = ContentAlignment.MiddleLeft}
-        lblTotalCount = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = ContentAlignment.MiddleLeft}
-        AddFieldRow(tlpAccResult, "総支払額", lblTotalPayment, "支払回数", lblTotalCount)
-
-        ' --- 仕訳科目 ---
-        AddSectionLabel(tlpAccResult, "■ 仕訳科目")
-        lblRouAsset = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_HEADER, .TextAlign = ContentAlignment.MiddleLeft}
-        _tooltipProvider.SetToolTip(lblRouAsset, "勘定科目コード: 2100")
-        lblLeaseLiab = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_HEADER, .TextAlign = ContentAlignment.MiddleLeft}
-        _tooltipProvider.SetToolTip(lblLeaseLiab, "勘定科目コード: 1100")
-        AddFieldRow(tlpAccResult, "使用権資産(2100)", lblRouAsset, "リース負債(1100)", lblLeaseLiab)
-
-        lblDeposit = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = ContentAlignment.MiddleLeft}
-        _tooltipProvider.SetToolTip(lblDeposit, "勘定科目コード: 2210")
-        lblPrepaidRent = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = ContentAlignment.MiddleLeft}
-        _tooltipProvider.SetToolTip(lblPrepaidRent, "勘定科目コード: 3010")
-        AddFieldRow(tlpAccResult, "敷金・保証金(2210)", lblDeposit, "前払リース料(3010)", lblPrepaidRent)
-
-        lblEquipmentCost = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT, .TextAlign = ContentAlignment.MiddleLeft}
-        _tooltipProvider.SetToolTip(lblEquipmentCost, "勘定科目コード: 2150")
-        AddFieldRow(tlpAccResult, "設備関連費(2150)", lblEquipmentCost, Nothing, Nothing)
-
-        ' --- 割引率・現在価値 ---
-        AddSectionLabel(tlpAccResult, "■ 割引計算")
-        txtResultDiscountRate = New TextBox() With {.Dock = DockStyle.Fill, .Font = FNT_INPUT, .ReadOnly = True, .BackColor = CLR_READONLY, .TextAlign = HorizontalAlignment.Right, .Text = "0.00"}
-        lblPresentValue = New Label() With {.Text = "0", .Dock = DockStyle.Fill, .Font = New Font("Meiryo", 10.0F, FontStyle.Bold), .ForeColor = CLR_HEADER, .TextAlign = ContentAlignment.MiddleLeft}
-        AddFieldRow(tlpAccResult, "適用割引率(%)", txtResultDiscountRate, "現在価値合計", lblPresentValue)
-
-        pnlResult.Controls.Add(tlpAccResult)
-
-        ' === mainTbl にセクションを配置 ===
         mainTbl.Controls.Add(grpIdent, 0, 0)
         mainTbl.Controls.Add(grpExempt, 0, 1)
-        mainTbl.Controls.Add(grpParty, 0, 2)
-        mainTbl.Controls.Add(grpResult, 0, 3)
-        mainTbl.Controls.Add(pnlResult, 0, 4)
+        mainTbl.Controls.Add(grpResult, 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgJudgment.Controls.Add(scroll)

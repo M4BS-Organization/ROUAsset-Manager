@@ -110,11 +110,8 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccountingCalculator.vb" />
     <Compile Include="CrudHelper.vb" />
     <Compile Include="DbConnectionManager.vb" />
-    <Compile Include="LeaseAccountingRepository.vb" />
-    <Compile Include="LeaseContractRepository.vb" />
     <Compile Include="MasterDataLoader.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
