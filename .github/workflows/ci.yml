@@ -1,0 +1,55 @@
+# CI Pipeline for LeaseM4BS (.NET Framework 4.7.2 VB.NET WinForms)
+# Build status badge:
+# ![CI](https://github.com/M4BS-Organization/M4BS/actions/workflows/ci.yml/badge.svg)
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: windows-latest
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+
+      - name: MSBuild セットアップ
+        uses: microsoft/setup-msbuild@v2
+
+      - name: NuGet セットアップ
+        uses: nuget/setup-nuget@v2
+
+      - name: NuGet パッケージキャッシュ
+        uses: actions/cache@v4
+        with:
+          path: |
+            LeaseM4BS/packages
+            ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.config') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: NuGet 復元 (DataAccess)
+        run: nuget restore LeaseM4BS/LeaseM4BS.slnx
+
+      - name: ビルド DataAccess
+        run: msbuild LeaseM4BS/LeaseM4BS.DataAccess/LeaseM4BS.DataAccess.vbproj /p:Configuration=Release /p:Platform="AnyCPU" /m /verbosity:minimal
+
+      - name: ビルド TestWinForms (オプション)
+        run: |
+          nuget restore LeaseM4BS.TestWinForms/LeaseM4BS.TestWinForms.slnx
+          msbuild LeaseM4BS.TestWinForms/LeaseM4BS.TestWinForms.slnx /p:Configuration=Release /p:Platform="Any CPU" /m /verbosity:minimal
+        continue-on-error: true  # Excel Interop (COM) が CI 環境にないためエラー許容
+
+      - name: ビルド成果物アップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: LeaseM4BS/LeaseM4BS.DataAccess/bin/Release/
+          retention-days: 7
