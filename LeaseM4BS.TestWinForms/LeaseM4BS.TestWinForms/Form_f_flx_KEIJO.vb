@@ -42,7 +42,15 @@ Public Class Form_f_flx_KEIJO
         sb.AppendLine("  haif.line_id AS 配No, ")                         ' 行ID(D_HAIF)
         sb.AppendLine("  kkbn.kkbn_nm AS 契区, ")                         ' 契約区分名(C_KKBN)
         sb.AppendLine("  kjkbn_h.kjkbn_nm AS 計上区分, ")                 ' 契約ヘッダの計上区分(C_KJKBN)
-        sb.AppendLine("  kjkbn_m.kjkbn_nm AS 法令区分, ")                 ' 物件の法令区分(D_KYKM.kjkbn_id → C_KJKBN)
+
+        ' 法令区分: Access版 gCalc法令判定(START_DT, KYAK_DT, SEKOU_DT) に準拠
+        ' 契約日(KYAK_DT)があればそれを、なければ開始日(START_DT)を施行日(t_settei.SEKOU_DT=2008/04/01)と比較
+        ' 施行日以降 → 新法、施行日より前 → 旧法
+        sb.AppendLine("  CASE ")
+        sb.AppendLine("    WHEN kykh.start_dt IS NULL THEN '' ")
+        sb.AppendLine("    WHEN COALESCE(kykh.kyak_dt, kykh.start_dt) >= settei.sekou_dt THEN '新法' ")
+        sb.AppendLine("    ELSE '旧法' ")
+        sb.AppendLine("  END AS 法令区分, ")
         sb.AppendLine("  leakbn.leakbn_nm AS リース区分, ")               ' リース区分(C_LEAKBN)
         sb.AppendLine("  kykh.kykbnl AS 契約番号, ")                      ' 契約番号(D_KYKH)
         sb.AppendLine("  lcpt.lcpt1_nm AS 支払先, ")                      ' 支払先(M_LCPT)
@@ -113,7 +121,7 @@ Public Class Form_f_flx_KEIJO
         sb.AppendLine("LEFT JOIN d_haif haif ON kykm.kykm_id = haif.kykm_id ")
         sb.AppendLine("LEFT JOIN c_kkbn kkbn ON kykh.kkbn_id = kkbn.kkbn_id ")
         sb.AppendLine("LEFT JOIN c_kjkbn kjkbn_h ON kykh.kjkbn_id = kjkbn_h.kjkbn_id ")   ' 契約ヘッダの計上区分
-        sb.AppendLine("LEFT JOIN c_kjkbn kjkbn_m ON kykm.kjkbn_id = kjkbn_m.kjkbn_id ")   ' 物件の法令区分
+        sb.AppendLine("CROSS JOIN (SELECT val_datetime AS sekou_dt FROM t_settei WHERE settei_nm = 'SEKOU_DT') settei ")
         sb.AppendLine("LEFT JOIN c_leakbn leakbn ON kykm.leakbn_id = leakbn.leakbn_id ")
         sb.AppendLine("LEFT JOIN m_lcpt lcpt ON kykh.lcpt_id = lcpt.lcpt_id ")
         sb.AppendLine("LEFT JOIN m_bcat b_bcat ON kykm.b_bcat_id = b_bcat.bcat_id ")

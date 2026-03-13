@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS l_slog CASCADE;
 DROP TABLE IF EXISTS l_bklog CASCADE;
 DROP TABLE IF EXISTS t_zei_kaisei CASCADE;
 DROP TABLE IF EXISTS t_szei_kmk CASCADE;
+DROP TABLE IF EXISTS t_settei CASCADE;
 DROP TABLE IF EXISTS t_system CASCADE;
 DROP TABLE IF EXISTS t_swk_nm CASCADE;
 DROP TABLE IF EXISTS t_seq CASCADE;
@@ -1090,6 +1091,19 @@ CREATE TABLE t_system (
     PRIMARY KEY (ap_version)
 );
 
+-- 共有初期設定
+CREATE TABLE t_settei (
+    settei_id                           INTEGER NOT NULL,
+    settei_nm                           VARCHAR(30) NOT NULL,
+    settei_nm_jpn                       VARCHAR(50) NOT NULL,
+    settei_type                         INTEGER NOT NULL,
+    val_text                            VARCHAR(100),
+    val_number                          DOUBLE PRECISION,
+    val_datetime                        TIMESTAMP,
+    biko                                VARCHAR(100),
+    PRIMARY KEY (settei_id)
+);
+
 -- 消費税科目
 CREATE TABLE t_szei_kmk (
     zritu                               DOUBLE PRECISION,
@@ -1564,6 +1578,7 @@ COMMENT ON TABLE t_mstk IS 'マスタチェック';
 COMMENT ON TABLE t_opt IS 'オプション設定';
 COMMENT ON TABLE t_seq IS '採番管理';
 COMMENT ON TABLE t_swk_nm IS '仕訳名称';
+COMMENT ON TABLE t_settei IS '共有初期設定';
 COMMENT ON TABLE t_system IS 'システム情報';
 COMMENT ON TABLE t_szei_kmk IS '消費税科目';
 COMMENT ON TABLE t_zei_kaisei IS '税制改正';
