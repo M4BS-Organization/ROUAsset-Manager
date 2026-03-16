@@ -108,25 +108,15 @@ Partial Public Class Form_f_仕訳出力標準_KJ
 
             ' ワークテーブル初期化 + 対象年月・計上日セット
             _crud.ExecuteNonQuery("DELETE FROM tw_f_仕訳出力標準_kj WHERE TRUE")
-            Dim dtWkCount = _crud.GetDataTable("SELECT COUNT(*) FROM tw_f_仕訳出力標準_kj")
-            Dim existsWk = CInt(dtWkCount.Rows(0)(0)) > 0
 
             ' 年度末YMD取得 (Access版 g年度末YMDGet 相当)
             Dim keijoDt = GetNendoMatsuYMD(kikanFrom)
 
-            If existsWk Then
-                _crud.ExecuteNonQuery("UPDATE tw_f_仕訳出力標準_kj SET 対象年月 = @p1, keijo_dt = @p2",
-                    New List(Of NpgsqlParameter) From {
-                        New NpgsqlParameter("@p1", kikanFrom),
-                        New NpgsqlParameter("@p2", keijoDt)
-                    })
-            Else
-                _crud.ExecuteNonQuery("INSERT INTO tw_f_仕訳出力標準_kj (対象年月, keijo_dt) VALUES (@p1, @p2)",
-                    New List(Of NpgsqlParameter) From {
-                        New NpgsqlParameter("@p1", kikanFrom),
-                        New NpgsqlParameter("@p2", keijoDt)
-                    })
-            End If
+            _crud.ExecuteNonQuery("INSERT INTO tw_f_仕訳出力標準_kj (対象年月, keijo_dt) VALUES (@p1, @p2)",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@p1", kikanFrom),
+                    New NpgsqlParameter("@p2", keijoDt)
+                })
 
             ' フォームに表示
             txt_対象年月.Text = kikanFrom.ToString("yyyy/MM")
@@ -649,7 +639,15 @@ Partial Public Class Form_f_仕訳出力標準_KJ
 
     Private Sub CheckKykmIdChange(dataRow As DataRow, ByRef prevKykmId As Object, ByRef edaNo As Integer, ByRef flOut As Boolean)
         Dim currentKykmId = dataRow("kykm_id")
-        If IsDBNull(prevKykmId) OrElse (Not IsDBNull(prevKykmId) AndAlso CDbl(currentKykmId) <> CDbl(prevKykmId)) Then
+        Dim changed As Boolean
+        If IsDBNull(prevKykmId) Then
+            changed = True
+        ElseIf IsDBNull(currentKykmId) Then
+            changed = True
+        Else
+            changed = (CDbl(currentKykmId) <> CDbl(prevKykmId))
+        End If
+        If changed Then
             If flOut Then _仕訳SEQNo += 1
             edaNo = 1
             prevKykmId = currentKykmId
@@ -1115,12 +1113,12 @@ Partial Public Class Form_f_仕訳出力標準_KJ
                 Dim amt2 = NzDec(row("gson_kaiyak_gen"))
 
                 If IsDcBetu() Then
-                    OutputDR_Betu(row, edaNo, KJKBN_HIYO, 6, "減額/費(費)", _tmDR(0), amt1, flOut)
-                    OutputDR_Betu(row, edaNo, KJKBN_HIYO, 6, "減額/費(費)", _tmDR(1), amt2, flOut)
-                    OutputCR_Betu(row, edaNo, KJKBN_HIYO, 6, "減額/費(費)", _tmCR(0), amt1 + amt2, flOut)
+                    OutputDR_Betu(row, edaNo, KJKBN_HIYO, 6, "終了(費)", _tmDR(0), amt1, flOut)
+                    OutputDR_Betu(row, edaNo, KJKBN_HIYO, 6, "終了(費)", _tmDR(1), amt2, flOut)
+                    OutputCR_Betu(row, edaNo, KJKBN_HIYO, 6, "終了(費)", _tmCR(0), amt1 + amt2, flOut)
                 Else
-                    OutputDCR_Same(row, edaNo, KJKBN_HIYO, 6, "減額/費(費)", _tmDR(0), amt1, _tmCR(0), flOut)
-                    OutputDCR_Same(row, edaNo, KJKBN_HIYO, 6, "減額/費(費)", _tmDR(1), amt2, _tmCR(0), flOut)
+                    OutputDCR_Same(row, edaNo, KJKBN_HIYO, 6, "終了(費)", _tmDR(0), amt1, _tmCR(0), flOut)
+                    OutputDCR_Same(row, edaNo, KJKBN_HIYO, 6, "終了(費)", _tmDR(1), amt2, _tmCR(0), flOut)
                 End If
             Next
             If flOut Then _仕訳SEQNo += 1

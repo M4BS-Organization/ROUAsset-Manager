@@ -4,7 +4,8 @@
 - 対象: Form_f_仕訳出力標準_KJ.vb（計上仕訳出力処理本体）
 - ブランチ: claude/shiwake-kj-verify/4738
 - 分析日: 2026-03-16
-- 充足率: 88.3%（68/77項目）
+- 充足率: 90.9%（70/77項目）
+- 最終更新: 2026-03-16（コードレビュー修正反映）
 
 ## スコープ
 - 対象: Form_f_仕訳出力標準_KJ.vb の出力処理本体
@@ -24,7 +25,7 @@
 | 8 | イベント | Form_Load - 配賦単位チェック(MEISAI=2) | MEISAI=2以外ならエラー | CInt <> 2チェック | ○ | |
 | 9 | イベント | Form_Load - KJ_FLG_1確認(資産計上) | KJ_FLG_1=FalseでYesNo | CBool=FalseでYesNo | ○ | |
 | 10 | イベント | Form_Load - KJ_FLG_2確認(費用借入) | KJ_FLG_2=FalseでYesNo | CBool=FalseでYesNo | ○ | |
-| 11 | イベント | Form_Load - ワークテーブル初期化 | AddNew/Edit + 対象年月・計上日セット | DELETE後INSERT/UPDATE | ○ | |
+| 11 | イベント | Form_Load - ワークテーブル初期化 | AddNew/Edit + 対象年月・計上日セット | DELETE後INSERT | ○ | デッドコード除去済 |
 | 12 | イベント | Form_Load - 年度末YMD取得 | g年度末YMDGet(KIKAN_FROM) | GetNendoMatsuYMD()で同等 | ○ | |
 | 13 | イベント | Form_Load - 共通設定取得 | gGet共通処理設定項目(tmSETTEI) | t_settei直接参照 | △ | 経路異なるが機能同等 |
 | 14 | イベント | Form_BeforeUpdate | fmSAVE=Falseならキャンセル | WinFormsでは不要 | ○ | |
@@ -44,7 +45,7 @@
 | 28 | イベント | cmd_選択_Click | p_api_gGetFolderName() | FolderBrowserDialog | ○ | |
 | 29 | イベント | txt_KEIJO_DT | gInt()で整数切捨て | TryParse+ToStringで整数化 | ○ | |
 | 30 | 仕訳パターン | SSN1: 科目配列構成 | DR2/CR2 | _tmDR(1)/_tmCR(1) | ○ | |
-| 31 | 仕訳パターン | SSN1: 科目No統合 | DR・CR両方統合 | DR側のみ統合 | △ | CR側統合欠落 |
+| 31 | 仕訳パターン | SSN1: 科目No統合 | DR・CR両方統合 | DR・CR両方統合 | ○ | 修正済(c83eb3d) |
 | 32 | 仕訳パターン | SSN1: 金額フィールド | SYUTOK_ZOU, ZEI_KHRI | 同一 | ○ | |
 | 33 | 仕訳パターン | SSN1: DC分離出力 | DC_BETU_Fで切替 | IsDcBetu()で切替 | ○ | |
 | 34 | 仕訳パターン | SSN2: 利息 | 1DR/1CR | ProcessSimplePattern | ○ | |
@@ -71,7 +72,7 @@
 | 55 | 共通ロジック | mGET科目 - HMK1-10 | KMK_CD1-10/NM1-10 | Select Case完全対応 | ○ | |
 | 56 | 共通ロジック | mGET科目 - CONST | 固定値セット | Case "CONST"対応 | ○ | |
 | 57 | 共通ロジック | mGET科目 - 科目名補完 | KMKNM_HOKAN | GetSettingBool対応 | ○ | |
-| 58 | 共通ロジック | m科目No統合 - Null比較 | gCmpでNull同士=True | NzStr比較+IsNoInputフィルタ | △ | Null比較挙動差 |
+| 58 | 共通ロジック | m科目No統合 - Null比較 | gCmpでNull同士=True | GCmp()でNull同士=True | ○ | 修正済(c83eb3d) |
 | 59 | 共通ロジック | DC分離出力(別行) | DC_BETU_F=True | OutputDR_Betu/OutputCR_Betu | ○ | |
 | 60 | 共通ロジック | DC同行出力 | DC_BETU_F=False | OutputDCR_Same | ○ | |
 | 61 | 共通ロジック | 仕訳SEQNo管理 | KYKM_ID変更時+1 | CheckKykmIdChange | ○ | |
@@ -96,28 +97,34 @@
 
 | 判定 | 件数 | 割合 |
 |------|------|------|
-| ○ 完全実装 | 68 | 88.3% |
-| △ 一部/代替 | 7 | 9.1% |
+| ○ 完全実装 | 70 | 90.9% |
+| △ 一部/代替 | 5 | 6.5% |
 | × 未実装 | 2 | 2.6% |
 | **合計** | **77** | **100%** |
 
-**充足率: 88.3%（○のみ）/ 97.4%（○+△）**
+**充足率: 90.9%（○のみ）/ 97.4%（○+△）**
 
 ## 未実装項目の詳細
 
 ### × 未実装（2件）
 1. **No.23/73: レポートプレビュー** — Access版は `DoCmd.OpenReport "r_仕訳出力標準_KJ"` でプレビュー表示。VB.NETではAccessレポートの直接代替がないため未実装。Excel出力は完了しているため実害は限定的。
 
-### △ 要注意（7件）
+### △ 要注意（5件）
 1. **No.13: 共通設定取得経路** — gGet共通処理設定項目を経由せずt_settei直接参照。機能同等。
 2. **No.18: 設定テーブル展開** — T_SETTEI→ワークテーブル展開プロセス省略。ストアド依存。
 3. **No.27: 設定画面遷移先** — _設定_MAINではなく_設定_KJを直接開く。
-4. **No.31: SSN1 CR側科目No統合欠落** — DR側のみ統合、CR側の統合が漏れている。**要修正**
-5. **No.58: m科目No統合 Null比較差異** — gCmpはNull同士をTrueとするが、VB.NET版はIsNoInputでNullペアを除外。**要検証**
-6. **No.70: Excelファイル名パターン差** — タイムスタンプ追加による差異。運用上は問題なし。
-7. **No.77: 共通クラス不使用** — 直接実装で代替。機能同等。
+4. **No.70: Excelファイル名パターン差** — タイムスタンプ追加による差異。運用上は問題なし。
+5. **No.77: 共通クラス不使用** — 直接実装で代替。機能同等。
 
-## 推奨アクション
-1. **No.31修正**: SSN1のCR側にもm科目No統合を追加（低リスク・数行の修正）
-2. **No.58検証**: m科目No統合のNull比較挙動をテストデータで確認
-3. **No.23/73**: レポートプレビューは将来的にRDLC等で対応検討（現時点では不要と判断可）
+### ○ 修正済（△→○への変更分）
+1. **No.31: SSN1 CR側科目No統合** — CR側にもm科目No統合を追加（c83eb3d）
+2. **No.58: m科目No統合 Null比較** — GCmp()に変更しNull同士=Trueに統一（c83eb3d）
+
+## コードレビュー修正（最終調査）
+以下の3件を追加修正:
+1. **CheckKykmIdChange DBNull対策** — currentKykmIdがDBNullの場合のInvalidCastException防止
+2. **Form_Load デッドコード除去** — DELETE直後のCOUNT+UPDATE死コード除去、INSERTのみに簡素化
+3. **HIYO6 パターン名修正** — 「減額/費(費)」→「終了(費)」に修正
+
+## 残存事項
+- **No.23/73**: レポートプレビューは将来的にRDLC等で対応検討（現時点では不要と判断可）
