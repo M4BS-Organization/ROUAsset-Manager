@@ -466,9 +466,8 @@ Partial Public Class Form_f_仕訳出力標準_KJ
 
         For i = 0 To kamokuArr.Length - 1
             For j = i + 1 To kamokuArr.Length - 1
-                If Not IsNoInput(kamokuArr(i).KamokuCD) AndAlso
-                   Not IsNoInput(kamokuArr(j).KamokuCD) AndAlso
-                   NzStr(kamokuArr(i).KamokuCD) = NzStr(kamokuArr(j).KamokuCD) Then
+                ' Access版gCmpと等価: Null同士もTrue（統合対象）
+                If GCmp(kamokuArr(i).KamokuCD, kamokuArr(j).KamokuCD) Then
                     kamokuArr(j).KamokuNo = kamokuArr(i).KamokuNo
                 End If
             Next
@@ -687,6 +686,7 @@ Partial Public Class Form_f_仕訳出力標準_KJ
                 _tmCR(0) = New KamokuInfo With {.KamokuNo = 1, .KamokuCD = kamokuCD, .KamokuNM = kamokuNM}
                 mGET科目(GetSettingStr(_settingKJ, "swkkj_ssn1_2c2_fldnm"), GetSettingStr(_settingKJ, "swkkj_ssn1_2c2_cnstcd"), GetSettingStr(_settingKJ, "swkkj_ssn1_2c2_cnstnm"), row, kamokuCD, kamokuNM)
                 _tmCR(1) = New KamokuInfo With {.KamokuNo = 2, .KamokuCD = kamokuCD, .KamokuNM = kamokuNM}
+                m科目No統合(_tmCR, GetSettingBool(_settingKJ, "swkkj_ssn1_kno_togo_f"))
 
                 Dim amt1 = NzDec(row("syutok_zou"))
                 Dim amt2 = NzDec(row("zei_khri"))
