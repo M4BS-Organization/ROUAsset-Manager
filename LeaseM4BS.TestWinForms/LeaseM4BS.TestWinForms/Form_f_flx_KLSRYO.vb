@@ -1,28 +1,44 @@
 ﻿Imports System.Windows.Forms
 Imports LeaseM4BS.DataAccess
-Imports Npgsql
 
 Partial Public Class Form_f_flx_KLSRYO
     Inherits Form
 
-    Private _crud As New CrudHelper()
+    Private Const FMT_CURRENCY As String = "#,##0"
+    Private Const FMT_DATE As String = "yyyy/MM/dd"
+
+    ' Access版 JOKEN から受け取るパラメータ
+    Public Property DtFrom As Date
+    Public Property DtTo As Date
+    Public Property Taisho As Integer = 3                      ' 1:リース料, 2:保守料, 3:全部
+    Public Property Ktmg As ShriKtmg = ShriKtmg.SimeDtBase    ' 締日ベース
+    Public Property Meisai As ShriMeisai = ShriMeisai.Haif     ' 配賦単位
+    Public Property LabelText As String
 
     Public Sub New()
         InitializeComponent()
     End Sub
+
     Private Sub Form_f_flx_KLSRYO_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SearchData()
     End Sub
 
     Private Sub SearchData()
         Try
-            Dim prms As New List(Of NpgsqlParameter)
-            Dim sql = BuildSql(txt_SEARCH.Text.Trim(), prms)
+            ' 計算エンジンを呼び出し (Access版 pc_SHRI_KLSRYO.gKLSRYO_Main 相当)
+            Dim engine As New KlsryoCalculationEngine()
+            Dim dt As System.Data.DataTable = engine.Execute(DtFrom, DtTo, Taisho, Ktmg, Meisai)
+
+            ' 検索条件でフィルタ
+            If txt_SEARCH.Text.Trim() <> "" Then
+                Dim searchVal = txt_SEARCH.Text.Trim()
+                dt.DefaultView.RowFilter = $"物件No = {searchVal}"
+                dt = dt.DefaultView.ToTable()
+            End If
 
             dgv_LIST.Columns.Clear()
             dgv_LIST.AutoGenerateColumns = True
-
-            dgv_LIST.DataSource = _crud.GetDataTable(sql, prms)
+            dgv_LIST.DataSource = dt
 
             ApplyGridStyle()
 
@@ -31,64 +47,27 @@ Partial Public Class Form_f_flx_KLSRYO
         End Try
     End Sub
 
-    Private Function BuildSql(searchText As String, ByRef prms As List(Of NpgsqlParameter)) As String
-        Dim sb As New System.Text.StringBuilder()
-
-        sb.AppendLine("SELECT ")
-        sb.AppendLine("  kykm.kykm_id, ")                                 ' 契約明細ID(D_KYKM)
-        sb.AppendLine("  kykh.kykh_id, ")                                 ' 契約ID(D_KYKH)
-        sb.AppendLine("  kykm.kykm_no AS 物件No, ")                       ' 契約明細No(D_KYKM)
-        sb.AppendLine("  kykm.saikaisu AS 再回, ")                        ' 再リース回数(D_KYKM)
-        sb.AppendLine("  haif.line_id AS 配No, ")                         ' 行ID(D_HAIF)
-        sb.AppendLine("  kkbn.kkbn_nm AS 契区, ")                         ' 契約区分名(C_KKBN)
-        ' sb.AppendLine(" AS 行区, ")                                     ' 行区(todo)
-        sb.AppendLine("  kjkbn.kjkbn_nm AS 計上区分, ")                   ' 計上区分名(C_KJKBN)
-        ' sb.AppendLine(" AS 法令区分, ")                               ' 法令区分(todo 場所不明、多分計算で判定する)
-        ' sb.AppendLine(" AS 取引区分, ")                               ' 取引区分(todo)
-        sb.AppendLine("  leakbn.leakbn_nm AS リース区分, ")               ' リース区分(C_LEAKBN)
-        sb.AppendLine("  kykh.kykbnl AS 契約番号, ")                      ' 契約番号(D_KYKH)
-        sb.AppendLine("  lcpt.lcpt1_nm AS 支払先, ")                       ' 支払先(M_LCPT)
-        sb.AppendLine("  kykm.bukn_nm AS 物件名, ")                       ' 物件名(D_KYKM)
-        sb.AppendLine("  b_bcat.bcat1_nm AS 管理部署, ")                  ' 管理部署名(M_BCAT)
-        sb.AppendLine("  h_bcat.bcat1_nm AS 費用負担部署, ")              ' 費用負担部署名(M_BCAT)
-        sb.AppendLine("  hkmk.hkmk_nm AS 費用区分, ")                     ' 費用区分名(M_HKMK)
-        sb.AppendLine("  kykh.start_dt AS 開始日, ")                      ' 開始日(D_KYKH)
-        sb.AppendLine("  kykh.end_dt AS 終了日, ")                        ' 終了日(D_KYKH)
-        ' sb.AppendLine(" AS 請求月, ")                                 ' 請求月(todo 場所不明、集計月？(開始日から終了日まで毎月ある可能性))
-        sb.AppendLine("  kykm.ckaiyk_dt AS 中途解約日, ")                 ' 中途解約日(D_KYKM)
-        ' sb.AppendLine("AS 回数済/総, ")                               ' 支払済み回数と総支払回数
-        sb.AppendLine("  kykm.b_knyukn AS 現金購入価額_物件, ")        ' 現金購入価額
-        sb.AppendLine("  kykm.b_slsryo AS 総支払額 ")                  ' 総支払額
-
-        sb.AppendLine("FROM d_kykm kykm ")
-        sb.AppendLine("LEFT JOIN d_kykh kykh ON kykm.kykh_id = kykh.kykh_id ")
-        sb.AppendLine("LEFT JOIN d_haif haif ON kykm.kykm_id = haif.kykm_id ")
-        sb.AppendLine("LEFT JOIN c_kkbn kkbn ON kykh.kkbn_id = kkbn.kkbn_id ")
-        sb.AppendLine("LEFT JOIN c_kjkbn kjkbn ON kykh.kjkbn_id = kjkbn.kjkbn_id ")
-        sb.AppendLine("LEFT JOIN c_leakbn leakbn ON kykm.leakbn_id = leakbn.leakbn_id ")
-        sb.AppendLine("LEFT JOIN m_lcpt lcpt ON kykh.lcpt_id = lcpt.lcpt_id ")
-        sb.AppendLine("LEFT JOIN m_bcat b_bcat ON kykm.b_bcat_id = b_bcat.bcat_id ")
-        sb.AppendLine("LEFT JOIN m_bcat h_bcat ON haif.h_bcat_id = h_bcat.bcat_id ")
-        sb.AppendLine("LEFT JOIN m_hkmk hkmk ON haif.hkmk_id = hkmk.hkmk_id ")
-
-        ' --- 検索条件 (WHERE) ---
-        ' todo 集計月、開始日、終了日、中途解約日で条件増えるはず
-        If txt_SEARCH.Text.Trim() <> "" Then
-            sb.AppendLine("WHERE kykm.kykm_no = @search ")
-            prms.Add(New NpgsqlParameter("@search", Double.Parse(txt_SEARCH.Text.Trim())))
-        End If
-
-        sb.AppendLine("ORDER BY kykm.kykm_id;")
-
-        Return sb.ToString()
-    End Function
-
     ' --- グリッドの見た目調整 ---
     Private Sub ApplyGridStyle()
         dgv_LIST.HideColumns("kykm_id", "kykh_id")
 
-        dgv_LIST.FormatColumn("現金購入価額_物件", "#0,00")
-        dgv_LIST.FormatColumn("総支払額", "#0,00")
+        ' 通貨フォーマット
+        Dim currencyCols = {"現金購入価額_物件", "総支払額", "前期末残高", "当期額",
+            "期末残高", "期中増加", "内1年内", "内2年内", "内3年内", "内4年内", "内5年内", "5年超"}
+        For Each col In currencyCols
+            dgv_LIST.FormatColumn(col, FMT_CURRENCY)
+        Next
+
+        ' 月別列 G01〜G12
+        For i As Integer = 1 To 12
+            dgv_LIST.FormatColumn($"G{i:D2}", FMT_CURRENCY)
+        Next
+
+        ' 日付フォーマット
+        Dim dateCols = {"開始日", "終了日", "中途解約日"}
+        For Each col In dateCols
+            dgv_LIST.FormatColumn(col, FMT_DATE)
+        Next
     End Sub
 
     ' [閉じる]ボタン
@@ -98,7 +77,7 @@ Partial Public Class Form_f_flx_KLSRYO
 
     ' [再計算]ボタン
     Private Sub cmd_RECALCULATE_Click(sender As Object, e As EventArgs) Handles cmd_RECALCULATE.Click
-
+        SearchData()
     End Sub
 
     ' [ファイル出力]ボタン

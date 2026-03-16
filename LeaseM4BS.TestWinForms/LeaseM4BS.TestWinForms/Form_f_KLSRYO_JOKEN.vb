@@ -29,6 +29,11 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         End If
 
         Dim frm As New Form_f_flx_KLSRYO
+        frm.DtFrom = CDate(txt_DATE_FROM.Value)
+        frm.DtTo = CDate(txt_DATE_TO.Value)
+        frm.Taisho = 3                                         ' 全部 (Access版 opg_TAISHO 相当)
+        frm.Ktmg = LeaseM4BS.DataAccess.ShriKtmg.SimeDtBase   ' 締日ベース (Access版 opg_KTMG 相当)
+        frm.Meisai = LeaseM4BS.DataAccess.ShriMeisai.Haif      ' 配賦単位 (Access版 opg_MEISAI 相当)
         frm.ShowDialog()
 
         _prevForm = frm
