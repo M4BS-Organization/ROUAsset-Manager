@@ -23,6 +23,8 @@ Partial Class Form_MAIN
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
+        Me.ファイルToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOGOUT = New System.Windows.Forms.ToolStripMenuItem()
         Me.台帳ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_CONTRACT_LIST = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_BUKN_LIST = New System.Windows.Forms.ToolStripMenuItem()
@@ -70,6 +72,8 @@ Partial Class Form_MAIN
         Me.menu_IMPORT_IDO_FROM_EXCEL = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_IMPORT_SAILEASE_FROM_EXCEL = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_IMPORT_GSON_FROM_EXCEL = New System.Windows.Forms.ToolStripMenuItem()
+        Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
+        Me.tsslUserInfo = New System.Windows.Forms.ToolStripStatusLabel()
         Me.MenuStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -77,7 +81,7 @@ Partial Class Form_MAIN
         '
         Me.MenuStrip1.GripMargin = New System.Windows.Forms.Padding(2, 2, 0, 2)
         Me.MenuStrip1.ImageScalingSize = New System.Drawing.Size(24, 24)
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.台帳ToolStripMenuItem, Me.月次ToolStripMenuItem, Me.期間ToolStripMenuItem, Me.決算ToolStripMenuItem, Me.マスタToolStripMenuItem, Me.一括更新ToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ファイルToolStripMenuItem, Me.台帳ToolStripMenuItem, Me.月次ToolStripMenuItem, Me.期間ToolStripMenuItem, Me.決算ToolStripMenuItem, Me.マスタToolStripMenuItem, Me.一括更新ToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(1375, 33)
@@ -372,21 +376,56 @@ Partial Class Form_MAIN
         Me.menu_IMPORT_GSON_FROM_EXCEL.Size = New System.Drawing.Size(314, 34)
         Me.menu_IMPORT_GSON_FROM_EXCEL.Text = "減損損失の取り込み"
         '
+        'ファイルToolStripMenuItem
+        '
+        Me.ファイルToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.menu_LOGOUT})
+        Me.ファイルToolStripMenuItem.Name = "ファイルToolStripMenuItem"
+        Me.ファイルToolStripMenuItem.Size = New System.Drawing.Size(80, 29)
+        Me.ファイルToolStripMenuItem.Text = "ファイル"
+        '
+        'menu_LOGOUT
+        '
+        Me.menu_LOGOUT.Name = "menu_LOGOUT"
+        Me.menu_LOGOUT.Size = New System.Drawing.Size(200, 34)
+        Me.menu_LOGOUT.Text = "ログアウト"
+        '
+        'StatusStrip1
+        '
+        Me.StatusStrip1.ImageScalingSize = New System.Drawing.Size(24, 24)
+        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsslUserInfo})
+        Me.StatusStrip1.Location = New System.Drawing.Point(0, 145)
+        Me.StatusStrip1.Name = "StatusStrip1"
+        Me.StatusStrip1.Size = New System.Drawing.Size(1375, 22)
+        Me.StatusStrip1.TabIndex = 4
+        '
+        'tsslUserInfo
+        '
+        Me.tsslUserInfo.Name = "tsslUserInfo"
+        Me.tsslUserInfo.Size = New System.Drawing.Size(0, 17)
+        Me.tsslUserInfo.Text = ""
+        '
         'Form_MAIN
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(10.0!, 18.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1375, 167)
+        Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.MenuStrip1)
         Me.Name = "Form_MAIN"
         Me.Text = "メイン画面"
         Me.MenuStrip1.ResumeLayout(False)
         Me.MenuStrip1.PerformLayout()
+        Me.StatusStrip1.ResumeLayout(False)
+        Me.StatusStrip1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Friend WithEvents MenuStrip1 As MenuStrip
+    Friend WithEvents ファイルToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents menu_LOGOUT As ToolStripMenuItem
+    Friend WithEvents StatusStrip1 As StatusStrip
+    Friend WithEvents tsslUserInfo As ToolStripStatusLabel
     Friend WithEvents 台帳ToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents menu_CONTRACT_LIST As ToolStripMenuItem
     Friend WithEvents menu_BUKN_LIST As ToolStripMenuItem
