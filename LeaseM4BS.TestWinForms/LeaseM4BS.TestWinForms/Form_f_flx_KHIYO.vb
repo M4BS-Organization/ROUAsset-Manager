@@ -231,6 +231,13 @@ Partial Public Class Form_f_flx_KHIYO
 
         Dim sql = String.Join(" UNION ALL ", sqls)
 
+        ' 金額符号フィルタ（マイナス/プラス選択に応じて絞り込み）
+        If RadioSymbol = Symbol.Minus Then
+            sql = "SELECT * FROM (" & sql & ") sub WHERE sub.期間計上額 < 0 "
+        ElseIf RadioSymbol = Symbol.Plus Then
+            sql = "SELECT * FROM (" & sql & ") sub WHERE sub.期間計上額 > 0 "
+        End If
+
         sql &= " "
         sql &= "ORDER BY kykm_id;"   'kykm.にするとエラーが出る
 
@@ -377,40 +384,4 @@ Partial Public Class Form_f_flx_KHIYO
         HandleEnterKeyNavigation(Me, e)
     End Sub
 
-    Private Sub AddRecConditions(ByRef sb As StringBuilder)
-        ' Trueが1つもなければReturn
-        If CheckRecFlags Is Nothing OrElse Not CheckRecFlags.Any(Function(f) f = True) Then
-            Return
-        End If
-
-        Dim whereClause = "AND ("
-        Dim trueList = New List(Of String)
-
-        ' 1. 支払額
-        If CheckRecFlags(0) Then
-            trueList.Add("kykm.kjkbn_id = 1")
-        End If
-
-        ' 3. 償却費
-        If CheckRecFlags(2) Then
-            trueList.Add("kykm.kjkbn_id = 2 AND kykm.taiyo_nen_ms_f = -1")
-        End If
-
-        ' 4. 支払利息
-        If CheckRecFlags(3) Then
-        End If
-
-        ' 5. 維持管理費用
-        If CheckRecFlags(4) Then
-            trueList.Add("kykm.kjkbn_id = 2 AND kykm.ijiknr IS NOT NULL")
-        End If
-
-        ' 6, 7. 減損
-        If CheckRecFlags(5) OrElse CheckRecFlags(6) Then
-            trueList.Add("kykm.b_gson_f = True")
-        End If
-
-        ' ORで結合
-        sb.AppendLine($"AND ( {String.Join(" OR ", trueList)} )")
-    End Sub
 End Class
