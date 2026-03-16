@@ -23,8 +23,6 @@ Partial Class Form_MAIN
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
-        Me.ファイルToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.menu_LOGOUT = New System.Windows.Forms.ToolStripMenuItem()
         Me.台帳ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_CONTRACT_LIST = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_BUKN_LIST = New System.Windows.Forms.ToolStripMenuItem()
@@ -67,6 +65,31 @@ Partial Class Form_MAIN
         Me.menu_ZEI_KAISEI = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_HREL = New System.Windows.Forms.ToolStripMenuItem()
         Me.一括更新ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.システムToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DB管理ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_SAVE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_RESTORE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_EXCEL_IMPORT = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_CACHE_CLEAR = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_COMPACT = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_CREATE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_DROP = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOCK_CLEAR = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_MIGRATE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_MNT_BKNRI = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_DB_EXPORT = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_ENV_SETTING = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_TOUSEI_OPT = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_PWD_CHANGE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ログ管理ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOG_REF = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOG_UPD = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOG_SAVE_RESTORE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOG_DELETE = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_SWKK_FIXED = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_VERSION_INFO = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_LOGOUT = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_EXIT = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_CHUKI_RECALC = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_IMPORT_CONTRACT_FROM_EXCEL = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_IMPORT_IDO_FROM_EXCEL = New System.Windows.Forms.ToolStripMenuItem()
@@ -81,7 +104,7 @@ Partial Class Form_MAIN
         '
         Me.MenuStrip1.GripMargin = New System.Windows.Forms.Padding(2, 2, 0, 2)
         Me.MenuStrip1.ImageScalingSize = New System.Drawing.Size(24, 24)
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ファイルToolStripMenuItem, Me.台帳ToolStripMenuItem, Me.月次ToolStripMenuItem, Me.期間ToolStripMenuItem, Me.決算ToolStripMenuItem, Me.マスタToolStripMenuItem, Me.一括更新ToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.台帳ToolStripMenuItem, Me.月次ToolStripMenuItem, Me.期間ToolStripMenuItem, Me.決算ToolStripMenuItem, Me.マスタToolStripMenuItem, Me.一括更新ToolStripMenuItem, Me.システムToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(1375, 33)
@@ -376,18 +399,158 @@ Partial Class Form_MAIN
         Me.menu_IMPORT_GSON_FROM_EXCEL.Size = New System.Drawing.Size(314, 34)
         Me.menu_IMPORT_GSON_FROM_EXCEL.Text = "減損損失の取り込み"
         '
-        'ファイルToolStripMenuItem
+        'システムToolStripMenuItem
         '
-        Me.ファイルToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.menu_LOGOUT})
-        Me.ファイルToolStripMenuItem.Name = "ファイルToolStripMenuItem"
-        Me.ファイルToolStripMenuItem.Size = New System.Drawing.Size(80, 29)
-        Me.ファイルToolStripMenuItem.Text = "ファイル"
+        Me.システムToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DB管理ToolStripMenuItem, Me.menu_ENV_SETTING, Me.menu_TOUSEI_OPT, Me.menu_PWD_CHANGE, Me.ログ管理ToolStripMenuItem, Me.menu_SWKK_FIXED, Me.menu_VERSION_INFO, Me.menu_LOGOUT, Me.menu_EXIT})
+        Me.システムToolStripMenuItem.Name = "システムToolStripMenuItem"
+        Me.システムToolStripMenuItem.Size = New System.Drawing.Size(82, 29)
+        Me.システムToolStripMenuItem.Text = "システム"
+        '
+        'DB管理ToolStripMenuItem
+        '
+        Me.DB管理ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.menu_DB_SAVE, Me.menu_DB_RESTORE, Me.menu_EXCEL_IMPORT, Me.menu_CACHE_CLEAR, Me.menu_DB_COMPACT, Me.menu_DB_CREATE, Me.menu_DB_DROP, Me.menu_LOCK_CLEAR, Me.menu_DB_MIGRATE, Me.menu_DB_MNT_BKNRI, Me.menu_DB_EXPORT})
+        Me.DB管理ToolStripMenuItem.Name = "DB管理ToolStripMenuItem"
+        Me.DB管理ToolStripMenuItem.Size = New System.Drawing.Size(270, 34)
+        Me.DB管理ToolStripMenuItem.Text = "DB管理"
+        '
+        'menu_DB_SAVE
+        '
+        Me.menu_DB_SAVE.Name = "menu_DB_SAVE"
+        Me.menu_DB_SAVE.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_SAVE.Text = "データ保存"
+        '
+        'menu_DB_RESTORE
+        '
+        Me.menu_DB_RESTORE.Name = "menu_DB_RESTORE"
+        Me.menu_DB_RESTORE.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_RESTORE.Text = "データ復元"
+        '
+        'menu_EXCEL_IMPORT
+        '
+        Me.menu_EXCEL_IMPORT.Name = "menu_EXCEL_IMPORT"
+        Me.menu_EXCEL_IMPORT.Size = New System.Drawing.Size(280, 34)
+        Me.menu_EXCEL_IMPORT.Text = "EXCEL取込"
+        '
+        'menu_CACHE_CLEAR
+        '
+        Me.menu_CACHE_CLEAR.Name = "menu_CACHE_CLEAR"
+        Me.menu_CACHE_CLEAR.Size = New System.Drawing.Size(280, 34)
+        Me.menu_CACHE_CLEAR.Text = "キャッシュクリア"
+        '
+        'menu_DB_COMPACT
+        '
+        Me.menu_DB_COMPACT.Name = "menu_DB_COMPACT"
+        Me.menu_DB_COMPACT.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_COMPACT.Text = "最適化"
+        '
+        'menu_DB_CREATE
+        '
+        Me.menu_DB_CREATE.Name = "menu_DB_CREATE"
+        Me.menu_DB_CREATE.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_CREATE.Text = "DB作成"
+        '
+        'menu_DB_DROP
+        '
+        Me.menu_DB_DROP.Name = "menu_DB_DROP"
+        Me.menu_DB_DROP.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_DROP.Text = "DB削除"
+        '
+        'menu_LOCK_CLEAR
+        '
+        Me.menu_LOCK_CLEAR.Name = "menu_LOCK_CLEAR"
+        Me.menu_LOCK_CLEAR.Size = New System.Drawing.Size(280, 34)
+        Me.menu_LOCK_CLEAR.Text = "ロック解除"
+        '
+        'menu_DB_MIGRATE
+        '
+        Me.menu_DB_MIGRATE.Name = "menu_DB_MIGRATE"
+        Me.menu_DB_MIGRATE.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_MIGRATE.Text = "DBマイグレーション"
+        '
+        'menu_DB_MNT_BKNRI
+        '
+        Me.menu_DB_MNT_BKNRI.Name = "menu_DB_MNT_BKNRI"
+        Me.menu_DB_MNT_BKNRI.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_MNT_BKNRI.Text = "物件管理単位メンテナンス"
+        '
+        'menu_DB_EXPORT
+        '
+        Me.menu_DB_EXPORT.Name = "menu_DB_EXPORT"
+        Me.menu_DB_EXPORT.Size = New System.Drawing.Size(280, 34)
+        Me.menu_DB_EXPORT.Text = "データエクスポート"
+        '
+        'menu_ENV_SETTING
+        '
+        Me.menu_ENV_SETTING.Name = "menu_ENV_SETTING"
+        Me.menu_ENV_SETTING.Size = New System.Drawing.Size(270, 34)
+        Me.menu_ENV_SETTING.Text = "環境設定"
+        '
+        'menu_TOUSEI_OPT
+        '
+        Me.menu_TOUSEI_OPT.Name = "menu_TOUSEI_OPT"
+        Me.menu_TOUSEI_OPT.Size = New System.Drawing.Size(270, 34)
+        Me.menu_TOUSEI_OPT.Text = "統制オプション"
+        '
+        'menu_PWD_CHANGE
+        '
+        Me.menu_PWD_CHANGE.Name = "menu_PWD_CHANGE"
+        Me.menu_PWD_CHANGE.Size = New System.Drawing.Size(270, 34)
+        Me.menu_PWD_CHANGE.Text = "パスワード変更"
+        '
+        'ログ管理ToolStripMenuItem
+        '
+        Me.ログ管理ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.menu_LOG_REF, Me.menu_LOG_UPD, Me.menu_LOG_SAVE_RESTORE, Me.menu_LOG_DELETE})
+        Me.ログ管理ToolStripMenuItem.Name = "ログ管理ToolStripMenuItem"
+        Me.ログ管理ToolStripMenuItem.Size = New System.Drawing.Size(270, 34)
+        Me.ログ管理ToolStripMenuItem.Text = "ログ管理"
+        '
+        'menu_LOG_REF
+        '
+        Me.menu_LOG_REF.Name = "menu_LOG_REF"
+        Me.menu_LOG_REF.Size = New System.Drawing.Size(250, 34)
+        Me.menu_LOG_REF.Text = "参照ログ"
+        '
+        'menu_LOG_UPD
+        '
+        Me.menu_LOG_UPD.Name = "menu_LOG_UPD"
+        Me.menu_LOG_UPD.Size = New System.Drawing.Size(250, 34)
+        Me.menu_LOG_UPD.Text = "更新ログ"
+        '
+        'menu_LOG_SAVE_RESTORE
+        '
+        Me.menu_LOG_SAVE_RESTORE.Name = "menu_LOG_SAVE_RESTORE"
+        Me.menu_LOG_SAVE_RESTORE.Size = New System.Drawing.Size(250, 34)
+        Me.menu_LOG_SAVE_RESTORE.Text = "保存復元ログ"
+        '
+        'menu_LOG_DELETE
+        '
+        Me.menu_LOG_DELETE.Name = "menu_LOG_DELETE"
+        Me.menu_LOG_DELETE.Size = New System.Drawing.Size(250, 34)
+        Me.menu_LOG_DELETE.Text = "ログ削除"
+        '
+        'menu_SWKK_FIXED
+        '
+        Me.menu_SWKK_FIXED.Name = "menu_SWKK_FIXED"
+        Me.menu_SWKK_FIXED.Size = New System.Drawing.Size(270, 34)
+        Me.menu_SWKK_FIXED.Text = "仕訳固定値設定"
+        '
+        'menu_VERSION_INFO
+        '
+        Me.menu_VERSION_INFO.Name = "menu_VERSION_INFO"
+        Me.menu_VERSION_INFO.Size = New System.Drawing.Size(270, 34)
+        Me.menu_VERSION_INFO.Text = "バージョン情報"
         '
         'menu_LOGOUT
         '
         Me.menu_LOGOUT.Name = "menu_LOGOUT"
-        Me.menu_LOGOUT.Size = New System.Drawing.Size(200, 34)
-        Me.menu_LOGOUT.Text = "ログアウト"
+        Me.menu_LOGOUT.Size = New System.Drawing.Size(270, 34)
+        Me.menu_LOGOUT.Text = "ログオフ"
+        '
+        'menu_EXIT
+        '
+        Me.menu_EXIT.Name = "menu_EXIT"
+        Me.menu_EXIT.Size = New System.Drawing.Size(270, 34)
+        Me.menu_EXIT.Text = "業務の終了"
         '
         'StatusStrip1
         '
@@ -422,8 +585,31 @@ Partial Class Form_MAIN
 
     End Sub
     Friend WithEvents MenuStrip1 As MenuStrip
-    Friend WithEvents ファイルToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents システムToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents DB管理ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents menu_DB_SAVE As ToolStripMenuItem
+    Friend WithEvents menu_DB_RESTORE As ToolStripMenuItem
+    Friend WithEvents menu_EXCEL_IMPORT As ToolStripMenuItem
+    Friend WithEvents menu_CACHE_CLEAR As ToolStripMenuItem
+    Friend WithEvents menu_DB_COMPACT As ToolStripMenuItem
+    Friend WithEvents menu_DB_CREATE As ToolStripMenuItem
+    Friend WithEvents menu_DB_DROP As ToolStripMenuItem
+    Friend WithEvents menu_LOCK_CLEAR As ToolStripMenuItem
+    Friend WithEvents menu_DB_MIGRATE As ToolStripMenuItem
+    Friend WithEvents menu_DB_MNT_BKNRI As ToolStripMenuItem
+    Friend WithEvents menu_DB_EXPORT As ToolStripMenuItem
+    Friend WithEvents menu_ENV_SETTING As ToolStripMenuItem
+    Friend WithEvents menu_TOUSEI_OPT As ToolStripMenuItem
+    Friend WithEvents menu_PWD_CHANGE As ToolStripMenuItem
+    Friend WithEvents ログ管理ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents menu_LOG_REF As ToolStripMenuItem
+    Friend WithEvents menu_LOG_UPD As ToolStripMenuItem
+    Friend WithEvents menu_LOG_SAVE_RESTORE As ToolStripMenuItem
+    Friend WithEvents menu_LOG_DELETE As ToolStripMenuItem
+    Friend WithEvents menu_SWKK_FIXED As ToolStripMenuItem
+    Friend WithEvents menu_VERSION_INFO As ToolStripMenuItem
     Friend WithEvents menu_LOGOUT As ToolStripMenuItem
+    Friend WithEvents menu_EXIT As ToolStripMenuItem
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents tsslUserInfo As ToolStripStatusLabel
     Friend WithEvents 台帳ToolStripMenuItem As ToolStripMenuItem

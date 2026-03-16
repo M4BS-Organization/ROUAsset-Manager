@@ -102,15 +102,23 @@ Public Class Form_MAIN
         End If
 
         ' ---------------------------------------------------------
-        ' 5. CanLogRef=False → ログ参照メニュー無効化
+        ' 5. CanLogRef=False → ログ管理サブメニュー無効化
         '    Access版: Case 621,622,623 (ログ管理) は boLOG 必須
-        '    現在のVB.NET版にはログ参照メニューが未実装のため、
-        '    将来追加時のためにフラグチェックのみ準備
         ' ---------------------------------------------------------
-        ' ログ参照メニューが追加された場合はここで無効化する
-        ' If LoginSession.CanLogRef = False Then
-        '     menu_LOG_xxx.Enabled = False
-        ' End If
+        If LoginSession.CanLogRef = False Then
+            ログ管理ToolStripMenuItem.Enabled = False
+        End If
+
+        ' ---------------------------------------------------------
+        ' 5b. IsAdmin=False → システムタブ内のDB管理・統制オプション無効化
+        '     Access版: Case 401,402,422,602 (DB管理系) は boAdmin 必須
+        ' ---------------------------------------------------------
+        If LoginSession.IsAdmin = False Then
+            DB管理ToolStripMenuItem.Enabled = False
+            menu_TOUSEI_OPT.Enabled = False
+            menu_ENV_SETTING.Enabled = False
+            menu_SWKK_FIXED.Enabled = False
+        End If
 
         ' ---------------------------------------------------------
         ' 6. AccessKind=2（参照のみ）→ データ変更系メニュー無効化
@@ -156,9 +164,32 @@ Public Class Form_MAIN
     ' 全メニューの有効状態をリセット（再ログイン時に使用）
     ' =========================================================
     Private Sub ResetAllMenuEnabled()
-        ' ファイルタブ
-        ファイルToolStripMenuItem.Enabled = True
+        ' システムタブ
+        システムToolStripMenuItem.Enabled = True
+        DB管理ToolStripMenuItem.Enabled = True
+        menu_DB_SAVE.Enabled = True
+        menu_DB_RESTORE.Enabled = True
+        menu_EXCEL_IMPORT.Enabled = True
+        menu_CACHE_CLEAR.Enabled = True
+        menu_DB_COMPACT.Enabled = True
+        menu_DB_CREATE.Enabled = True
+        menu_DB_DROP.Enabled = True
+        menu_LOCK_CLEAR.Enabled = True
+        menu_DB_MIGRATE.Enabled = True
+        menu_DB_MNT_BKNRI.Enabled = True
+        menu_DB_EXPORT.Enabled = True
+        menu_ENV_SETTING.Enabled = True
+        menu_TOUSEI_OPT.Enabled = True
+        menu_PWD_CHANGE.Enabled = True
+        ログ管理ToolStripMenuItem.Enabled = True
+        menu_LOG_REF.Enabled = True
+        menu_LOG_UPD.Enabled = True
+        menu_LOG_SAVE_RESTORE.Enabled = True
+        menu_LOG_DELETE.Enabled = True
+        menu_SWKK_FIXED.Enabled = True
+        menu_VERSION_INFO.Enabled = True
         menu_LOGOUT.Enabled = True
+        menu_EXIT.Enabled = True
 
         ' 台帳タブ
         台帳ToolStripMenuItem.Enabled = True
@@ -221,7 +252,7 @@ Public Class Form_MAIN
     End Sub
 
     ' =========================================================
-    ' ファイルタブ - ログアウト
+    ' システムタブ - ログオフ (Access版 Case 613)
     ' Access版 gLOGOFF (p_StartUp.txt:535-570) の再現
     ' =========================================================
     Private Sub menu_LOGOUT_Click(sender As Object, e As EventArgs) Handles menu_LOGOUT.Click
@@ -741,4 +772,138 @@ Public Class Form_MAIN
             MessageBox.Show("フォームの起動に失敗しました。" & vbCrLf & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+    ' =========================================================
+    ' システムタブ - 業務の終了
+    ' Access版 p_menu2 Case 625 相当
+    ' =========================================================
+    Private Sub menu_EXIT_Click(sender As Object, e As EventArgs) Handles menu_EXIT.Click
+        Dim confirmResult As DialogResult = MessageBox.Show(
+            "業務を終了しますか？",
+            "終了確認",
+            MessageBoxButtons.YesNo, MessageBoxIcon.Information)
+
+        If confirmResult <> DialogResult.Yes Then
+            Return
+        End If
+
+        ' ログアウト処理を経由して終了
+        CloseAllChildForms()
+        RecordLogoutLog()
+        LoginSession.Clear()
+        Me.Close()
+    End Sub
+
+    ' =========================================================
+    ' システムタブ - バージョン情報 (Access版 Case 612)
+    ' =========================================================
+    Private Sub menu_VERSION_INFO_Click(sender As Object, e As EventArgs) Handles menu_VERSION_INFO.Click
+        Dim appVersion As String = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()
+        MessageBox.Show(
+            "LeaseM4BS" & vbCrLf &
+            "Version: " & appVersion & vbCrLf &
+            "DB Version: " & LoginSession.DbVersion,
+            "バージョン情報",
+            MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' =========================================================
+    ' システムタブ - 未実装メニュー項目のプレースホルダー
+    ' 各機能は別Issue/別フェーズで実装予定
+    ' =========================================================
+
+    ' [DB管理 - データ保存] Access版 Case 401
+    Private Sub menu_DB_SAVE_Click(sender As Object, e As EventArgs) Handles menu_DB_SAVE.Click
+        MessageBox.Show("データ保存機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - データ復元] Access版 Case 402
+    Private Sub menu_DB_RESTORE_Click(sender As Object, e As EventArgs) Handles menu_DB_RESTORE.Click
+        MessageBox.Show("データ復元機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - EXCEL取込] Access版 Case 403
+    Private Sub menu_EXCEL_IMPORT_Click(sender As Object, e As EventArgs) Handles menu_EXCEL_IMPORT.Click
+        MessageBox.Show("EXCEL取込機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - キャッシュクリア] Access版 Case 404
+    Private Sub menu_CACHE_CLEAR_Click(sender As Object, e As EventArgs) Handles menu_CACHE_CLEAR.Click
+        MessageBox.Show("キャッシュクリア機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - 最適化] Access版 Case 421
+    Private Sub menu_DB_COMPACT_Click(sender As Object, e As EventArgs) Handles menu_DB_COMPACT.Click
+        MessageBox.Show("DB最適化機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - DB作成] Access版 Case 422
+    Private Sub menu_DB_CREATE_Click(sender As Object, e As EventArgs) Handles menu_DB_CREATE.Click
+        MessageBox.Show("DB作成機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - DB削除] Access版 Case 423
+    Private Sub menu_DB_DROP_Click(sender As Object, e As EventArgs) Handles menu_DB_DROP.Click
+        MessageBox.Show("DB削除機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - ロック解除] Access版 Case 424
+    Private Sub menu_LOCK_CLEAR_Click(sender As Object, e As EventArgs) Handles menu_LOCK_CLEAR.Click
+        MessageBox.Show("ロック解除機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - DBマイグレーション] Access版 Case 425
+    Private Sub menu_DB_MIGRATE_Click(sender As Object, e As EventArgs) Handles menu_DB_MIGRATE.Click
+        MessageBox.Show("DBマイグレーション機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - 物件管理単位メンテナンス] Access版 Case 426
+    Private Sub menu_DB_MNT_BKNRI_Click(sender As Object, e As EventArgs) Handles menu_DB_MNT_BKNRI.Click
+        MessageBox.Show("物件管理単位メンテナンス機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [DB管理 - データエクスポート] Access版 Case 427
+    Private Sub menu_DB_EXPORT_Click(sender As Object, e As EventArgs) Handles menu_DB_EXPORT.Click
+        MessageBox.Show("データエクスポート機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [環境設定] Access版 Case 601
+    Private Sub menu_ENV_SETTING_Click(sender As Object, e As EventArgs) Handles menu_ENV_SETTING.Click
+        MessageBox.Show("環境設定機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [統制オプション] Access版 Case 602
+    Private Sub menu_TOUSEI_OPT_Click(sender As Object, e As EventArgs) Handles menu_TOUSEI_OPT.Click
+        MessageBox.Show("統制オプション機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [パスワード変更] Access版 Case 408
+    Private Sub menu_PWD_CHANGE_Click(sender As Object, e As EventArgs) Handles menu_PWD_CHANGE.Click
+        MessageBox.Show("パスワード変更機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [ログ管理 - 参照ログ] Access版 Case 621
+    Private Sub menu_LOG_REF_Click(sender As Object, e As EventArgs) Handles menu_LOG_REF.Click
+        MessageBox.Show("参照ログ機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [ログ管理 - 更新ログ] Access版 Case 622
+    Private Sub menu_LOG_UPD_Click(sender As Object, e As EventArgs) Handles menu_LOG_UPD.Click
+        MessageBox.Show("更新ログ機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [ログ管理 - 保存復元ログ] Access版 Case 623
+    Private Sub menu_LOG_SAVE_RESTORE_Click(sender As Object, e As EventArgs) Handles menu_LOG_SAVE_RESTORE.Click
+        MessageBox.Show("保存復元ログ機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [ログ管理 - ログ削除] Access版 Case 624
+    Private Sub menu_LOG_DELETE_Click(sender As Object, e As EventArgs) Handles menu_LOG_DELETE.Click
+        MessageBox.Show("ログ削除機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' [仕訳固定値設定] Access版 Case 611
+    Private Sub menu_SWKK_FIXED_Click(sender As Object, e As EventArgs) Handles menu_SWKK_FIXED.Click
+        MessageBox.Show("仕訳固定値設定機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
 End Class
