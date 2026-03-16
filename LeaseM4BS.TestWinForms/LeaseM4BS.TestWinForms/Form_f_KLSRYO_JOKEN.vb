@@ -28,7 +28,18 @@ Partial Public Class Form_f_KLSRYO_JOKEN
             Return
         End If
 
+        ' 前回フォームが残っていれば解放
+        If _prevForm IsNot Nothing Then
+            _prevForm.Dispose()
+            _prevForm = Nothing
+        End If
+
         Dim frm As New Form_f_flx_KLSRYO
+        frm.DtFrom = CDate(txt_DATE_FROM.Value)
+        frm.DtTo = CDate(txt_DATE_TO.Value)
+        frm.Taisho = 3                                         ' 全部 (Access版 opg_TAISHO 相当)
+        frm.Ktmg = LeaseM4BS.DataAccess.ShriKtmg.SimeDtBase   ' 締日ベース (Access版 opg_KTMG 相当)
+        frm.Meisai = LeaseM4BS.DataAccess.ShriMeisai.Haif      ' 配賦単位 (Access版 opg_MEISAI 相当)
         frm.ShowDialog()
 
         _prevForm = frm
