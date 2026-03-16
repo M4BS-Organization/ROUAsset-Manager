@@ -114,10 +114,10 @@ Public Class KlsryoCalculationEngine
         Select Case taisho
             Case 1 ' リース料 → 保守以外
                 sb.Append(" AND d_kykh.kkbn_id <> @hoshu")
-                prms.Add(New NpgsqlParameter("@hoshu", Kkbn.Hoshu))
+                prms.Add(New NpgsqlParameter("@hoshu", CInt(Kkbn.Hoshu)))
             Case 2 ' 保守料
                 sb.Append(" AND d_kykh.kkbn_id = @hoshu")
-                prms.Add(New NpgsqlParameter("@hoshu", Kkbn.Hoshu))
+                prms.Add(New NpgsqlParameter("@hoshu", CInt(Kkbn.Hoshu)))
             Case 3 ' 全部 → 条件なし
         End Select
 
@@ -191,25 +191,25 @@ Public Class KlsryoCalculationEngine
                 If Not IsDBNull(shriCnt) AndAlso CInt(shriCnt) > 0 Then
                     Dim schedule = CashScheduleBuilder.BuildTeigakuSchedule(
                         ktmg, kishuDt, kimatDt, ynKimatDt(4),
-                        CBool(row("jencho_f")),
-                        CInt(row("shri_kn")), row("shri_cnt"),
-                        CInt(row("sshri_kn_m")), CInt(row("sshri_kn_1")), CInt(row("sshri_kn_2")), CInt(row("sshri_kn_3")),
+                        GetBool(row, "jencho_f"),
+                        GetInt(row, "shri_kn"), row("shri_cnt"),
+                        GetInt(row, "sshri_kn_m"), GetInt(row, "sshri_kn_1"), GetInt(row, "sshri_kn_2"), GetInt(row, "sshri_kn_3"),
                         row("shho_m_id"), row("shho_1_id"), row("shho_2_id"), row("shho_3_id"),
-                        row("mae_dt"), CDate(row("shri_dt1")), row("shri_dt2"), CInt(row("shri_dt3")),
+                        row("mae_dt"), CDate(row("shri_dt1")), row("shri_dt2"), GetInt(row, "shri_dt3"),
                         GetDbl(row, "zritu"),
                         bKlsryo, bKzei, bMlsryo, bMzei,
                         row("ckaiyk_esdt_t"))
 
                     Dim klsryoResult = CalcKlsryoFromSchedule(
                         ktmg, kishuDt, kimatDt, gCnt, ynKimatDt, getudoFrom, getudoTo,
-                        row("start_dt"), row("b_rend_dt"), CBool(row("jencho_f")), schedule)
+                        row("start_dt"), row("b_rend_dt"), GetBool(row, "jencho_f"), schedule)
 
                     AddResultRow(resultDt, row, klsryoResult, RecKbn.Teigaku, row("lcpt_id"), Nothing, sekouDt)
                 End If
             End If
 
             ' *** 変額 ***
-            If CBool(row("b_henl_f")) Then
+            If GetBool(row, "b_henl_f") Then
                 Dim schH = CashScheduleBuilder.BuildHengakuSchedule(_crud, CDbl(row("kykm_kykm_id")), row("ckaiyk_esdt_h"))
                 If schH.Count > 0 Then
                     Dim klsryoResultH = CalcKlsryoFromSchedule(
@@ -255,18 +255,18 @@ Public Class KlsryoCalculationEngine
                     If Not IsDBNull(shriCnt) AndAlso CInt(shriCnt) > 0 Then
                         teigakuSchedule = CashScheduleBuilder.BuildTeigakuSchedule(
                             ktmg, kishuDt, kimatDt, ynKimatDt(4),
-                            CBool(row("jencho_f")),
-                            CInt(row("shri_kn")), row("shri_cnt"),
-                            CInt(row("sshri_kn_m")), CInt(row("sshri_kn_1")), CInt(row("sshri_kn_2")), CInt(row("sshri_kn_3")),
+                            GetBool(row, "jencho_f"),
+                            GetInt(row, "shri_kn"), row("shri_cnt"),
+                            GetInt(row, "sshri_kn_m"), GetInt(row, "sshri_kn_1"), GetInt(row, "sshri_kn_2"), GetInt(row, "sshri_kn_3"),
                             row("shho_m_id"), row("shho_1_id"), row("shho_2_id"), row("shho_3_id"),
-                            row("mae_dt"), CDate(row("shri_dt1")), row("shri_dt2"), CInt(row("shri_dt3")),
+                            row("mae_dt"), CDate(row("shri_dt1")), row("shri_dt2"), GetInt(row, "shri_dt3"),
                             GetDbl(row, "zritu"),
                             bKlsryo, bKzei, bMlsryo, bMzei,
                             row("ckaiyk_esdt_t"))
                     End If
                 End If
 
-                If CBool(row("b_henl_f")) Then
+                If GetBool(row, "b_henl_f") Then
                     hengakuSchedule = CashScheduleBuilder.BuildHengakuSchedule(_crud, kykmId, row("ckaiyk_esdt_h"))
                 End If
             End If
@@ -284,7 +284,7 @@ Public Class KlsryoCalculationEngine
                 Dim haifSchedule = ApplyHaifritu(teigakuSchedule, haifritu)
                 Dim klsResult = CalcKlsryoFromSchedule(
                     ktmg, kishuDt, kimatDt, gCnt, ynKimatDt, getudoFrom, getudoTo,
-                    row("start_dt"), row("b_rend_dt"), CBool(row("jencho_f")), haifSchedule)
+                    row("start_dt"), row("b_rend_dt"), GetBool(row, "jencho_f"), haifSchedule)
                 AddResultRow(resultDt, row, klsResult, RecKbn.Teigaku, row("lcpt_id"), haifInfo, sekouDt)
             End If
 
@@ -1010,6 +1010,16 @@ Public Class KlsryoCalculationEngine
     Private Shared Function GetDbl(row As DataRow, colName As String) As Double
         If IsDBNull(row(colName)) Then Return 0.0
         Return CDbl(row(colName))
+    End Function
+
+    Private Shared Function GetInt(row As DataRow, colName As String) As Integer
+        If IsDBNull(row(colName)) Then Return 0
+        Return CInt(row(colName))
+    End Function
+
+    Private Shared Function GetBool(row As DataRow, colName As String) As Boolean
+        If IsDBNull(row(colName)) Then Return False
+        Return CBool(row(colName))
     End Function
 
 End Class
