@@ -28,6 +28,12 @@ Partial Public Class Form_f_KLSRYO_JOKEN
             Return
         End If
 
+        ' 前回フォームが残っていれば解放
+        If _prevForm IsNot Nothing Then
+            _prevForm.Dispose()
+            _prevForm = Nothing
+        End If
+
         Dim frm As New Form_f_flx_KLSRYO
         frm.DtFrom = CDate(txt_DATE_FROM.Value)
         frm.DtTo = CDate(txt_DATE_TO.Value)

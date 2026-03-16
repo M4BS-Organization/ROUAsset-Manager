@@ -29,11 +29,14 @@ Partial Public Class Form_f_flx_KLSRYO
             Dim engine As New KlsryoCalculationEngine()
             Dim dt As System.Data.DataTable = engine.Execute(DtFrom, DtTo, Taisho, Ktmg, Meisai)
 
-            ' 検索条件でフィルタ
+            ' 検索条件でフィルタ (数値のみ許可)
             If txt_SEARCH.Text.Trim() <> "" Then
                 Dim searchVal = txt_SEARCH.Text.Trim()
-                dt.DefaultView.RowFilter = $"物件No = {searchVal}"
-                dt = dt.DefaultView.ToTable()
+                Dim numVal As Integer
+                If Integer.TryParse(searchVal, numVal) Then
+                    dt.DefaultView.RowFilter = $"物件No = {numVal}"
+                    dt = dt.DefaultView.ToTable()
+                End If
             End If
 
             dgv_LIST.Columns.Clear()
