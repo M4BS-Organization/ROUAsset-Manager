@@ -29,6 +29,8 @@ Partial Public Class Form_f_KHIYO_JOKEN
         Dim frm As New Form_f_flx_KHIYO
         frm.DtFrom = txt_DT_FROM.Value
         frm.DtTo = txt_DT_TO.Value
+        frm.NextDtTo = txt_DT_TO.Value.AddMonths(1)
+        frm.RecBase = If(radio_SHIME.Checked, RecTiming.SmdtBase, RecTiming.ShdtBase)
 
         frm.CheckRecFlags = {chk_REC_KBN_1.Checked, chk_REC_KBN_2.Checked, chk_REC_KBN_3.Checked, chk_REC_KBN_4.Checked, chk_REC_KBN_5.Checked, chk_REC_KBN_6.Checked, chk_REC_KBN_7.Checked}
 

@@ -1,6 +1,8 @@
-﻿Imports System.Text
+﻿Imports System.Drawing
+Imports System.Text
 Imports System.Windows.Forms
 Imports LeaseM4BS.DataAccess
+Imports Microsoft.VisualBasic.Information
 Imports Npgsql
 
 Public Enum RecTiming
@@ -44,10 +46,10 @@ Partial Public Class Form_f_flx_KHIYO
             dgv_LIST.Columns.Clear()
             dgv_LIST.AutoGenerateColumns = True
 
-            ' todo グレーアウトの条件を探す(Access版はグレーアウト行がある。条件不明)
             dgv_LIST.DataSource = _crud.GetDataTable(sql, prms)
 
             ApplyGridStyle()
+            ApplyGrayOut()
 
         Catch ex As Exception
             MessageBox.Show("一覧取得エラー: " & ex.Message)
@@ -81,20 +83,29 @@ Partial Public Class Form_f_flx_KHIYO
                                    "LEFT JOIN m_bcat b_bcat ON kykm.b_bcat_id = b_bcat.bcat_id " &
                                    "LEFT JOIN m_bcat h_bcat ON haif.h_bcat_id = h_bcat.bcat_id "
 
-        Dim whereClause As String = "WHERE ((kykh.start_dt <= @NextDtTo AND kykh.end_dt <= @dtFrom) " &
-                                    "OR (kykm.b_shdt_fst_sum BETWEEN @dtFrom AND @dtTo))"
+        Dim whereClause As String = "WHERE ((kykh.start_dt <= @NextDtTo AND kykh.end_dt >= @dtFrom) " &
+                                    "OR (kykm.b_shdt_fst_sum BETWEEN @dtFrom AND @dtTo)) "
 
         prms.Add(New NpgsqlParameter("@dtFrom", GetMonthStart(DtFrom)))
         prms.Add(New NpgsqlParameter("@dtTo", GetMonthEnd(DtTo)))
         prms.Add(New NpgsqlParameter("@NextDtTo", GetMonthEnd(NextDtTo)))
 
         If searchText <> "" Then
-            whereClause &= "WHERE kykm.kykm_no = @search "
+            whereClause &= "AND kykm.kykm_no = @search "
             prms.Add(New NpgsqlParameter("@search", Double.Parse(txt_SEARCH.Text.Trim())))
         End If
 
+        ' 期間月数計算（契約期間と集計期間の交差月数）
+        Dim periodMonths As String =
+            "GREATEST(0, " &
+            "(EXTRACT(YEAR FROM AGE(LEAST(@dtTo, COALESCE(kykh.end_dt, @dtTo)), " &
+            "GREATEST(@dtFrom, kykh.start_dt))) * 12 " &
+            "+ EXTRACT(MONTH FROM AGE(LEAST(@dtTo, COALESCE(kykh.end_dt, @dtTo)), " &
+            "GREATEST(@dtFrom, kykh.start_dt))) + 1))"
+
         Dim sqls As New List(Of String)
 
+        ' sql1: 支払額（計上区分=費用）
         If CheckRecFlags(0) Then
             Dim sql1 As String = "SELECT " &
                                   selectPart1 &
@@ -108,37 +119,60 @@ Partial Public Class Form_f_flx_KHIYO
             sqls.Add(sql1)
         End If
 
+        ' sql2: 保守料（変更情報テーブルから取得）
         If CheckRecFlags(1) Then
             Dim sql2 As String = "SELECT " &
                                  selectPart1 &
                                  "'保守料' AS 行区, " &
                                  selectPart2 &
-                                 "haif.h_klsryo AS 期間計上額 " &
-                                 fromClause &
-                                 whereClause                        ' todo
+                                 "henf.klsryo AS 期間計上額 " &
+                                 "FROM d_henf henf " &
+                                 "LEFT JOIN d_kykm kykm ON henf.kykm_id = kykm.kykm_id " &
+                                 "LEFT JOIN d_kykh kykh ON kykm.kykh_id = kykh.kykh_id " &
+                                 "LEFT JOIN d_haif haif ON kykm.kykm_id = haif.kykm_id " &
+                                 "LEFT JOIN c_kjkbn kjkbn ON kykm.kjkbn_id = kjkbn.kjkbn_id " &
+                                 "LEFT JOIN m_lcpt lcpt ON kykh.lcpt_id = lcpt.lcpt_id " &
+                                 "LEFT JOIN m_bcat b_bcat ON kykm.b_bcat_id = b_bcat.bcat_id " &
+                                 "LEFT JOIN m_bcat h_bcat ON haif.h_bcat_id = h_bcat.bcat_id " &
+                                 "WHERE kykm.b_henf_f = True " &
+                                 "AND NOT (kykh.end_dt < @dtFrom OR kykh.start_dt > @dtTo) "
+
+            If searchText <> "" Then
+                sql2 &= "AND kykm.kykm_no = @search "
+            End If
+
+            sqls.Add(sql2)
         End If
 
+        ' sql3: 償却費（月割按分: 取得価額 / (耐用年数 * 12) * 期間月数）
         If CheckRecFlags(2) Then
             Dim sql3 As String = "SELECT " &
                                  selectPart1 &
                                  "'償却費' AS 行区, " &
                                  selectPart2 &
-                                 "kykm.b_syutok AS 期間計上額 " &
+                                 "CASE WHEN kykm.taiyo_nen > 0 THEN " &
+                                 "ROUND(kykm.b_syutok / (kykm.taiyo_nen * 12.0) * " & periodMonths & ", 0) " &
+                                 "ELSE 0 END AS 期間計上額 " &
                                  fromClause &
                                  whereClause &
-                                 "AND kykm.kjkbn_id = 2"    ' todo WHERE句不明
+                                 "AND kykh.kkbn_id = 1 AND kykm.saikaisu = 0 " &
+                                 "AND (kykm.kjkbn_id = 2 OR kykm.b_gson_f = True)"
 
             sqls.Add(sql3)
         End If
 
+        ' sql4: 支払利息（月割按分: (リース料総額 - 購入価額) / リース期間 * 期間月数）
         If CheckRecFlags(3) Then
             Dim sql4 As String = "SELECT " &
                                  selectPart1 &
                                  "'支払利息' AS 行区, " &
                                  selectPart2 &
-                                 "(kykm.b_slsryo - kykm.b_knyukn) AS 期間計上額 " &     ' todo 計算方法不明
+                                 "CASE WHEN kykh.lkikan > 0 THEN " &
+                                 "ROUND((kykm.b_slsryo - kykm.b_knyukn) / kykh.lkikan * " & periodMonths & ", 0) " &
+                                 "ELSE 0 END AS 期間計上額 " &
                                  fromClause &
                                  whereClause &
+                                 "AND kykh.kkbn_id = 1 AND kykm.saikaisu = 0 " &
                                  "AND kykm.kjkbn_id = 2 AND kykm.kari_ritu_ms_f = True "
 
             If RecBase = RecTiming.SmdtBase Then
@@ -150,46 +184,59 @@ Partial Public Class Form_f_flx_KHIYO
             sqls.Add(sql4)
         End If
 
+        ' sql5: 維持管理費用（月割按分: 維持管理費 / リース期間 * 期間月数）
         If CheckRecFlags(4) Then
             Dim sql5 As String = "SELECT " &
                                  selectPart1 &
                                  "'維持管理費用' AS 行区, " &
                                  selectPart2 &
-                                 "(kykm.b_ijiknr * 1) AS 期間計上額 " &                  ' todo 集計期間から割合算出
+                                 "CASE WHEN kykh.lkikan > 0 THEN " &
+                                 "ROUND(kykm.b_ijiknr / kykh.lkikan * " & periodMonths & ", 0) " &
+                                 "ELSE kykm.b_ijiknr END AS 期間計上額 " &
                                  fromClause &
                                  whereClause &
-                                 "AND kykm.b_ijiknr IS NOT NULL"
+                                 "AND kykm.b_ijiknr <> 0 AND kykm.kjkbn_id = 2 " &
+                                 "AND kykh.kkbn_id = 1 AND kykm.saikaisu = 0"
 
             sqls.Add(sql5)
         End If
 
+        ' sql6: 減損損失（現時点では固定値0）
         If CheckRecFlags(5) Then
             Dim sql6 As String = "SELECT " &
                                  selectPart1 &
                                  "'減損損失' AS 行区, " &
                                  selectPart2 &
-                                 "haif.h_klsryo AS 期間計上額 " &                          ' todo テストデータになくて分からない
+                                 "0 AS 期間計上額 " &
                                  fromClause &
                                  whereClause &
-                                 "AND kykm.b_gson_f = True"
+                                 "AND kykm.b_gson_f = True AND kykh.kkbn_id = 1 AND kykm.saikaisu = 0"
 
             sqls.Add(sql6)
         End If
 
+        ' sql7: 減損勘定取崩額（現時点では固定値0）
         If CheckRecFlags(6) Then
             Dim sql7 As String = "SELECT " &
                                  selectPart1 &
                                  "'減損勘定取崩額' AS 行区, " &
                                  selectPart2 &
-                                 "haif.h_klsryo AS 期間計上額 " &                         ' todo テストデータになくて分からない
+                                 "0 AS 期間計上額 " &
                                  fromClause &
                                  whereClause &
-                                 "AND kykm.b_gson_f = True"
+                                 "AND kykm.b_gson_f = True AND kykh.kkbn_id = 1 AND kykm.saikaisu = 0"
 
             sqls.Add(sql7)
         End If
 
         Dim sql = String.Join(" UNION ALL ", sqls)
+
+        ' 金額符号フィルタ（マイナス/プラス選択に応じて絞り込み）
+        If RadioSymbol = Symbol.Minus Then
+            sql = "SELECT * FROM (" & sql & ") sub WHERE sub.期間計上額 < 0 "
+        ElseIf RadioSymbol = Symbol.Plus Then
+            sql = "SELECT * FROM (" & sql & ") sub WHERE sub.期間計上額 > 0 "
+        End If
 
         sql &= " "
         sql &= "ORDER BY kykm_id;"   'kykm.にするとエラーが出る
@@ -201,6 +248,29 @@ Partial Public Class Form_f_flx_KHIYO
         dgv_LIST.HideColumns("kykm_id", "kykh_id")
 
         dgv_LIST.FormatColumn("期間計上額", FMT_CURRENCY)
+    End Sub
+
+    ' グレーアウト判定（期間外かつ計上額0の行を灰色表示）
+    Private Sub ApplyGrayOut()
+        For Each row As DataGridViewRow In dgv_LIST.Rows
+            If row.IsNewRow Then Continue For
+
+            Dim startDt = If(IsDBNull(row.Cells("開始日").Value), Date.MinValue, CDate(row.Cells("開始日").Value))
+            Dim endDt = If(IsDBNull(row.Cells("終了日").Value), Date.MaxValue, CDate(row.Cells("終了日").Value))
+            Dim keijoAmount = If(IsDBNull(row.Cells("期間計上額").Value), 0D, CDec(row.Cells("期間計上額").Value))
+            Dim isTaisho As Boolean = False
+
+            If startDt <= DtTo AndAlso endDt >= DtFrom Then
+                isTaisho = True
+            ElseIf keijoAmount <> 0 Then
+                isTaisho = True
+            End If
+
+            If Not isTaisho Then
+                row.DefaultCellStyle.ForeColor = Color.Gray
+                row.DefaultCellStyle.BackColor = Color.FromArgb(240, 240, 240)
+            End If
+        Next
     End Sub
 
     ' [閉じる]ボタン
@@ -314,40 +384,4 @@ Partial Public Class Form_f_flx_KHIYO
         HandleEnterKeyNavigation(Me, e)
     End Sub
 
-    Private Sub AddRecConditions(ByRef sb As StringBuilder)
-        ' Trueが1つもなければReturn
-        If CheckRecFlags Is Nothing OrElse Not CheckRecFlags.Any(Function(f) f = True) Then
-            Return
-        End If
-
-        Dim whereClause = "AND ("
-        Dim trueList = New List(Of String)
-
-        ' 1. 支払額
-        If CheckRecFlags(0) Then
-            trueList.Add("kykm.kjkbn_id = 1")
-        End If
-
-        ' 3. 償却費
-        If CheckRecFlags(2) Then
-            trueList.Add("kykm.kjkbn_id = 2 AND kykm.taiyo_nen_ms_f = -1")
-        End If
-
-        ' 4. 支払利息
-        If CheckRecFlags(3) Then
-        End If
-
-        ' 5. 維持管理費用
-        If CheckRecFlags(4) Then
-            trueList.Add("kykm.kjkbn_id = 2 AND kykm.ijiknr IS NOT NULL")
-        End If
-
-        ' 6, 7. 減損
-        If CheckRecFlags(5) OrElse CheckRecFlags(6) Then
-            trueList.Add("kykm.b_gson_f = True")
-        End If
-
-        ' ORで結合
-        sb.AppendLine($"AND ( {String.Join(" OR ", trueList)} )")
-    End Sub
 End Class
