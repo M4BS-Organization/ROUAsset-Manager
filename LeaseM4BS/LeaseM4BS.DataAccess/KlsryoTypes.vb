@@ -10,8 +10,10 @@ End Enum
 
 ''' <summary>計上タイミング (Access版 engSHRI_KTMG)</summary>
 Public Enum ShriKtmg
-    SimeDtBase = 1  ' 締日ベース
-    ShriDtBase = 2  ' 支払日ベース
+    Nothing_ = 0     ' 未設定
+    SimeDtBase = 1   ' 締日ベース
+    ShriDtBase = 2   ' 支払日ベース
+    ShriRDtBase = 3  ' 前月支払日ベース
 End Enum
 
 ''' <summary>明細単位 (Access版 engSHRI_MEISAI)</summary>
@@ -22,13 +24,17 @@ End Enum
 
 ''' <summary>契約区分 (Access版 engKKBN)</summary>
 Public Enum Kkbn
-    Lease = 1    ' リース
-    Rental = 2   ' レンタル
-    Hoshu = 3    ' 保守
+    Nothing_ = 0  ' 未設定
+    Lease = 1     ' リース
+    Rental = 2    ' レンタル
+    Hoshu = 3     ' 保守
+    Iten = 4      ' 移転リース
+    Other = 99    ' その他
 End Enum
 
 ''' <summary>計上区分 (Access版 engKJKBN)</summary>
 Public Enum Kjkbn
+    None = 0    ' 未設定
     Hiyo = 1    ' 費用
     Sisan = 2   ' 資産
 End Enum

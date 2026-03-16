@@ -245,10 +245,10 @@ Public Class KlsryoCalculationEngine
                 teigakuSchedule = Nothing
                 hengakuSchedule = Nothing
 
-                Dim bKlsryo = GetDbl(row, "b_klsryo")
-                Dim bKzei = GetDbl(row, "b_kzei")
-                Dim bMlsryo = GetDbl(row, "b_mlsryo")
-                Dim bMzei = GetDbl(row, "b_mzei")
+                Dim bKlsryo = GetDbl(row, "h_klsryo")
+                Dim bKzei = GetDbl(row, "h_kzei")
+                Dim bMlsryo = GetDbl(row, "h_mlsryo")
+                Dim bMzei = GetDbl(row, "h_mzei")
 
                 If (bKlsryo <> 0 OrElse bKzei <> 0 OrElse bMlsryo <> 0 OrElse bMzei <> 0) Then
                     Dim shriCnt = row("shri_cnt")
@@ -362,6 +362,24 @@ Public Class KlsryoCalculationEngine
         End If
 
         For Each henfRow As DataRow In henfDt.Rows
+            ' 事前フィルタ: 集計期間外の付随費用をスキップ (Access版 mKLSRYO_Sub_HENF 準拠)
+            Dim henfShriDt1 As Date = CDate(henfRow("shri_dt1"))
+            Dim henfShriKn As Integer = CInt(henfRow("shri_kn"))
+            Dim henfShriCnt As Integer = CInt(henfRow("shri_cnt"))
+            Dim henfSshriKn As Integer = CInt(henfRow("sshri_kn"))
+            Dim henfIlDay As Integer = If(henfShriDt1.Day >= DateTime.DaysInMonth(henfShriDt1.Year, henfShriDt1.Month), 31, henfShriDt1.Day)
+            Dim lastShriDt As Date = CashScheduleBuilder.CalcNextShriDt(
+                henfShriDt1.Year, henfShriDt1.Month, (henfShriCnt - 1) * henfShriKn, henfIlDay)
+            If ktmg = ShriKtmg.ShriDtBase Then
+                If lastShriDt < kishuDt AndAlso henfShriDt1 < kishuDt Then Continue For
+                If henfShriDt1 > kimatDt Then Continue For
+            Else
+                Dim lastSimeDt As Date = CashScheduleBuilder.CalcSimeDtB(lastShriDt.Year, lastShriDt.Month, lastShriDt.Day, henfSshriKn)
+                If lastSimeDt < kishuDt Then Continue For
+                Dim firstSimeDt As Date = CashScheduleBuilder.CalcSimeDtB(henfShriDt1.Year, henfShriDt1.Month, henfShriDt1.Day, henfSshriKn)
+                If firstSimeDt > kimatDt Then Continue For
+            End If
+
             ' スケジュール生成
             Dim schedule = CashScheduleBuilder.BuildCommonSchedule(
                 ktmg,
@@ -578,17 +596,17 @@ Public Class KlsryoCalculationEngine
 
                 ' 1〜5年超 振り分け
                 If compareDate <= ynKimatDt(0) Then
-                    lsryoYoku1NaiCf += entry.Lsryo : zeiYoku1NaiCf += entry.Lsryo
+                    lsryoYoku1NaiCf += entry.Lsryo : zeiYoku1NaiCf += entry.Zei
                 ElseIf compareDate <= ynKimatDt(1) Then
-                    lsryoYoku2NaiCf += entry.Lsryo : zeiYoku2NaiCf += entry.Lsryo
+                    lsryoYoku2NaiCf += entry.Lsryo : zeiYoku2NaiCf += entry.Zei
                 ElseIf compareDate <= ynKimatDt(2) Then
-                    lsryoYoku3NaiCf += entry.Lsryo : zeiYoku3NaiCf += entry.Lsryo
+                    lsryoYoku3NaiCf += entry.Lsryo : zeiYoku3NaiCf += entry.Zei
                 ElseIf compareDate <= ynKimatDt(3) Then
-                    lsryoYoku4NaiCf += entry.Lsryo : zeiYoku4NaiCf += entry.Lsryo
+                    lsryoYoku4NaiCf += entry.Lsryo : zeiYoku4NaiCf += entry.Zei
                 ElseIf compareDate <= ynKimatDt(4) Then
-                    lsryoYoku5NaiCf += entry.Lsryo : zeiYoku5NaiCf += entry.Lsryo
+                    lsryoYoku5NaiCf += entry.Lsryo : zeiYoku5NaiCf += entry.Zei
                 Else
-                    lsryoYoku5ChoCf += entry.Lsryo : zeiYoku5ChoCf += entry.Lsryo
+                    lsryoYoku5ChoCf += entry.Lsryo : zeiYoku5ChoCf += entry.Zei
                 End If
             End If
         Next
@@ -814,7 +832,13 @@ Public Class KlsryoCalculationEngine
 
         ' 法令区分 (Access版 gCalc法令判定 準拠)
         Dim refDt As Object = sourceRow("kyak_dt")
-        If IsDBNull(refDt) Then refDt = sourceRow("start_dt")
+        If IsDBNull(refDt) Then
+            refDt = sourceRow("start_dt")
+        ElseIf Not IsDBNull(sourceRow("start_dt")) Then
+            If CDate(sourceRow("start_dt")) < CDate(refDt) Then
+                refDt = sourceRow("start_dt")
+            End If
+        End If
         If Not IsDBNull(refDt) Then
             If CDate(refDt) >= sekouDt Then
                 r("法令区分") = "新法"
@@ -895,26 +919,35 @@ Public Class KlsryoCalculationEngine
         r("物件No") = henfRow("kykm_kykm_no")
         r("再回") = If(IsDBNull(henfRow("kykm_saikaisu")), DBNull.Value, henfRow("kykm_saikaisu"))
         r("配No") = If(haifInfo IsNot Nothing, CObj(haifInfo.LineId), DBNull.Value)
-        r("契区") = GetNameFromMaster("SELECT kkbn_nm FROM c_kkbn WHERE kkbn_id = @id", henfRow("kkbn_id"))
+        r("契区") = "保守"
         r("行区") = "付随費用"
         r("計上区分") = GetNameFromMaster("SELECT kjkbn_nm FROM c_kjkbn WHERE kjkbn_id = @id", Kjkbn.Hiyo)
 
         ' 法令区分
         Dim refDt As Object = henfRow("kyak_dt")
-        If IsDBNull(refDt) Then refDt = henfRow("start_dt")
+        If IsDBNull(refDt) Then
+            refDt = henfRow("start_dt")
+        ElseIf Not IsDBNull(henfRow("start_dt")) Then
+            If CDate(henfRow("start_dt")) < CDate(refDt) Then
+                refDt = henfRow("start_dt")
+            End If
+        End If
         If Not IsDBNull(refDt) Then
             r("法令区分") = If(CDate(refDt) >= sekouDt, "新法", "旧法")
         End If
         r("取引区分") = "費用計上"
 
         r("リース区分") = GetNameFromMaster("SELECT leakbn_nm FROM c_leakbn WHERE leakbn_id = @id", henfRow("leakbn_id"))
-        r("契約番号") = If(IsDBNull(henfRow("kykbnl")), DBNull.Value, henfRow("kykbnl"))
-        r("支払先") = GetNameFromMaster("SELECT lcpt1_nm FROM m_lcpt WHERE lcpt_id = @id", henfRow("lcpt_id"))
+        r("契約番号") = If(IsDBNull(henfRow("kykbnf")), DBNull.Value, henfRow("kykbnf"))
+        r("支払先") = GetNameFromMaster("SELECT lcpt1_nm FROM m_lcpt WHERE lcpt_id = @id", henfRow("f_lcpt_id"))
         r("物件名") = If(IsDBNull(henfRow("bukn_nm")), DBNull.Value, henfRow("bukn_nm"))
         r("管理部署") = GetNameFromMaster("SELECT bcat1_nm FROM m_bcat WHERE bcat_id = @id", henfRow("b_bcat_id"))
 
         If haifInfo IsNot Nothing Then
             r("費用負担部署") = GetNameFromMaster("SELECT bcat1_nm FROM m_bcat WHERE bcat_id = @id", haifInfo.HBcatId)
+            r("費用区分") = GetNameFromMaster("SELECT hkmk_nm FROM c_hkmk WHERE hkmk_id = @id", haifInfo.HkmkId)
+        Else
+            r("費用区分") = GetNameFromMaster("SELECT hkmk_nm FROM c_hkmk WHERE hkmk_id = @id", henfRow("f_hkmk_id"))
         End If
 
         r("開始日") = If(IsDBNull(henfRow("start_dt")), DBNull.Value, henfRow("start_dt"))
