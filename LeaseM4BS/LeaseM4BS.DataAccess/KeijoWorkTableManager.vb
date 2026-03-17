@@ -64,6 +64,8 @@ Public Class KeijoWorkTableManager
                     InsertChukiKeijo(row)
                 Case KeijoTargetTable.HenlKeijo
                     InsertHenlKeijo(row)
+                Case KeijoTargetTable.GsonKeijo
+                    InsertGsonKeijo(row)
             End Select
         Next
     End Sub
@@ -76,6 +78,31 @@ Public Class KeijoWorkTableManager
     ''' <summary>変額仕訳ワーク1行書込</summary>
     Public Sub InsertHenlKeijo(row As KeijoWorkRow)
         InsertKeijoRow("tw_d_henl_keijo", row)
+    End Sub
+
+    ''' <summary>減損仕訳ワーク1行書込 (tw_d_gson_keijo)</summary>
+    Public Sub InsertGsonKeijo(row As KeijoWorkRow)
+        Dim sql As String =
+            "INSERT INTO tw_d_gson_keijo (" &
+            "kykm_id, kykh_id, kjkbn_id, gson_dt, gson_tmg, " &
+            "gson_ryo, gson_nm, lsryo_toki, keijo_dt, shori_dt" &
+            ") VALUES (" &
+            "@kykm_id, @kykh_id, @kjkbn_id, @gson_dt, @gson_tmg, " &
+            "@gson_ryo, @gson_nm, @lsryo_toki, @keijo_dt, @shori_dt)"
+
+        Dim params As New List(Of NpgsqlParameter)()
+        params.Add(New NpgsqlParameter("@kykm_id", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.KykmId})
+        params.Add(New NpgsqlParameter("@kykh_id", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.KykhId})
+        params.Add(MakeParam("@kjkbn_id", row.KjkbnId))
+        params.Add(MakeParam("@gson_dt", row.GsonDt))
+        params.Add(New NpgsqlParameter("@gson_tmg", NpgsqlTypes.NpgsqlDbType.Integer) With {.Value = 0})  ' 月度末固定
+        params.Add(New NpgsqlParameter("@gson_ryo", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.Lsryo})
+        params.Add(New NpgsqlParameter("@gson_nm", NpgsqlTypes.NpgsqlDbType.Varchar) With {.Value = ""})
+        params.Add(New NpgsqlParameter("@lsryo_toki", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.LsryoToki})
+        params.Add(MakeParam("@keijo_dt", row.KejoDt))
+        params.Add(New NpgsqlParameter("@shori_dt", NpgsqlTypes.NpgsqlDbType.Date) With {.Value = row.ShoriDt})
+
+        _crud.ExecuteNonQuery(sql, params)
     End Sub
 
     ''' <summary>共通 INSERT ロジック (tw_s_chuki_keijo / tw_d_henl_keijo 共通スキーマ)</summary>
@@ -127,7 +154,7 @@ Public Class KeijoWorkTableManager
         params.Add(New NpgsqlParameter("@ckaiyk_f", NpgsqlTypes.NpgsqlDbType.Boolean) With {.Value = row.CkaiykF})
         params.Add(New NpgsqlParameter("@keijo_f", NpgsqlTypes.NpgsqlDbType.Boolean) With {.Value = row.KeijoF})
         params.Add(MakeParam("@keijo_dt", row.KejoDt))
-        params.Add(New NpgsqlParameter("@sumikaisu_zen", NpgsqlTypes.NpgsqlDbType.Integer) With {.Value = row.SumikaisuZen})
+        params.Add(MakeParam("@sumikaisu_zen", row.SumikaisuZen))
         params.Add(New NpgsqlParameter("@keijo_shri_cnt", NpgsqlTypes.NpgsqlDbType.Integer) With {.Value = row.KeijoShriCnt})
         params.Add(New NpgsqlParameter("@lsryo_total", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.LsryoTotal})
         params.Add(New NpgsqlParameter("@lsryo_toki", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.LsryoToki})

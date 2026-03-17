@@ -146,8 +146,8 @@ Public Class KeijoCalculationEngine
             _fuzuiSchCnt = 0
             If CInt(row("kykm_kjkbn_id")) = CInt(Kjkbn.Hiyo) Then
                 If GetBool(row, "b_gson_f") Then
-                    Dim gsonSql As String = KeijoSqlBuilder.BuildGsonSql(CInt(row("kykm_kykm_id")))
-                    Dim gsonDt As DataTable = _crud.GetDataTable(gsonSql)
+                    Dim gsonSqlResult = KeijoSqlBuilder.BuildGsonSql(CInt(row("kykm_kykm_id")))
+                    Dim gsonDt As DataTable = _crud.GetDataTable(gsonSqlResult.Sql, gsonSqlResult.Parameters)
                     ' 減損スケジュールは付随費用スケジュールとして利用
                     _fuzuiSch = BuildGsonSchedule(gsonDt)
                     _fuzuiSchCnt = _fuzuiSch.Count
@@ -331,8 +331,8 @@ Public Class KeijoCalculationEngine
                 _fuzuiSchCnt = 0
                 If CInt(row("kykm_kjkbn_id")) = CInt(Kjkbn.Hiyo) Then
                     If GetBool(row, "b_gson_f") Then
-                        Dim gsonSql As String = KeijoSqlBuilder.BuildGsonSql(CInt(row("kykm_kykm_id")))
-                        Dim gsonDt As DataTable = _crud.GetDataTable(gsonSql)
+                        Dim gsonSqlResult = KeijoSqlBuilder.BuildGsonSql(CInt(row("kykm_kykm_id")))
+                        Dim gsonDt As DataTable = _crud.GetDataTable(gsonSqlResult.Sql, gsonSqlResult.Parameters)
                         _fuzuiSch = BuildGsonSchedule(gsonDt)
                         _fuzuiSchCnt = _fuzuiSch.Count
                     End If
@@ -1123,9 +1123,10 @@ Public Class KeijoCalculationEngine
         ' 補完行のロジックは Access版 mKEIJO_Sub_SCHtoWK_ADD_DATA を VB.NET化
 
         ' 現在の集計月範囲を不要行補完管理の登録から取得
+        Dim kykmId As Double = GetDbl(sourceRow, "kykm_kykm_id")
         Dim registeredDates As New HashSet(Of String)()
         For Each entry As HoyoKanriEntry In _hoyoKanriList
-            If entry.KykmId = keijoResult.LcptId Then ' KykmId で代用 (実際は KykmId)
+            If entry.KykmId = kykmId Then
                 registeredDates.Add(entry.KeijoDate.ToString("yyyyMM"))
             End If
         Next

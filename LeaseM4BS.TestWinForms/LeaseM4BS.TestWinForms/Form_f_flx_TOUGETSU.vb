@@ -3,7 +3,12 @@ Imports Npgsql
 
 Public Class Form_f_flx_TOUGETSU
     Public Property LabelText As String
+    Public Property Joken As KeijoJoken
+    Public Property DtFrom As Date
+    Public Property DtTo As Date
+
     Private _crud As CrudHelper = New CrudHelper()
+    Private _engine As MonthlyJournalEngine
 
     Private Sub Form_f_flx_MONTHLY_JOURNAL_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         lbl_CONDITION.Text = LabelText
@@ -12,6 +17,45 @@ Public Class Form_f_flx_TOUGETSU
     End Sub
 
     Private Sub SearchData()
+        If Joken IsNot Nothing Then
+            ExecuteEngine()
+            Return
+        End If
+
+        SearchDataLegacy()
+    End Sub
+
+    ''' <summary>MonthlyJournalEngine で計上計算を実行し、結果を表示する</summary>
+    Private Sub ExecuteEngine()
+        Try
+            Me.Cursor = Cursors.WaitCursor
+
+            _engine = New MonthlyJournalEngine(_crud)
+            Dim success As Boolean = _engine.Execute(DtFrom, DtTo, Joken)
+
+            If Not success Then
+                MessageBox.Show("計上計算に失敗しました。")
+                Return
+            End If
+
+            dgv_LIST.Columns.Clear()
+            dgv_LIST.AutoGenerateColumns = True
+            dgv_LIST.DataSource = _engine.GetChukiKeijoResult()
+
+            ApplyGridStyle()
+
+            Dim counts = _engine.GetResultCounts()
+            lbl_CONDITION.Text = LabelText & $"  [注記:{counts.ChukiCount}件 変額:{counts.HenlCount}件]"
+
+        Catch ex As Exception
+            MessageBox.Show("計上計算エラー: " & ex.Message)
+        Finally
+            Me.Cursor = Cursors.Default
+        End Try
+    End Sub
+
+    ''' <summary>従来のSQL一覧表示（条件パラメータなしの場合の互換動作）</summary>
+    Private Sub SearchDataLegacy()
         Try
             Dim prms As New List(Of NpgsqlParameter)
             Dim sql = BuildSql(txt_SEARCH.Text.Trim(), prms)
