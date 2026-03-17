@@ -217,8 +217,8 @@ Public Class KeijoWorkTableManager
     Public Sub ClearChukiCalc()
         Try
             _crud.ExecuteNonQuery("DELETE FROM tw_s_chuki_calc")
-        Catch
-            ' テーブルが存在しない場合は無視
+        Catch ex As Npgsql.PostgresException When ex.SqlState = "42P01"
+            ' テーブルが存在しない場合(undefined_table)は無視
         End Try
     End Sub
 
@@ -354,7 +354,8 @@ Public Class KeijoWorkTableManager
     Public Function GetChukiCalcCount() As Integer
         Try
             Return _crud.ExecuteScalar(Of Integer)("SELECT COUNT(*) FROM tw_s_chuki_calc")
-        Catch
+        Catch ex As Npgsql.PostgresException When ex.SqlState = "42P01"
+            ' テーブルが存在しない場合(undefined_table)は0件とみなす
             Return 0
         End Try
     End Function
