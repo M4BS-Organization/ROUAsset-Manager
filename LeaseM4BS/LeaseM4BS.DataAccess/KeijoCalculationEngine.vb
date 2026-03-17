@@ -170,7 +170,7 @@ Public Class KeijoCalculationEngine
                         GetNullableInt(row, "shho_2_id"), GetNullableInt(row, "shho_3_id"),
                         GetNullableDate(row, "mae_dt"),
                         GetNullableDate(row, "shri_dt1"), GetNullableDate(row, "shri_dt2"),
-                        GetNullableDate(row, "shri_dt3"),
+                        GetInt(row, "shri_dt3"),
                         GetDbl(row, "zritu"),
                         klsryo, kzei, mlsryo, mzei,
                         GetNullableDate(row, "ckaiyk_esdt_t")
@@ -357,7 +357,7 @@ Public Class KeijoCalculationEngine
                         GetNullableInt(row, "shho_2_id"), GetNullableInt(row, "shho_3_id"),
                         GetNullableDate(row, "mae_dt"),
                         GetNullableDate(row, "shri_dt1"), GetNullableDate(row, "shri_dt2"),
-                        GetNullableDate(row, "shri_dt3"),
+                        GetInt(row, "shri_dt3"),
                         GetDbl(row, "zritu"),
                         klsryo, kzei, mlsryo, mzei,
                         GetNullableDate(row, "ckaiyk_esdt_t")
