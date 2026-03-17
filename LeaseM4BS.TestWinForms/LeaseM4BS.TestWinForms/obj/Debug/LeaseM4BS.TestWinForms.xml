@@ -6,6 +6,20 @@ LeaseM4BS.TestWinForms
 </name>
 </assembly>
 <members>
+<member name="M:My.MyApplication.MyApplication_Startup(System.Object,Microsoft.VisualBasic.ApplicationServices.StartupEventArgs)">
+ <summary>
+ アプリ起動時にログインフォームを表示する（Access版 p_StartUp_gMain 相当）。
+ 1. バージョン情報をログ出力
+ 2. ログインフォーム表示
+ 3. 認証成功(DialogResult.OK)ならセッション情報をセットしメインメニューへ進む
+ 4. それ以外はアプリを終了する
+ </summary>
+</member>
+<member name="M:My.MyApplication.MyApplication_Shutdown(System.Object,System.EventArgs)">
+ <summary>
+ アプリ終了時にログアウトログを記録する（Access版 gLOGOFF 相当）
+ </summary>
+</member>
 <member name="T:My.Resources.Resources">
 <summary>
   ローカライズされた文字列などを検索するための、厳密に型指定されたリソース クラスです。
@@ -112,9 +126,62 @@ LeaseM4BS.TestWinForms
  例15: 接続テスト
  </summary>
 </member>
+<member name="M:FileHelper.GetColumnByteWidth(System.Windows.Forms.DataGridViewColumn,System.Collections.Generic.Dictionary{System.String,System.Int32})">
+ <summary>
+ 列のバイト幅を取得します（辞書 → Tag → デフォルトの優先順位）
+ </summary>
+</member>
 <member name="M:FileHelper.PadRightByte(System.String,System.Int32)">
  <summary>
  文字列をバイト数指定でパディング（または切り捨て）します
+ </summary>
+</member>
+<member name="M:LoginSession.LoadPermissions(System.Int32)">
+ <summary>
+ ログイン成功時に sec_kngn から権限情報を取得してセットする
+ </summary>
+</member>
+<member name="M:LoginSession.Clear">
+ <summary>
+ ログアウト時にセッション情報をクリアする
+ </summary>
+</member>
+<member name="M:LoginSession.InitUserSet">
+ <summary>
+ ユーザーセット初期化 (Gap 5: Access版 gInitUserSet に相当)
+ sec_kngn と sec_user のマスタをメモリにロードし、フラグをセットする
+ </summary>
+</member>
+<member name="M:LoginSession.LoadTouseiOptions">
+ <summary>
+ 月次オプション読込 (Gap 6: Access版 GetTousei_OPT に相当)
+ T_OPT テーブルからログ出力フラグ等を読み込む
+ </summary>
+</member>
+<member name="M:LoginSession.WriteAuditLog(System.String,System.String)">
+ <summary>
+ 操作ログをDBに記録する（Access版 olSLOG.OutputSLOG 相当）
+ </summary>
+ <param name="operationType">操作種別（OP_LOGIN, OP_LOGIN_ERR, OP_LOGOUT, OP_PWD_CHANGE）</param>
+ <param name="detail">操作詳細</param>
+</member>
+<member name="M:Form_f_LOGIN_JET.VerifyPassword(System.String,System.String)">
+ <summary>
+ パスワードを検証する
+ 1. SHA256ハッシュとして比較
+ 2. 一致しなければ平文として比較（フォールバック）
+ </summary>
+</member>
+<member name="M:Form_f_LOGIN_JET.ComputeSha256Hash(System.String)">
+ <summary>
+ SHA256ハッシュを計算する
+ </summary>
+</member>
+<member name="M:Form_f_LOGIN_JET.DecryptAccessPassword(System.String)">
+ <summary>
+ Access版 pc_Encrypt.gDecrypt 互換の復号処理
+ 暗号化キー: "ILTEX KUBOKI&amp;TANI"
+ 形式: 先頭4文字がシード値、以降4文字ごとに16進数の暗号化データ
  </summary>
 </member>
 </members>

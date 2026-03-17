@@ -12,6 +12,7 @@ End Enum
 Public Enum KeijoTargetTable
     ChukiKeijo = 1   ' tw_s_chuki_keijo (注記計上ワーク)
     HenlKeijo = 2    ' tw_d_henl_keijo (変額仕訳ワーク)
+    GsonKeijo = 3    ' tw_d_gson_keijo (減損計上ワーク)
 End Enum
 
 ''' <summary>

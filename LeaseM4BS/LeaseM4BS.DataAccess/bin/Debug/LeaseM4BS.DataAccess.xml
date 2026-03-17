@@ -6,6 +6,44 @@ LeaseM4BS.DataAccess
 </name>
 </assembly>
 <members>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.BuildTeigakuSchedule(LeaseM4BS.DataAccess.ShriKtmg,System.DateTime,System.DateTime,System.DateTime,System.Boolean,System.Int32,System.Object,System.Int32,System.Int32,System.Int32,System.Int32,System.Object,System.Object,System.Object,System.Object,System.Object,System.DateTime,System.Object,System.Int32,System.Double,System.Double,System.Double,System.Double,System.Double,System.Object)">
+ <summary>
+ 定額キャッシュスケジュール生成 (Access版 gMakeCASH_SCH_T)
+ 前払→第1回→第2回→第3回以降(支払間隔で生成)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.BuildHengakuSchedule(LeaseM4BS.DataAccess.CrudHelper,System.Double,System.Object)">
+ <summary>
+ 変額キャッシュスケジュール生成 (Access版 gMakeCASH_SCH_H)
+ D_HENL テーブルから読み取り
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.BuildCommonSchedule(LeaseM4BS.DataAccess.ShriKtmg,System.Int32,System.Int32,System.Int32,System.Object,System.DateTime,System.Double,System.Double,System.Double,System.Object)">
+ <summary>
+ 汎用キャッシュスケジュール生成 (Access版 gMakeCASH_SCH_COM)
+ 付随費用の単一レコード用
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.CalcNextShriDt(System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 次回支払日計算 (Access版 gNEXT_SHRI_DT_CALC_B)
+ 指定年月の指定月数後の年月日を求める
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.CalcSimeDtB(System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 締日計算 (Access版 gSIME_DT_CALC_B)
+ 締日=月末(ig締日=31)前提で計算
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.CalcSimeDtFromShriDt(System.DateTime,System.Int32)">
+ <summary>
+ 締日取得 (Access版 g締日Get に相当): 支払日と締支払間隔から締日を算出
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleBuilder.GetMonthEndDate(System.DateTime)">
+ <summary>月末日取得 (Access版 g末日YMDGet に相当)</summary>
+</member>
 <member name="T:LeaseM4BS.DataAccess.CrudHelper">
  <summary>
  PostgreSQL データベースに対する汎用的な CRUD 操作を提供するヘルパークラス
@@ -195,6 +233,869 @@ LeaseM4BS.DataAccess
  <summary>
  デストラクタ
  </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoCalculationEngine">
+ <summary>
+ 計上計算エンジン (Access版 pc_SHRI_KEIJO.gKEIJO_Main 相当)
+ 1ヶ月分の計上データを計算し、KeijoWorkRow のリストとして返す。
+ </summary>
+</member>
+<member name="F:LeaseM4BS.DataAccess.KeijoCalculationEngine._sekouDt">
+ <summary>施行日キャッシュ</summary>
+</member>
+<member name="F:LeaseM4BS.DataAccess.KeijoCalculationEngine._hoyoKanriList">
+ <summary>
+ 不要行補完管理 (Access版 tm不要行補完管理() 相当)
+ 移転外ファイナンスリースの計上済み月を追跡する。
+ </summary>
+</member>
+<member name="F:LeaseM4BS.DataAccess.KeijoCalculationEngine._fuzuiSch">
+ <summary>
+ 付随費用スケジュール (Access版 tm付随費用_SCH() 相当)
+ 費用計上で減損ありの場合に使用。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.Execute(LeaseM4BS.DataAccess.KeijoJoken,System.DateTime,System.DateTime)">
+ <summary>
+ 計上計算エンジンメイン (Access版 gKEIJO_Main)
+ 1ヶ月分の計上データを計算し、KeijoWorkRow のリストとして返す。
+ </summary>
+ <param name="joken">計上条件</param>
+ <param name="kishuDt">期首日（月初日）</param>
+ <param name="kimatDt">期末日（月末日）</param>
+ <returns>計上ワーク行のリスト</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ExecuteChuki(LeaseM4BS.DataAccess.KeijoJoken,System.DateTime,System.DateTime)">
+ <summary>
+ 注記計算メイン (Access版 pc_注記.m注記計算_main)
+ 全対象物件に対して償却/返済/債務スケジュールを生成し、注記結果を返す。
+ </summary>
+ <param name="joken">計上条件</param>
+ <param name="kishuDt">期首日</param>
+ <param name="kimatDt">期末日</param>
+ <returns>物件ID→注記計算結果のリスト</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.BuildShiharaiSchForChuki(System.Data.DataRow,LeaseM4BS.DataAccess.ChukiCalcParams,System.Double)">
+ <summary>
+ 注記用支払スケジュール生成 (Access版 gMake支払_SCH 相当)
+ CashScheduleBuilder のスケジュールを ShiharaiSchEntry に変換する。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ConvertCashToShiharai(System.Collections.Generic.List{LeaseM4BS.DataAccess.CashScheduleEntry},LeaseM4BS.DataAccess.ShriKtmg,System.Collections.Generic.List{LeaseM4BS.DataAccess.ShiharaiSchEntry})">
+ <summary>
+ CashScheduleEntry リストを ShiharaiSchEntry に変換して結果リストに追加する
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetSourceData(System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken)">
+ <summary>
+ 計上用ソースデータ取得 (Access版 gMOTO_RSETSQL_EDIT_KEIJO 相当)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ProcessKykm(System.Data.DataTable,System.DateTime,System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken)">
+ <summary>
+ 物件単位処理 (Access版 mKEIJO_Sub_KYKM)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ProcessHaif(System.Data.DataTable,System.DateTime,System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken)">
+ <summary>
+ 配賦単位処理 (Access版 mKEIJO_Sub_HAIF)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ProcessHaifHengaku(System.Data.DataRow,System.Collections.Generic.List{LeaseM4BS.DataAccess.HaifInfo},System.DateTime,System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken,LeaseM4BS.DataAccess.HensaiKind,LeaseM4BS.DataAccess.ShriKtmg)">
+ <summary>配賦単位の変額処理</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ProcessHenf(System.DateTime,System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken)">
+ <summary>
+ 付随費用処理 (Access版 mKEIJO_Sub_HENF)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.CalcKeijoFromSchedule(LeaseM4BS.DataAccess.ShriKtmg,System.DateTime,System.DateTime,System.DateTime,System.Object,System.Object,System.Boolean,System.Collections.Generic.List{LeaseM4BS.DataAccess.CashScheduleEntry})">
+ <summary>
+ スケジュールから計上金額算出 (Access版 mCALC_KEIJOfromSCH)
+ 前期以前・当期・残高に各スケジュールエントリを分類する。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.IsTargetRecord(System.DateTime,System.DateTime,LeaseM4BS.DataAccess.ShriKtmg,System.Data.DataRow)">
+ <summary>
+ 集計対象判定 (Access版 mKEIJO_Sub_KYKM L440-480 参照)
+ 締日ベース/支払日ベースで判定ロジックが異なる。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ScheduleToWorkRows(System.Collections.Generic.List{LeaseM4BS.DataAccess.CashScheduleEntry},LeaseM4BS.DataAccess.KeijoResult,System.Data.DataRow,System.DateTime,System.DateTime,LeaseM4BS.DataAccess.ShriKtmg,LeaseM4BS.DataAccess.HensaiKind)">
+ <summary>
+ スケジュール各エントリを KeijoWorkRow に変換 (Access版 mKEIJO_Sub_SCHtoWK)
+ 集計期間内のエントリのみ出力行とする。
+ 前払い情報 (MAE_ZOU/MAE_GEN/MZEI_ZOU/MZEI_GEN) も算出する。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.SetKeijoFlag(LeaseM4BS.DataAccess.KeijoWorkRow,System.Data.DataRow,System.DateTime,System.DateTime)">
+ <summary>
+ 計上フラグを設定し、不要行補完管理に登録する (Access版 L_不要行補完管理_ADD)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.AddSupplementRows(System.Collections.Generic.List{LeaseM4BS.DataAccess.KeijoWorkRow},LeaseM4BS.DataAccess.KeijoResult,LeaseM4BS.DataAccess.HensaiKind,System.Data.DataRow)">
+ <summary>
+ 不要行補完出力 (Access版 mKEIJO_Sub_SCHtoWK_ADD)
+ 移転外ファイナンスリースの場合、支払と無関係な月に補完行を追加する。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ApplySokyu(System.Object,System.Collections.Generic.List{LeaseM4BS.DataAccess.CashScheduleEntry},LeaseM4BS.DataAccess.ShriKtmg)">
+ <summary>
+ 速給処理 (Access版 mUPD_CASHSCH_SOKYU)
+ 計上開始日以前のスケジュールエントリを無効化する。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetHoreiKbn(System.Object,System.Object,System.DateTime)">
+ <summary>
+ 法令区分取得 (Access版 mGET_法令区分)
+ 施行日と契約開始日を比較して旧法/新法を判定する。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetSekouDt">
+ <summary>施行日取得 (システム設定から)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.DetermineHensaiKindAndKtmg(System.Data.DataRow,LeaseM4BS.DataAccess.KeijoJoken,System.DateTime)">
+ <summary>
+ 返済方法・計上タイミング決定 (Access版 mKEIJO_Sub_KYKM の分岐ロジック)
+ 資産/費用・旧法/新法・移転外 の分岐を実装。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.ValidateSaJoken(System.String)">
+ <summary>
+ ユーザー指定フィルタ条件 (SaJoken) のSQLインジェクション検証
+ ホワイトリスト方式で安全なSQL断片のみ許可する。
+ </summary>
+ <param name="saJoken">ユーザー指定フィルタ条件</param>
+ <returns>検証済みSQL断片。不正な場合はNothing</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetDbl(System.Data.DataRow,System.String)">
+ <summary>DataRow から Double を安全に取得 (型変換エラー時は0)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetInt(System.Data.DataRow,System.String)">
+ <summary>DataRow から Integer を安全に取得 (型変換エラー時は0)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetBool(System.Data.DataRow,System.String)">
+ <summary>DataRow から Boolean を安全に取得 (型変換エラー時はFalse)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetNullableInt(System.Data.DataRow,System.String)">
+ <summary>DataRow から Nullable(Of Integer) を安全に取得 (型変換エラー時はDBNull)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetNullableDate(System.Data.DataRow,System.String)">
+ <summary>DataRow から Nullable(Of Date) を安全に取得 (型変換エラー時はDBNull)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.SetHaifZokusei(LeaseM4BS.DataAccess.KeijoResult,LeaseM4BS.DataAccess.HaifInfo)">
+ <summary>配賦情報のゼロ設定</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.LoadHaifInfo(System.Data.DataTable,System.Double)">
+ <summary>配賦情報の読み込み</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.LoadHenfHaifInfo(System.Data.DataTable,System.Double)">
+ <summary>付随費用用配賦情報の読み込み</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.BuildGsonSchedule(System.Data.DataTable)">
+ <summary>減損スケジュールを CashScheduleEntry のリストに変換</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoCalculationEngine.GetLineIdForCompare(System.Object)">
+ <summary>LINE_ID の比較用変換 (DBNull → 0)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.HoyoKanriEntry">
+ <summary>不要行補完管理エントリ</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.HoreiKbn">
+ <summary>法令区分定数</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.LeakbnKind">
+ <summary>リース区分定数 (移転外ファイナンスリース)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ChukiResultRow">
+ <summary>注記計算結果行 (物件単位)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoSqlBuilder">
+ <summary>
+ 計上用SQL生成クラス (Access版 gMOTO_RSETSQL_EDIT_KEIJO + m仕訳計算_SQLMAKE 相当)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoSqlBuilder.BuildSourceSql(LeaseM4BS.DataAccess.ShriMeisai,System.Int32,System.Boolean,System.Boolean)">
+ <summary>
+ 計上用ソースデータSQL生成 (Access版 gMOTO_RSETSQL_EDIT_KEIJO)
+ d_kykh JOIN d_kykm (物件単位) / d_kykh JOIN d_kykm JOIN d_haif (配賦単位)
+ </summary>
+ <param name="meisai">明細単位 (物件/配賦)</param>
+ <param name="taisho">対象区分 (1:リース, 2:保守, 3:全部)</param>
+ <param name="kjkbnSisan">計上区分: 資産を含む</param>
+ <param name="kjkbnHiyo">計上区分: 費用を含む</param>
+ <returns>SQL文字列とパラメータのタプル</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoSqlBuilder.BuildGsonSql(System.Int32)">
+ <summary>
+ 減損データ取得SQL (Access版 D_GSON テーブル参照)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoSqlBuilder.BuildHenfSql(LeaseM4BS.DataAccess.ShriMeisai)">
+ <summary>
+ 付随費用ソースSQL (Access版 mKEIJO_Sub_HENF 内の SQL)
+ d_henf テーブルから付随費用データを取得
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoSqlBuilder.BuildHenfHaifSql">
+ <summary>
+ 付随費用配賦情報SQL
+ </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.HensaiKind">
+ <summary>返済方法 (Access版 engHENSAI_KIND)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoTargetTable">
+ <summary>計上出力先テーブル区分</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoJoken">
+ <summary>
+ 計上条件（画面入力パラメータ）
+ Access版 gKEIJO_Main の引数に相当
+ </summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.Meisai">
+ <summary>明細単位 (1:物件 / 2:配賦)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.Taisho">
+ <summary>対象区分 (1:リース / 2:保守 / 3:全部)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.KjkbnSisan">
+ <summary>計上区分: 資産を含む</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.KjkbnHiyo">
+ <summary>計上区分: 費用を含む</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.SaJoken">
+ <summary>ユーザー指定フィルタ条件 (SQL WHERE句断片)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.HensaiKindShinhoHiyo">
+ <summary>新法費用の返済方法 (画面指定)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.ShoriEndF">
+ <summary>処理完了残高当月埋めフラグ</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.KeijoJoken.SkyakHoId">
+ <summary>償却方法ID</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoResult">
+ <summary>
+ 計上計算結果 (Access版 cn_typ_mKEIJO の計算結果部分)
+ CalcKeijoFromSchedule の出力。
+ </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoWorkRow">
+ <summary>
+ 計上ワーク1行 (Access版 tw_S_CHUKI_KEIJO / tw_D_HENL_KEIJO の1レコードに相当)
+ KeijoCalculationEngine.ScheduleToWorkRows の出力。
+ </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KeijoWorkTableManager">
+ <summary>
+ 計上ワークテーブル管理クラス
+ KeijoCalculationEngine の計算結果をワークテーブルに書き込む。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.ClearChukiKeijo">
+ <summary>tw_s_chuki_keijo 全件削除</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.ClearHenlKeijo">
+ <summary>tw_d_henl_keijo 全件削除</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.ClearGsonKeijo">
+ <summary>tw_d_gson_keijo 全件削除</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.ClearAll">
+ <summary>全ワークテーブルクリア</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertWorkRows(System.Collections.Generic.List{LeaseM4BS.DataAccess.KeijoWorkRow})">
+ <summary>
+ KeijoWorkRow リストをワークテーブルに一括書込
+ TargetTable プロパティに応じて出力先を振り分ける。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertChukiKeijo(LeaseM4BS.DataAccess.KeijoWorkRow)">
+ <summary>注記計上ワーク1行書込</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertHenlKeijo(LeaseM4BS.DataAccess.KeijoWorkRow)">
+ <summary>変額仕訳ワーク1行書込</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertGsonKeijo(LeaseM4BS.DataAccess.KeijoWorkRow)">
+ <summary>減損計上ワーク1行書込</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertKeijoRow(System.String,LeaseM4BS.DataAccess.KeijoWorkRow)">
+ <summary>共通 INSERT ロジック (tw_s_chuki_keijo / tw_d_henl_keijo 共通スキーマ)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetChukiKeijoAll">
+ <summary>tw_s_chuki_keijo 全件取得（結果表示用）</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetHenlKeijoAll">
+ <summary>tw_d_henl_keijo 全件取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetGsonKeijoAll">
+ <summary>tw_d_gson_keijo 全件取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetChukiKeijoCount">
+ <summary>tw_s_chuki_keijo 件数取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetHenlKeijoCount">
+ <summary>tw_d_henl_keijo 件数取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.ClearChukiCalc">
+ <summary>tw_s_chuki_calc 全件削除</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertChukiCalcResults(System.Collections.Generic.List{LeaseM4BS.DataAccess.ChukiResultRow})">
+ <summary>注記計算結果リストを tw_s_chuki_calc に書込</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.InsertChukiCalcRow(LeaseM4BS.DataAccess.ChukiResultRow)">
+ <summary>注記計算結果1行書込</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetChukiCalcAll">
+ <summary>tw_s_chuki_calc 全件取得（結果表示用）</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.GetChukiCalcCount">
+ <summary>tw_s_chuki_calc 件数取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KeijoWorkTableManager.MakeParam(System.String,System.Object)">
+ <summary>DBNull対応パラメータ生成</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KlsryoCalculationEngine.Execute(System.DateTime,System.DateTime,System.Int32,LeaseM4BS.DataAccess.ShriKtmg,LeaseM4BS.DataAccess.ShriMeisai)">
+ <summary>
+ メイン計算処理 (Access版 gKLSRYO_Main)
+ 期間FROM/TO と各パラメータを受けて DataTable を返す
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KlsryoCalculationEngine.ApplyHaifritu(System.Collections.Generic.List{LeaseM4BS.DataAccess.CashScheduleEntry},System.Double)">
+ <summary>配賦率を適用したスケジュールのコピーを作成</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.KlsryoCalculationEngine.AddHenfResultRow(System.Data.DataTable,System.Data.DataRow,LeaseM4BS.DataAccess.KlsryoResult,LeaseM4BS.DataAccess.HaifInfo,System.DateTime)">
+ <summary>付随費用用の結果行追加</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.RecKbn">
+ <summary>行区分 (Access版 engSHRI_REC_KBN)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ShriKtmg">
+ <summary>計上タイミング (Access版 engSHRI_KTMG)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ShriMeisai">
+ <summary>明細単位 (Access版 engSHRI_MEISAI)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.Kkbn">
+ <summary>契約区分 (Access版 engKKBN)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.Kjkbn">
+ <summary>計上区分 (Access版 engKJKBN)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.CashScheduleEntry">
+ <summary>キャッシュスケジュール1エントリ (Access版 cn_typ_gSch_CASH)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.CashScheduleEntry.Clone">
+ <summary>エントリの複製を作成 (配賦按分用)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.KlsryoResult">
+ <summary>期間リース料計算結果 (Access版 cn_typ_mKLSRYO)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.HaifInfo">
+ <summary>配賦情報 (Access版 cn_typ_mHAIF)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFileWriter">
+ <summary>
+ DataTableから固定長テキストファイルを出力するライター
+ Access版 pc_仕訳出力 の gStrSizeAdjust + Format(Nz()) と同等ロジック
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFileWriter.WriteFile(System.String,System.Data.DataTable,System.Collections.Generic.List{LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef})">
+ <summary>
+ DataTableからフォーマット定義に従って固定長ファイルを出力する
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFileWriter.BuildRecord(System.Data.DataRow,System.Collections.Generic.List{LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef})">
+ <summary>
+ 1行分のレコード文字列を生成する（テスト用にPublic）
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFileWriter.FormatField(System.Object,LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef)">
+ <summary>
+ フィールド値をフォーマットしてパディングする
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFileWriter.FormatValue(System.Object,LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef)">
+ <summary>
+ 値にフォーマットを適用する
+ Access版: Format(Nz(value, 0), formatString) または gStrSizeAdjust(value, byteWidth)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFileWriter.PadRightByte(System.String,System.Int32)">
+ <summary>
+ Shift-JISバイト単位で右パディング（半角スペース）または切り捨て
+ Access版 gStrSizeAdjust() と同等
+ </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef">
+ <summary>
+ 固定長フィールド定義
+ </summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef.Name">
+ <summary>DB列名（DataTableのカラム名と一致）</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef.ByteWidth">
+ <summary>Shift-JISバイト幅</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.FixedLengthFieldDef.FormatString">
+ <summary>数値フォーマット文字列（Nothingの場合は文字列としてパディング）</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.KitokuFixedLengthFormats">
+ <summary>
+ KITOKU顧客向け固定長出力フォーマット定義
+ Access版 pc_仕訳出力.txt から正確に移植
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.KitokuFixedLengthFormats.GetCMSW2WRKFields">
+ <summary>
+ CMSW2WRK (伝票ワーク) フィールド定義 — 52フィールド
+ Access版: gCMSW2WRK出力() Lines 146-197
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.KitokuFixedLengthFormats.GetAPGDHWRKFields">
+ <summary>
+ APGDHWRK (金額概要ワーク) フィールド定義 — 72フィールド
+ Access版: gAPGDHWRK出力() Lines 266-346
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.KitokuFixedLengthFormats.GetAPGDDWRKFields">
+ <summary>
+ APGDDWRK (金額詳細ワーク) フィールド定義 — 31フィールド
+ Access版: gAPGDDWRK出力() Lines 417-451
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.LeaseM4BS.DataAccess.KitokuFixedLengthFormats.GetAPGDSWRKFields">
+ <summary>
+ APGDSWRK (支払ワーク) フィールド定義 — 62フィールド
+ Access版: gAPGDSWRK出力() Lines 519-581
+ </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.AmortizationScheduleBuilder">
+ <summary>
+ 償却スケジュール生成 (Access版 pc_注記.gMake償却_SCH)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.AmortizationScheduleBuilder.CalcShokyakuRitu(System.Int32)">
+ <summary>
+ 定率法の減価償却率を算出する (Access版 gCalc償却率)
+ M4互換モード: Int(ritu*1000000) → Long*0.1 → Long*0.00001
+ 計算式: 1 - n√0.1 = 1 - 0.1^(1/n)
+ </summary>
+ <param name="taiyoKikan">耐用月数 (リース期間)</param>
+ <returns>償却率 (月率)</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.AmortizationScheduleBuilder.Build(LeaseM4BS.DataAccess.ShokyakuHo,System.Nullable{System.Double},System.DateTime,System.Int32,System.DateTime,System.Double,System.Double,System.Collections.Generic.List{LeaseM4BS.DataAccess.GsonScheduleEntry},System.String@)">
+ <summary>
+ 償却スケジュールを生成する (Access版 gMake償却_SCH)
+ </summary>
+ <param name="skyakHo">償却方法 (定額法/定率法)</param>
+ <param name="skyakRitu">償却率 (定率法の場合のみ。定額法はNothing)</param>
+ <param name="startDt">開始日</param>
+ <param name="lkikan">リース期間月数</param>
+ <param name="rendDt">実際終了日 (終了日または中途解約日の前日)</param>
+ <param name="syutok">取得価額相当額</param>
+ <param name="zanryo">残価保証額 (なしの場合0)</param>
+ <param name="gsonSchedule">減損スケジュール</param>
+ <param name="warningMsg">ワーニングメッセージ (Out)</param>
+ <returns>償却スケジュールリスト</returns>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ChukiCalcEngine">
+ <summary>
+ 注記計算エンジン (Access版 pc_注記.m注記計算_main)
+ 償却・返済スケジュールの結果から注記用の各金額を算出する
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ChukiCalcEngine.Calculate(LeaseM4BS.DataAccess.ChukiCalcParams,System.Collections.Generic.List{LeaseM4BS.DataAccess.ShiharaiSchEntry},System.Collections.Generic.List{LeaseM4BS.DataAccess.GsonScheduleEntry},LeaseM4BS.DataAccess.CrudHelper)">
+ <summary>
+ 注記計算メイン (Access版 m注記計算_main)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ChukiCalcEngine.ClearAllPeriodBalances(LeaseM4BS.DataAccess.ChukiCalcResult)">
+ <summary>期末残高と翌期以降の全残高を0クリアする</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.GsonScheduleBuilder">
+ <summary>
+ 減損スケジュール生成 (Access版 pc_注記.gMake減損_SCH)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.GsonScheduleBuilder.Build(LeaseM4BS.DataAccess.CrudHelper,System.Double)">
+ <summary>
+ 減損スケジュールを生成する (Access版 gMake減損_SCH)
+ d_gson テーブルの減損レコードから GsonScheduleEntry リストを作成する
+ </summary>
+ <param name="crud">CrudHelper インスタンス</param>
+ <param name="kykmId">物件ID</param>
+ <returns>減損スケジュールリスト</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.GsonScheduleBuilder.BuildFromRows(System.Data.DataRowCollection)">
+ <summary>
+ DataRow配列から減損スケジュールを生成する (レコードセット未使用版)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.GsonScheduleBuilder.SafeConv``1(System.Object,``0)">
+ <summary>DBNull安全変換ヘルパー</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.RepaymentScheduleBuilder">
+ <summary>
+ 返済スケジュール生成 (Access版 pc_注記.gMake返済_SCH_約定支払用)
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.RepaymentScheduleBuilder.BuildYakujoShiharai(System.DateTime,System.Int32,System.DateTime,System.Double,System.Double,System.Double,System.Double,System.Nullable{System.Double},System.Boolean,System.Double,LeaseM4BS.DataAccess.RsokTmg,System.Collections.Generic.List{LeaseM4BS.DataAccess.ShiharaiSchEntry},System.Collections.Generic.List{LeaseM4BS.DataAccess.GsonScheduleEntry},LeaseM4BS.DataAccess.HensaiKind,System.String@)">
+ <summary>
+ 約定支払用返済スケジュールを生成する (Access版 gMake返済_SCH_約定支払用)
+ </summary>
+ <param name="startDt">開始日</param>
+ <param name="lkikan">リース期間月数</param>
+ <param name="rendDt">実際終了日</param>
+ <param name="syutok">取得価額相当額</param>
+ <param name="slsryo">総額リース料</param>
+ <param name="ijiknr">維持管理費用</param>
+ <param name="zanryo">残価保証額</param>
+ <param name="lbSoneki">リースバック売却損益</param>
+ <param name="ckaiykF">中途解約フラグ</param>
+ <param name="ksanRitu">計算利子率</param>
+ <param name="rsokTmg">先払/後払</param>
+ <param name="shiharaiSch">支払スケジュール</param>
+ <param name="gsonSchedule">減損スケジュール</param>
+ <param name="hensaiKind">返済方法</param>
+ <param name="warningMsg">ワーニングメッセージ (Out)</param>
+ <returns>返済スケジュールリスト。エラー時はNothing</returns>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ShokyakuHo">
+ <summary>償却方法 (Access版 engSKYAK_HO)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.RsokTmg">
+ <summary>先払/後払 (Access版 engRSOK_TMG)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.RcalcKind">
+ <summary>計算方法区分 (Access版 cngRCALC_*)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.LeaseKbn">
+ <summary>リース区分 (Access版 engLEAKBN)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.CashFlowKind">
+ <summary>キャッシュフロー区分 (Access版 eng_KIND)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.GsonScheduleEntry">
+ <summary>減損スケジュール1行 (Access版 cn_typ_gSch_減損)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.Nen">
+ <summary>年度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.Getu">
+ <summary>月度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.GsonTmg">
+ <summary>処理タイミング (0:月度末, 1:月度初)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.GsonRyoS">
+ <summary>減損損失・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.GsonRyoE">
+ <summary>減損損失・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.GsonRkeiS">
+ <summary>減損損失累計額・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.GsonScheduleEntry.GsonRkeiE">
+ <summary>減損損失累計額・月度末</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ShokyakuScheduleEntry">
+ <summary>償却スケジュール1行 (Access版 cn_typ_gSch_償却)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.Nen">
+ <summary>年度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.Getu">
+ <summary>月度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.GetuStDt">
+ <summary>月度開始日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.GetuEnDt">
+ <summary>月度終了日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.LkikanStDt">
+ <summary>期間開始日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.LkikanEnDt">
+ <summary>期間終了日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.CkaiykF">
+ <summary>中途解約フラグ</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.SkyakRitu">
+ <summary>償却率 (定率法の場合のみ。定額法はNothing)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.SkyakRkeiS">
+ <summary>減価償却累計額・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.SkyakRkeiE">
+ <summary>減価償却累計額・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.ZanS">
+ <summary>残高・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.ZanE">
+ <summary>残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.Zan109S">
+ <summary>9分の10残高・月度初 (定率法のみ)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.Zan109E">
+ <summary>9分の10残高・月度末 (定率法のみ)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.Skyak">
+ <summary>減価償却費</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.GsonRyoS">
+ <summary>減損損失・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.GsonRyoE">
+ <summary>減損損失・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.GsonRkeiS">
+ <summary>減損損失累計額・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShokyakuScheduleEntry.GsonRkeiE">
+ <summary>減損損失累計額・月度末</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.HensaiScheduleEntry">
+ <summary>返済スケジュール1行 (Access版 cn_typ_gSch_返済)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.Nen">
+ <summary>年度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.Getu">
+ <summary>月度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GetuStDt">
+ <summary>月度開始日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GetuEnDt">
+ <summary>月度終了日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.LkikanStDt">
+ <summary>期間開始日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.LkikanEnDt">
+ <summary>期間終了日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.CkaiykF">
+ <summary>中途解約フラグ</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.CashS">
+ <summary>支払額・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.CashE">
+ <summary>支払額・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.CashZanE">
+ <summary>支払額残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.NetLsryoS">
+ <summary>NET支払リース料・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.NetLsryoE">
+ <summary>NET支払リース料・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.NetLsryoZanE">
+ <summary>NET支払リース料残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.ZanryoSeisanE">
+ <summary>残価保証清算額・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.ZanryoMsZanE">
+ <summary>残価保証未清算残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.IjiknrS">
+ <summary>維持管理費用・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.IjiknrE">
+ <summary>維持管理費用・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.LbSonekiS">
+ <summary>リースバック繰延損益・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.LbSonekiE">
+ <summary>リースバック繰延損益・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuHasseiS">
+ <summary>発生利息・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuHasseiE">
+ <summary>発生利息・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuShriS">
+ <summary>支払利息・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuShriE">
+ <summary>支払利息・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuMibZanS">
+ <summary>未払利息残高・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuMibZanE">
+ <summary>未払利息残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuZanS">
+ <summary>利息残高・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.RisokuZanE">
+ <summary>利息残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GanponS">
+ <summary>返済元本・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GanponE">
+ <summary>返済元本・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GanponZanS">
+ <summary>元本残高・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GanponZanE">
+ <summary>元本残高・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonRyoS">
+ <summary>減損損失・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonRyoE">
+ <summary>減損損失・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonRkeiS">
+ <summary>減損損失累計額・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonRkeiE">
+ <summary>減損損失累計額・月度末</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonTk">
+ <summary>リース資産減損勘定の取崩額</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonZanS">
+ <summary>リース資産減損勘定の残高・月度初</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.HensaiScheduleEntry.GsonZanE">
+ <summary>リース資産減損勘定の残高・月度末</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ShiharaiSchEntry">
+ <summary>注記用支払スケジュール1行 (Access版 cn_typ_gSch_支払_注記用)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.ShriDt">
+ <summary>支払年月日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.SimeDt">
+ <summary>締日</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.KeijDt">
+ <summary>計上日 (請求ベース=締日, 約定=支払日)</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.Cash">
+ <summary>支払リース料</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.CkaiykF">
+ <summary>中途解約フラグ</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.Nen">
+ <summary>年度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.Getu">
+ <summary>月度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.KeijNen">
+ <summary>計上年度</summary>
+</member>
+<member name="P:LeaseM4BS.DataAccess.ShiharaiSchEntry.KeijGetu">
+ <summary>計上月度</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ChukiCalcParams">
+ <summary>注記計算入力パラメータ (Access版 cn_typ_m注記計算_IF の入力部分)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ChukiCalcResult">
+ <summary>注記計算結果 (Access版 cn_typ_m注記計算_IF の出力部分)</summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.ScheduleHelper">
+ <summary>スケジュール計算用ヘルパー (Access版 gInt, gNvl, g加算, g月度 等)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ScheduleHelper.GInt(System.Double)">
+ <summary>
+ Access版 gInt 相当: Int(CStr(value))
+ VBA の CStr は15桁有効数字で文字列化し、Int() で切捨てる。
+ CStr往復により浮動小数点誤差 (例: 3744.9999999999996→3745) が除去される。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ScheduleHelper.GKasan(System.Boolean,System.Nullable{System.Double}[])">
+ <summary>
+ Null安全加算 (Access版 g加算)
+ skipNull=True かつ全項がNothing(Null)の場合は Nothing を返す。
+ skipNull=False の場合はNothingを0として加算し常にDoubleを返す。
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ScheduleHelper.GetGetuYYYYMM(System.DateTime,System.Int32@,System.Int32@)">
+ <summary>
+ 月度の年・月を求める (Access版 g月度YYYYandMMGet)
+ ig決算日=31(月末)前提: 日付のYear/Monthがそのまま年度/月度
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ScheduleHelper.GetGetuShoNichi(System.DateTime)">
+ <summary>
+ 月度の初日を求める (Access版 g月度初YMDGet)
+ ig決算日=31(月末)前提: 月初1日
+ </summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.ScheduleHelper.IsMonthEnd(System.DateTime)">
+ <summary>
+ 月末日チェック (Access版 g月末日Check)
+ </summary>
+</member>
+<member name="T:LeaseM4BS.DataAccess.MonthlyJournalEngine">
+ <summary>
+ 月次仕訳計上エンジン (Access版 g仕訳計算_仕訳to計上テーブル_計上)
+ 指定期間を月単位に分割し、各月の計上データを算出してワークテーブルに書き込む。
+ </summary>
+</member>
+<member name="E:LeaseM4BS.DataAccess.MonthlyJournalEngine.Progress">
+ <summary>処理進捗コールバック (現在月, 全体月数, メッセージ)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.Execute(System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken)">
+ <summary>
+ 月次仕訳計上メイン処理
+ 期間FROM～TOを月単位で分割し、各月ごとに計上計算→ワークテーブル書込を行う。
+ </summary>
+ <param name="kikanFrom">期間FROM (月初日)</param>
+ <param name="kikanTo">期間TO (月末日)</param>
+ <param name="joken">計上条件</param>
+ <returns>成功: True / 失敗: False</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.ExecuteChuki(System.DateTime,System.DateTime,LeaseM4BS.DataAccess.KeijoJoken)">
+ <summary>
+ 注記計算実行
+ 対象物件の償却/返済/債務スケジュールを生成し、注記結果をワークテーブルに書き込む。
+ 月次ループとは別に、期間全体で1回だけ実行する。
+ </summary>
+ <param name="kishuDt">期首日</param>
+ <param name="kimatDt">期末日</param>
+ <param name="joken">計上条件</param>
+ <returns>成功: True / 失敗: False</returns>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.GetChukiCalcResult">
+ <summary>注記計算結果取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.GetChukiKeijoResult">
+ <summary>注記計上ワーク全件取得 (結果表示用)</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.GetHenlKeijoResult">
+ <summary>変額仕訳ワーク全件取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.GetResultCounts">
+ <summary>結果件数取得</summary>
+</member>
+<member name="M:LeaseM4BS.DataAccess.MonthlyJournalEngine.GetMonthCount(System.DateTime,System.DateTime)">
+ <summary>期間の月数を算出</summary>
 </member>
 </members>
 </doc>

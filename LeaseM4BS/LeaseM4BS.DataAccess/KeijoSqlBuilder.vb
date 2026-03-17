@@ -130,8 +130,11 @@ Public Class KeijoSqlBuilder
     ''' <summary>
     ''' 減損データ取得SQL (Access版 D_GSON テーブル参照)
     ''' </summary>
-    Public Shared Function BuildGsonSql(kykmId As Integer) As String
-        Return $"SELECT gson_dt, gson_ryo FROM d_gson WHERE kykm_id = {kykmId} ORDER BY gson_dt"
+    Public Shared Function BuildGsonSql(kykmId As Integer) As (Sql As String, Parameters As List(Of NpgsqlParameter))
+        Dim sql As String = "SELECT gson_dt, gson_ryo FROM d_gson WHERE kykm_id = @kykm_id ORDER BY gson_dt"
+        Dim params As New List(Of NpgsqlParameter)()
+        params.Add(New NpgsqlParameter("@kykm_id", NpgsqlTypes.NpgsqlDbType.Integer) With {.Value = kykmId})
+        Return (sql, params)
     End Function
 
     ''' <summary>
