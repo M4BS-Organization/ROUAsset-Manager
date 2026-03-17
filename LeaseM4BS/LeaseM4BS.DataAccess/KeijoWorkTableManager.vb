@@ -210,6 +210,156 @@ Public Class KeijoWorkTableManager
     End Function
 
     ' ======================================================================
+    '  注記計算結果書込 (tw_s_chuki_calc)
+    ' ======================================================================
+
+    ''' <summary>tw_s_chuki_calc 全件削除</summary>
+    Public Sub ClearChukiCalc()
+        Try
+            _crud.ExecuteNonQuery("DELETE FROM tw_s_chuki_calc")
+        Catch
+            ' テーブルが存在しない場合は無視
+        End Try
+    End Sub
+
+    ''' <summary>注記計算結果リストを tw_s_chuki_calc に書込</summary>
+    Public Sub InsertChukiCalcResults(rows As List(Of ChukiResultRow))
+        If rows Is Nothing OrElse rows.Count = 0 Then Return
+
+        For Each row As ChukiResultRow In rows
+            InsertChukiCalcRow(row)
+        Next
+    End Sub
+
+    ''' <summary>注記計算結果1行書込</summary>
+    Private Sub InsertChukiCalcRow(row As ChukiResultRow)
+        Dim r As ChukiCalcResult = row.Result
+
+        Dim sql As String =
+            "INSERT INTO tw_s_chuki_calc (" &
+            "kykm_id, kykh_id, kykm_no, bukn_nm, kykbnl_no, leakbn_id, kjkbn_id, " &
+            "syutok_zzan, syutok_zou, syutok_gen, syutok_zan, " &
+            "gruikei_zzan, gruikei_zou, gruikei_gen, gruikei_zan, skyak_ritu, " &
+            "gson_rkei_zzan, gson_rkei_zou, gson_rkei_gen, gson_rkei_zan, " &
+            "boka_zan, " &
+            "lgnpn_zzan, lgnpn_zan, lgnpn_zan_1nai, lgnpn_zan_1cho, " &
+            "lgnpn_zan_2nai, lgnpn_zan_3nai, lgnpn_zan_4nai, lgnpn_zan_5nai, lgnpn_zan_5cho, " &
+            "lrsok_zzan, lrsok_zan, lrsok_zan_1nai, lrsok_zan_1cho, " &
+            "lrsok_zan_2nai, lrsok_zan_3nai, lrsok_zan_4nai, lrsok_zan_5nai, lrsok_zan_5cho, " &
+            "risoku_mib_zan, " &
+            "gson_zzan, gson_zan, " &
+            "lsryo_toki, lgnpn_toki, lrsok_toki, risoku_hassei_toki, " &
+            "gson_tk_toki, ijiknr_toki, lb_soneki_toki, lb_soneki_ruikei, " &
+            "lgnpn_kaiyak_gen, risoku_mib_kaiyak_gen, gson_kaiyak_gen" &
+            ") VALUES (" &
+            "@kykm_id, @kykh_id, @kykm_no, @bukn_nm, @kykbnl_no, @leakbn_id, @kjkbn_id, " &
+            "@syutok_zzan, @syutok_zou, @syutok_gen, @syutok_zan, " &
+            "@gruikei_zzan, @gruikei_zou, @gruikei_gen, @gruikei_zan, @skyak_ritu, " &
+            "@gson_rkei_zzan, @gson_rkei_zou, @gson_rkei_gen, @gson_rkei_zan, " &
+            "@boka_zan, " &
+            "@lgnpn_zzan, @lgnpn_zan, @lgnpn_zan_1nai, @lgnpn_zan_1cho, " &
+            "@lgnpn_zan_2nai, @lgnpn_zan_3nai, @lgnpn_zan_4nai, @lgnpn_zan_5nai, @lgnpn_zan_5cho, " &
+            "@lrsok_zzan, @lrsok_zan, @lrsok_zan_1nai, @lrsok_zan_1cho, " &
+            "@lrsok_zan_2nai, @lrsok_zan_3nai, @lrsok_zan_4nai, @lrsok_zan_5nai, @lrsok_zan_5cho, " &
+            "@risoku_mib_zan, " &
+            "@gson_zzan, @gson_zan, " &
+            "@lsryo_toki, @lgnpn_toki, @lrsok_toki, @risoku_hassei_toki, " &
+            "@gson_tk_toki, @ijiknr_toki, @lb_soneki_toki, @lb_soneki_ruikei, " &
+            "@lgnpn_kaiyak_gen, @risoku_mib_kaiyak_gen, @gson_kaiyak_gen)"
+
+        Dim params As New List(Of NpgsqlParameter)()
+        params.Add(New NpgsqlParameter("@kykm_id", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.KykmId})
+        params.Add(New NpgsqlParameter("@kykh_id", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.KykhId})
+        params.Add(New NpgsqlParameter("@kykm_no", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = row.KykmNo})
+        params.Add(New NpgsqlParameter("@bukn_nm", NpgsqlTypes.NpgsqlDbType.Varchar) With {.Value = If(row.BuknNm, "")})
+        params.Add(New NpgsqlParameter("@kykbnl_no", NpgsqlTypes.NpgsqlDbType.Varchar) With {.Value = If(row.KykbnlNo, "")})
+        params.Add(New NpgsqlParameter("@leakbn_id", NpgsqlTypes.NpgsqlDbType.Integer) With {.Value = row.LeakbnId})
+        params.Add(New NpgsqlParameter("@kjkbn_id", NpgsqlTypes.NpgsqlDbType.Integer) With {.Value = row.KjkbnId})
+
+        ' 取得価額
+        params.Add(New NpgsqlParameter("@syutok_zzan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.SyutokZzan})
+        params.Add(New NpgsqlParameter("@syutok_zou", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.SyutokZou})
+        params.Add(New NpgsqlParameter("@syutok_gen", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.SyutokGen})
+        params.Add(New NpgsqlParameter("@syutok_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.SyutokZan})
+
+        ' 減価償却累計額
+        params.Add(New NpgsqlParameter("@gruikei_zzan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GruikeiZzan})
+        params.Add(New NpgsqlParameter("@gruikei_zou", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GruikeiZou})
+        params.Add(New NpgsqlParameter("@gruikei_gen", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GruikeiGen})
+        params.Add(New NpgsqlParameter("@gruikei_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GruikeiZan})
+        params.Add(MakeParam("@skyak_ritu", If(r.SkyakRitu.HasValue, CObj(r.SkyakRitu.Value), DBNull.Value)))
+
+        ' 減損損失累計額
+        params.Add(New NpgsqlParameter("@gson_rkei_zzan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GsonRkeiZzan})
+        params.Add(New NpgsqlParameter("@gson_rkei_zou", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GsonRkeiZou})
+        params.Add(New NpgsqlParameter("@gson_rkei_gen", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GsonRkeiGen})
+        params.Add(New NpgsqlParameter("@gson_rkei_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.GsonRkeiZan})
+
+        ' 簿価
+        params.Add(New NpgsqlParameter("@boka_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.BokaZan})
+
+        ' リース料元本
+        params.Add(New NpgsqlParameter("@lgnpn_zzan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZzan})
+        params.Add(New NpgsqlParameter("@lgnpn_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_1nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan1Nai})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_1cho", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan1Cho})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_2nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan2Nai})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_3nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan3Nai})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_4nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan4Nai})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_5nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan5Nai})
+        params.Add(New NpgsqlParameter("@lgnpn_zan_5cho", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LgnpnZan5Cho})
+
+        ' リース料利息
+        params.Add(New NpgsqlParameter("@lrsok_zzan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZzan})
+        params.Add(New NpgsqlParameter("@lrsok_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan})
+        params.Add(New NpgsqlParameter("@lrsok_zan_1nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan1Nai})
+        params.Add(New NpgsqlParameter("@lrsok_zan_1cho", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan1Cho})
+        params.Add(New NpgsqlParameter("@lrsok_zan_2nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan2Nai})
+        params.Add(New NpgsqlParameter("@lrsok_zan_3nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan3Nai})
+        params.Add(New NpgsqlParameter("@lrsok_zan_4nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan4Nai})
+        params.Add(New NpgsqlParameter("@lrsok_zan_5nai", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan5Nai})
+        params.Add(New NpgsqlParameter("@lrsok_zan_5cho", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.LrsokZan5Cho})
+
+        ' 未払利息
+        params.Add(New NpgsqlParameter("@risoku_mib_zan", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.RisokuMibZan})
+
+        ' 減損勘定 (Double? → MakeParam でNULL対応)
+        params.Add(MakeParam("@gson_zzan", If(r.GsonZzan.HasValue, CObj(r.GsonZzan.Value), DBNull.Value)))
+        params.Add(MakeParam("@gson_zan", If(r.GsonZan.HasValue, CObj(r.GsonZan.Value), DBNull.Value)))
+
+        ' 当期発生 (Double? → MakeParam でNULL対応)
+        params.Add(MakeParam("@lsryo_toki", If(r.LsryoToki.HasValue, CObj(r.LsryoToki.Value), DBNull.Value)))
+        params.Add(MakeParam("@lgnpn_toki", If(r.LgnpnToki.HasValue, CObj(r.LgnpnToki.Value), DBNull.Value)))
+        params.Add(MakeParam("@lrsok_toki", If(r.LrsokToki.HasValue, CObj(r.LrsokToki.Value), DBNull.Value)))
+        params.Add(New NpgsqlParameter("@risoku_hassei_toki", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.RisokuHasseiToki})
+        params.Add(MakeParam("@gson_tk_toki", If(r.GsonTkToki.HasValue, CObj(r.GsonTkToki.Value), DBNull.Value)))
+        params.Add(MakeParam("@ijiknr_toki", If(r.IjiknrToki.HasValue, CObj(r.IjiknrToki.Value), DBNull.Value)))
+        params.Add(MakeParam("@lb_soneki_toki", If(r.LbSonekiToki.HasValue, CObj(r.LbSonekiToki.Value), DBNull.Value)))
+        params.Add(MakeParam("@lb_soneki_ruikei", If(r.LbSonekiRuikei.HasValue, CObj(r.LbSonekiRuikei.Value), DBNull.Value)))
+
+        ' 解約抹消 (Double? → MakeParam でNULL対応)
+        params.Add(MakeParam("@lgnpn_kaiyak_gen", If(r.LgnpnKaiyakGen.HasValue, CObj(r.LgnpnKaiyakGen.Value), DBNull.Value)))
+        params.Add(New NpgsqlParameter("@risoku_mib_kaiyak_gen", NpgsqlTypes.NpgsqlDbType.Double) With {.Value = r.RisokuMibKaiyakGen})
+        params.Add(MakeParam("@gson_kaiyak_gen", If(r.GsonKaiyakGen.HasValue, CObj(r.GsonKaiyakGen.Value), DBNull.Value)))
+
+        _crud.ExecuteNonQuery(sql, params)
+    End Sub
+
+    ''' <summary>tw_s_chuki_calc 全件取得（結果表示用）</summary>
+    Public Function GetChukiCalcAll() As DataTable
+        Return _crud.GetDataTable("SELECT * FROM tw_s_chuki_calc ORDER BY kykm_id")
+    End Function
+
+    ''' <summary>tw_s_chuki_calc 件数取得</summary>
+    Public Function GetChukiCalcCount() As Integer
+        Try
+            Return _crud.ExecuteScalar(Of Integer)("SELECT COUNT(*) FROM tw_s_chuki_calc")
+        Catch
+            Return 0
+        End Try
+    End Function
+
+    ' ======================================================================
     '  ヘルパー
     ' ======================================================================
 
