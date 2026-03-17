@@ -83,7 +83,7 @@ Partial Public Class Form_f_flx_IDOLST
         sb.AppendLine("WHERE kykm.ido_dt >= @dtFrom AND kykm.ido_dt <= @dtTo ")
 
         ' CheckBcatFlagsの状態を条件式に反映
-        sb.AppendLine(GetBcatConditions())
+        sb.AppendLine(GetBcatConditions(CheckBcatFlags))
 
         prms.Add(New NpgsqlParameter("@dtFrom", DtFrom))
         prms.Add(New NpgsqlParameter("@dtTo", DtTo))
@@ -170,16 +170,16 @@ Partial Public Class Form_f_flx_IDOLST
         HandleEnterKeyNavigation(Me, e)
     End Sub
 
-    Private Function GetBcatConditions() As String
+    Public Shared Function GetBcatConditions(checkBcatFlags As Boolean()) As String
         ' Trueが1つもなければReturn
-        If CheckBcatFlags Is Nothing OrElse Not CheckBcatFlags.Any(Function(f) f = True) Then
+        If checkBcatFlags Is Nothing OrElse Not checkBcatFlags.Any(Function(f) f = True) Then
             Return String.Empty
         End If
 
         Dim trueList = New List(Of String)
 
-        For i = 1 To CheckBcatFlags.Length
-            If CheckBcatFlags(i - 1) Then
+        For i = 1 To checkBcatFlags.Length
+            If checkBcatFlags(i - 1) Then
                 ' 部署コードがnullの行も出力(Access版に準拠)
                 trueList.Add($"b_bcat.bcat{i}_cd <> r1_bcat.bcat{i}_cd OR b_bcat.bcat{i}_cd IS NULL OR r1_bcat.bcat{i}_cd IS NULL")
             End If

@@ -57,6 +57,50 @@ Partial Public Class Form_f_IDOLST_JOKEN
         HandleEnterKeyNavigation(Me, e)
     End Sub
 
+    ' ラベルテキスト生成 Pure Function (テスト用: コントロール非依存版)
+    ' NOTE: bcat1～4 は末尾「、」付き、bcat5 のみ直書きで「、」なし。
+    '       bcat4=T, bcat5=F の場合 TrimEnd("、"c) が正しく機能するか要確認 (Issue #10)
+    Public Shared Function GetLabelTextPure(
+        dtFrom As Date,
+        dtTo As Date,
+        bcat1F As Boolean,
+        bcat2F As Boolean,
+        bcat3F As Boolean,
+        bcat4F As Boolean,
+        bcat5F As Boolean
+    ) As String
+        Dim labelText As String = "移動日:　" & dtFrom.ToString("yyyy/MM/dd") & "～" & dtTo.ToString("yyyy/MM/dd") & "  "
+
+        labelText &= "移動チェックカテゴリ： "
+
+        If bcat1F Then
+            labelText &= "管理部署1、"
+        End If
+
+        If bcat2F Then
+            labelText &= "管理部署2、"
+        End If
+
+        If bcat3F Then
+            labelText &= "管理部署3、"
+        End If
+
+        If bcat4F Then
+            labelText &= "管理部署4、"
+        End If
+
+        If bcat5F Then
+            labelText &= "管理部署5"
+        End If
+
+        ' 最後の「、」を削除
+        If labelText.EndsWith("、") Then
+            labelText = labelText.TrimEnd("、"c)
+        End If
+
+        Return labelText
+    End Function
+
     ' ラベルテキストを生成
     Private Function GetLabelText()
         ' 移動日

@@ -176,6 +176,112 @@ Partial Public Class Form_f_CHUKI_JOKEN
     End Function
 
     ' =========================================================
+    '  テスト用 Pure Function (WinForms 非依存・Friend Shared)
+    ' =========================================================
+
+    ' WHERE句生成 Pure Function (テスト用: コントロール非依存版)
+    ' NOTE: leakbn_id の値 (1,2) が ScheduleTypes.LeaseKbn enum (Itengai=3, Ope=4) と不一致。
+    '       c_leakbn テーブルの実 ID 値として現行実装の動作を期待値とする (Issue #10 要確認)
+    Public Shared Function GenerateWhereClausePure(
+        ByRef prms As List(Of NpgsqlParameter),
+        itengaiF As Boolean,
+        opeF As Boolean,
+        followF As Boolean,
+        omissionF As Boolean,
+        kyknNoFrom As String,
+        kyknNoTo As String,
+        skmkCd As Object,
+        lcptCd As Object,
+        bcatCd As Object,
+        dtFrom As Date,
+        dtTo As Date
+    ) As String
+        Dim whereClause As String = ""
+
+        whereClause &= "WHERE (kykh.start_dt <= @dtTo AND kykh.end_dt >= @dtFrom) "
+
+        prms.Add(New NpgsqlParameter("@dtFrom", GetMonthStart(dtFrom)))
+        prms.Add(New NpgsqlParameter("@dtTo", GetMonthEnd(dtTo)))
+
+        ' リース区分
+        If itengaiF And opeF Then
+            whereClause &= "AND kykm.leakbn_id IN (1, 2) "
+        ElseIf itengaiF Then
+            whereClause &= "AND kykm.leakbn_id = 1 "
+        ElseIf opeF Then
+            whereClause &= "AND kykm.leakbn_id = 2 "
+        End If
+
+        ' 省略基準
+        If followF Then
+            whereClause &= "AND kykm.chuum_id = 1 "
+        ElseIf omissionF Then
+            whereClause &= "AND kykm.chuum_id = 2 "
+        End If
+
+        ' 物件No
+        Dim kyknNo As Integer
+        If Integer.TryParse(kyknNoFrom, kyknNo) Then
+            whereClause &= "AND kykm.kykm_no >= @kyknNoFrom "
+            prms.Add(New NpgsqlParameter("@kyknNoFrom", kyknNo))
+        End If
+
+        If Integer.TryParse(kyknNoTo, kyknNo) Then
+            whereClause &= "AND kykm.kykm_no <= @kyknNoTo "
+            prms.Add(New NpgsqlParameter("@kyknNoTo", kyknNo))
+        End If
+
+        ' 資産科目
+        If skmkCd IsNot Nothing Then
+            whereClause &= "AND skmk.skmk_cd = @skmkCd "
+            prms.Add(New NpgsqlParameter("@skmkCd", skmkCd))
+        End If
+
+        ' リース会社
+        If lcptCd IsNot Nothing Then
+            whereClause &= "AND lcpt.lcpt1_cd = @lcptCd "
+            prms.Add(New NpgsqlParameter("@lcptCd", lcptCd))
+        End If
+
+        ' 管理部署
+        If bcatCd IsNot Nothing Then
+            whereClause &= "AND b_bcat.bcat_cd = @bcatCd "
+            prms.Add(New NpgsqlParameter("@bcatCd", bcatCd))
+        End If
+
+        Return whereClause
+    End Function
+
+    ' ラベルテキスト生成 Pure Function (テスト用: コントロール非依存版)
+    Public Shared Function GenerateLabelTextPure(
+        dtFrom As Date,
+        dtTo As Date,
+        teigakuF As Boolean,
+        risokuF As Boolean
+    ) As String
+        Dim labelText As String = "決算期間："
+
+        labelText &= dtFrom.ToString("yyyy/MM") & "～" & dtTo.ToString("yyyy/MM") & "  "
+
+        ' todo どの条件でもなぜか表示されるテキスト
+        labelText &= "所有権移転外ファイナンスリースの計算条件  "
+
+        If teigakuF Then
+            labelText &= "償却方法：リース定額  "
+        Else
+            labelText &= "償却方法：近似定率  "
+        End If
+
+        If risokuF Then
+            labelText &= "利息計算：利息法  "
+        Else
+            labelText &= "利息計算：利子込法  "
+        End If
+
+        Return labelText
+    End Function
+
+    ' =========================================================
     '  コンボボックスの2列描画 (Access完全再現・罫線付き)
     ' =========================================================
     Private Sub Combo_SKMK_DrawItem(sender As Object, e As DrawItemEventArgs) Handles cmb_SKMK_CD.DrawItem
