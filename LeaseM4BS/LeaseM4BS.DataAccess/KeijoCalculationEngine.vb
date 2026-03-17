@@ -45,33 +45,39 @@ Public Class KeijoCalculationEngine
         kimatDt As Date
     ) As List(Of KeijoWorkRow)
 
-        ' 翌期末日 = 期末日の1年後の月末
-        Dim y1kimatDt As Date = CashScheduleBuilder.GetMonthEndDate(kimatDt.AddMonths(12))
+        Try
+            ' 翌期末日 = 期末日の1年後の月末
+            Dim y1kimatDt As Date = CashScheduleBuilder.GetMonthEndDate(kimatDt.AddMonths(12))
 
-        ' 施行日取得
-        _sekouDt = GetSekouDt()
+            ' 施行日取得
+            _sekouDt = GetSekouDt()
 
-        ' ソースデータ取得
-        Dim sourceDt As DataTable = GetSourceData(kishuDt, kimatDt, joken)
+            ' ソースデータ取得
+            Dim sourceDt As DataTable = GetSourceData(kishuDt, kimatDt, joken)
 
-        Dim resultRows As New List(Of KeijoWorkRow)()
+            Dim resultRows As New List(Of KeijoWorkRow)()
 
-        ' 集計単位により処理分岐
-        Select Case joken.Meisai
-            Case ShriMeisai.Kykm
-                resultRows.AddRange(ProcessKykm(sourceDt, kishuDt, kimatDt, y1kimatDt, joken))
-            Case ShriMeisai.Haif
-                resultRows.AddRange(ProcessHaif(sourceDt, kishuDt, kimatDt, y1kimatDt, joken))
-        End Select
+            ' 集計単位により処理分岐
+            Select Case joken.Meisai
+                Case ShriMeisai.Kykm
+                    resultRows.AddRange(ProcessKykm(sourceDt, kishuDt, kimatDt, y1kimatDt, joken))
+                Case ShriMeisai.Haif
+                    resultRows.AddRange(ProcessHaif(sourceDt, kishuDt, kimatDt, y1kimatDt, joken))
+            End Select
 
-        ' 付随費用処理 (保守料 or 全部の場合)
-        If joken.KjkbnHiyo Then
-            If joken.Taisho = 2 OrElse joken.Taisho = 3 Then
-                resultRows.AddRange(ProcessHenf(kishuDt, kimatDt, y1kimatDt, joken))
+            ' 付随費用処理 (保守料 or 全部の場合)
+            If joken.KjkbnHiyo Then
+                If joken.Taisho = 2 OrElse joken.Taisho = 3 Then
+                    resultRows.AddRange(ProcessHenf(kishuDt, kimatDt, y1kimatDt, joken))
+                End If
             End If
-        End If
 
-        Return resultRows
+            Return resultRows
+
+        Catch ex As Exception
+            Throw New Exception(
+                $"計上計算エンジンでエラーが発生しました (期間: {kishuDt:yyyy/MM/dd}～{kimatDt:yyyy/MM/dd}): {ex.Message}", ex)
+        End Try
     End Function
 
     ' ======================================================================
@@ -87,21 +93,30 @@ Public Class KeijoCalculationEngine
         joken As KeijoJoken
     ) As DataTable
 
-        Dim result As (Sql As String, Parameters As List(Of NpgsqlParameter)) =
-            KeijoSqlBuilder.BuildSourceSql(
-                joken.Meisai,
-                joken.Taisho,
-                joken.KjkbnSisan,
-                joken.KjkbnHiyo
-            )
+        Try
+            Dim result As (Sql As String, Parameters As List(Of NpgsqlParameter)) =
+                KeijoSqlBuilder.BuildSourceSql(
+                    joken.Meisai,
+                    joken.Taisho,
+                    joken.KjkbnSisan,
+                    joken.KjkbnHiyo
+                )
 
-        ' ユーザー指定フィルタ条件を追加
-        Dim sql As String = result.Sql
-        If Not String.IsNullOrWhiteSpace(joken.SaJoken) Then
-            sql &= " AND (" & joken.SaJoken & ")"
-        End If
+            ' ユーザー指定フィルタ条件を追加 (SQLインジェクション対策済み)
+            Dim sql As String = result.Sql
+            If Not String.IsNullOrWhiteSpace(joken.SaJoken) Then
+                Dim sanitized As String = ValidateSaJoken(joken.SaJoken)
+                If sanitized IsNot Nothing Then
+                    sql &= " AND (" & sanitized & ")"
+                End If
+            End If
 
-        Return _crud.GetDataTable(sql, result.Parameters)
+            Return _crud.GetDataTable(sql, result.Parameters)
+
+        Catch ex As Exception
+            Throw New Exception(
+                $"計上ソースデータ取得でエラーが発生しました (明細={joken.Meisai}, 対象={joken.Taisho}): {ex.Message}", ex)
+        End Try
     End Function
 
     ' ======================================================================
@@ -122,7 +137,7 @@ Public Class KeijoCalculationEngine
         Dim resultRows As New List(Of KeijoWorkRow)()
 
         For Each row As DataRow In sourceDt.Rows
-
+          Try
             ' 不要行補完管理をリセット (物件ごと)
             _hoyoKanriList.Clear()
 
@@ -257,6 +272,10 @@ Public Class KeijoCalculationEngine
                 AddSupplementRows(resultRows, keijoResultH, ilHensaiKind, row)
             End If
 
+          Catch ex As Exception
+            Dim kykmId As String = If(row.Table.Columns.Contains("kykm_kykm_id"), row("kykm_kykm_id").ToString(), "?")
+            Throw New Exception($"物件単位処理エラー (kykm_id={kykmId}): {ex.Message}", ex)
+          End Try
         Next
 
         Return resultRows
@@ -285,7 +304,7 @@ Public Class KeijoCalculationEngine
         Dim prevRow As DataRow = Nothing
 
         For Each row As DataRow In sourceDt.Rows
-
+          Try
             ' 物件IDが変わった場合の処理
             Dim curKykmId As Double = CDbl(row("kykm_kykm_id"))
             If savedKykmId <> curKykmId Then
@@ -439,6 +458,10 @@ Public Class KeijoCalculationEngine
                 End If
             End If
 
+          Catch ex As Exception
+            Dim kykmId As String = If(row.Table.Columns.Contains("kykm_kykm_id"), row("kykm_kykm_id").ToString(), "?")
+            Throw New Exception($"配賦単位処理エラー (kykm_id={kykmId}): {ex.Message}", ex)
+          End Try
         Next ' row
 
         ' ループ終了後、最終物件に変額がある場合
@@ -567,7 +590,7 @@ Public Class KeijoCalculationEngine
         Dim haifList As New List(Of HaifInfo)()
 
         For Each row As DataRow In henfDt.Rows
-
+          Try
             ' 計上タイミング決定 (付随費用は支払日ベース固定)
             Dim ilKtmg As ShriKtmg = ShriKtmg.ShriDtBase
 
@@ -684,6 +707,10 @@ Public Class KeijoCalculationEngine
                 End If
             End If
 
+          Catch ex As Exception
+            Dim henfId As String = If(row.Table.Columns.Contains("henf_id"), row("henf_id").ToString(), "?")
+            Throw New Exception($"付随費用処理エラー (henf_id={henfId}): {ex.Message}", ex)
+          End Try
         Next
 
         Return resultRows
@@ -1223,42 +1250,110 @@ Public Class KeijoCalculationEngine
     '  ヘルパーメソッド
     ' ======================================================================
 
-    ''' <summary>DataRow から Double を安全に取得</summary>
+    ''' <summary>
+    ''' ユーザー指定フィルタ条件 (SaJoken) のSQLインジェクション検証
+    ''' ホワイトリスト方式で安全なSQL断片のみ許可する。
+    ''' </summary>
+    ''' <param name="saJoken">ユーザー指定フィルタ条件</param>
+    ''' <returns>検証済みSQL断片。不正な場合はNothing</returns>
+    Private Shared Function ValidateSaJoken(saJoken As String) As String
+        If String.IsNullOrWhiteSpace(saJoken) Then Return Nothing
+
+        ' 危険なキーワードを検出 (大文字小文字無視)
+        Dim upper As String = saJoken.ToUpperInvariant()
+        Dim dangerousKeywords() As String = {
+            "DROP ", "DELETE ", "UPDATE ", "INSERT ", "ALTER ", "EXEC ", "EXECUTE ",
+            "CREATE ", "--", ";", "/*", "*/", "xp_", "sp_", "TRUNCATE ",
+            "GRANT ", "REVOKE ", "UNION ", "INTO "
+        }
+
+        For Each kw As String In dangerousKeywords
+            If upper.Contains(kw) Then
+                Throw New ArgumentException(
+                    $"SaJoken に不正なキーワードが含まれています: {kw.Trim()}")
+            End If
+        Next
+
+        ' 許可するパターン: カラム名 演算子 値 の組み合わせ (AND/OR接続)
+        ' 例: "h.kykh_id = 123" / "m.kykm_no IN (1,2,3)" / "h.start_dt >= '2024-01-01'"
+        Dim allowedPattern As New System.Text.RegularExpressions.Regex(
+            "^[\w\.\s,()=<>!'\-\d]+$",
+            System.Text.RegularExpressions.RegexOptions.Compiled)
+
+        If Not allowedPattern.IsMatch(saJoken) Then
+            Throw New ArgumentException(
+                $"SaJoken に許可されていない文字が含まれています: {saJoken}")
+        End If
+
+        Return saJoken
+    End Function
+
+    ''' <summary>DataRow から Double を安全に取得 (型変換エラー時は0)</summary>
     Private Shared Function GetDbl(row As DataRow, colName As String) As Double
         If row.Table.Columns.Contains(colName) AndAlso Not IsDBNull(row(colName)) Then
-            Return CDbl(row(colName))
+            Try
+                Return Convert.ToDouble(row(colName))
+            Catch ex As InvalidCastException
+                Return 0.0
+            Catch ex As FormatException
+                Return 0.0
+            End Try
         End If
         Return 0.0
     End Function
 
-    ''' <summary>DataRow から Integer を安全に取得</summary>
+    ''' <summary>DataRow から Integer を安全に取得 (型変換エラー時は0)</summary>
     Private Shared Function GetInt(row As DataRow, colName As String) As Integer
         If row.Table.Columns.Contains(colName) AndAlso Not IsDBNull(row(colName)) Then
-            Return CInt(row(colName))
+            Try
+                Return Convert.ToInt32(row(colName))
+            Catch ex As InvalidCastException
+                Return 0
+            Catch ex As FormatException
+                Return 0
+            End Try
         End If
         Return 0
     End Function
 
-    ''' <summary>DataRow から Boolean を安全に取得</summary>
+    ''' <summary>DataRow から Boolean を安全に取得 (型変換エラー時はFalse)</summary>
     Private Shared Function GetBool(row As DataRow, colName As String) As Boolean
         If row.Table.Columns.Contains(colName) AndAlso Not IsDBNull(row(colName)) Then
-            Return CBool(row(colName))
+            Try
+                Return Convert.ToBoolean(row(colName))
+            Catch ex As InvalidCastException
+                Return False
+            Catch ex As FormatException
+                Return False
+            End Try
         End If
         Return False
     End Function
 
-    ''' <summary>DataRow から Nullable(Of Integer) を安全に取得</summary>
+    ''' <summary>DataRow から Nullable(Of Integer) を安全に取得 (型変換エラー時はDBNull)</summary>
     Private Shared Function GetNullableInt(row As DataRow, colName As String) As Object
         If row.Table.Columns.Contains(colName) AndAlso Not IsDBNull(row(colName)) Then
-            Return CInt(row(colName))
+            Try
+                Return Convert.ToInt32(row(colName))
+            Catch ex As InvalidCastException
+                Return DBNull.Value
+            Catch ex As FormatException
+                Return DBNull.Value
+            End Try
         End If
         Return DBNull.Value
     End Function
 
-    ''' <summary>DataRow から Nullable(Of Date) を安全に取得</summary>
+    ''' <summary>DataRow から Nullable(Of Date) を安全に取得 (型変換エラー時はDBNull)</summary>
     Private Shared Function GetNullableDate(row As DataRow, colName As String) As Object
         If row.Table.Columns.Contains(colName) AndAlso Not IsDBNull(row(colName)) Then
-            Return CDate(row(colName))
+            Try
+                Return Convert.ToDateTime(row(colName))
+            Catch ex As InvalidCastException
+                Return DBNull.Value
+            Catch ex As FormatException
+                Return DBNull.Value
+            End Try
         End If
         Return DBNull.Value
     End Function
