@@ -107,6 +107,62 @@ Public Class MonthlyJournalEngine
     End Function
 
     ' ======================================================================
+    '  注記計算実行 (Access版 pc_注記.m注記計算_main のエントリーポイント)
+    ' ======================================================================
+
+    ''' <summary>
+    ''' 注記計算実行
+    ''' 対象物件の償却/返済/債務スケジュールを生成し、注記結果をワークテーブルに書き込む。
+    ''' 月次ループとは別に、期間全体で1回だけ実行する。
+    ''' </summary>
+    ''' <param name="kishuDt">期首日</param>
+    ''' <param name="kimatDt">期末日</param>
+    ''' <param name="joken">計上条件</param>
+    ''' <returns>成功: True / 失敗: False</returns>
+    Public Function ExecuteChuki(
+        kishuDt As Date,
+        kimatDt As Date,
+        joken As KeijoJoken
+    ) As Boolean
+
+        Try
+            _crud.BeginTransaction()
+
+            ' 注記計算ワークテーブルクリア
+            _workTableManager.ClearChukiCalc()
+
+            RaiseEvent Progress(0, 1, "注記計算中...")
+
+            ' 注記計算実行
+            Dim results As List(Of ChukiResultRow) = _keijoEngine.ExecuteChuki(joken, kishuDt, kimatDt)
+
+            ' ワークテーブルに書込
+            _workTableManager.InsertChukiCalcResults(results)
+
+            _crud.Commit()
+
+            RaiseEvent Progress(1, 1, $"注記計算完了 ({results.Count}件)")
+
+            Return True
+
+        Catch ex As Exception
+            Try
+                If _crud.IsInTransaction Then
+                    _crud.Rollback()
+                End If
+            Catch
+            End Try
+
+            Throw New Exception($"注記計算処理でエラーが発生しました: {ex.Message}", ex)
+        End Try
+    End Function
+
+    ''' <summary>注記計算結果取得</summary>
+    Public Function GetChukiCalcResult() As DataTable
+        Return _workTableManager.GetChukiCalcAll()
+    End Function
+
+    ' ======================================================================
     '  結果取得
     ' ======================================================================
 
