@@ -116,8 +116,13 @@
     <Compile Include="CashScheduleBuilder.vb" />
     <Compile Include="CrudHelper.vb" />
     <Compile Include="DbConnectionManager.vb" />
+    <Compile Include="KeijoCalculationEngine.vb" />
+    <Compile Include="KeijoSqlBuilder.vb" />
+    <Compile Include="KeijoTypes.vb" />
+    <Compile Include="KeijoWorkTableManager.vb" />
     <Compile Include="KlsryoCalculationEngine.vb" />
     <Compile Include="KlsryoTypes.vb" />
+    <Compile Include="MonthlyJournalEngine.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

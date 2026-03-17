@@ -52,6 +52,25 @@ Public Class CashScheduleEntry
     Public Property SshriKn As Integer    ' 締支払間隔
     Public Property LsryoHsum As Double   ' 配賦用累計(税抜)
     Public Property ZeiHsum As Double     ' 配賦用累計(税額)
+    Public Property GsonDt As Object      ' 減損日 (減損スケジュール用)
+
+    ''' <summary>エントリの複製を作成 (配賦按分用)</summary>
+    Public Function Clone() As CashScheduleEntry
+        Return New CashScheduleEntry() With {
+            .ShriDt = Me.ShriDt,
+            .SimeDt = Me.SimeDt,
+            .Lsryo = Me.Lsryo,
+            .Zritu = Me.Zritu,
+            .Zei = Me.Zei,
+            .MaeF = Me.MaeF,
+            .CkaiykF = Me.CkaiykF,
+            .ShhoId = Me.ShhoId,
+            .SshriKn = Me.SshriKn,
+            .LsryoHsum = 0,
+            .ZeiHsum = 0,
+            .GsonDt = Me.GsonDt
+        }
+    End Function
 End Class
 
 ''' <summary>期間リース料計算結果 (Access版 cn_typ_mKLSRYO)</summary>
