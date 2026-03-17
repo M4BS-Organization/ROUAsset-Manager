@@ -74,7 +74,20 @@ Public Class KeijoSqlBuilder
         sb.AppendLine("  m.b_shdt_fst_sum,")
         sb.AppendLine("  m.b_smdt_lst_sum,")
         sb.AppendLine("  m.b_shdt_lst_sum,")
-        sb.AppendLine("  m.szei_kjkbn_id")
+        sb.AppendLine("  m.szei_kjkbn_id,")
+        ' 注記計算用フィールド (償却/返済/債務スケジュール生成に必要)
+        sb.AppendLine("  m.ksan_ritu,")
+        sb.AppendLine("  m.skyak_ho_id,")
+        sb.AppendLine("  m.b_syutok,")
+        sb.AppendLine("  m.b_slsryo,")
+        sb.AppendLine("  m.b_ijiknr,")
+        sb.AppendLine("  m.b_zanryo,")
+        sb.AppendLine("  m.b_lb_soneki,")
+        sb.AppendLine("  m.b_ckaiyk_f,")
+        sb.AppendLine("  m.rsok_tmg,")
+        sb.AppendLine("  m.rcalc_id,")
+        sb.AppendLine("  m.lb_chuki_f,")
+        sb.AppendLine("  h.lkikan")
 
         ' 配賦単位の場合は配賦情報を結合
         If meisai = ShriMeisai.Haif Then

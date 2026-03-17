@@ -81,6 +81,202 @@ Public Class KeijoCalculationEngine
     End Function
 
     ' ======================================================================
+    '  注記計算実行 (Access版 pc_注記.m注記計算_main の物件ループ)
+    ' ======================================================================
+
+    ''' <summary>
+    ''' 注記計算メイン (Access版 pc_注記.m注記計算_main)
+    ''' 全対象物件に対して償却/返済/債務スケジュールを生成し、注記結果を返す。
+    ''' </summary>
+    ''' <param name="joken">計上条件</param>
+    ''' <param name="kishuDt">期首日</param>
+    ''' <param name="kimatDt">期末日</param>
+    ''' <returns>物件ID→注記計算結果のリスト</returns>
+    Public Function ExecuteChuki(
+        joken As KeijoJoken,
+        kishuDt As Date,
+        kimatDt As Date
+    ) As List(Of ChukiResultRow)
+
+        Try
+            _sekouDt = GetSekouDt()
+
+            ' ソースデータ取得 (新フィールド含む)
+            Dim sourceDt As DataTable = GetSourceData(kishuDt, kimatDt, joken)
+
+            Dim results As New List(Of ChukiResultRow)()
+
+            Dim processedKykmIds As New HashSet(Of Double)()
+
+            For Each row As DataRow In sourceDt.Rows
+              Try
+                Dim kykmId As Double = CDbl(row("kykm_kykm_id"))
+
+                ' 物件単位で1回だけ処理 (配賦モードでも物件単位で注記計算)
+                If processedKykmIds.Contains(kykmId) Then Continue For
+                processedKykmIds.Add(kykmId)
+
+                ' 資産計上のみ注記計算対象
+                Dim kjkbnId As Integer = GetInt(row, "kykm_kjkbn_id")
+                If kjkbnId <> CInt(Kjkbn.Sisan) Then Continue For
+
+                ' ChukiCalcParams 構築
+                Dim p As New ChukiCalcParams()
+                p.KishuDt = kishuDt
+                p.KimatDt = kimatDt
+                p.StartDt = CDate(row("start_dt"))
+                p.Lkikan = GetInt(row, "lkikan")
+                p.BRendDt = CDate(row("b_rend_dt"))
+                p.BCkaiykF = GetBool(row, "b_ckaiyk_f")
+                p.RcalcId = GetInt(row, "rcalc_id")
+                p.SkyakHoId = GetInt(row, "skyak_ho_id")
+                p.LeakbnId = GetInt(row, "leakbn_id")
+                p.HensaiKind = CType(GetInt(row, "hensai_kind"), HensaiKind)
+                p.RsokTmg = CType(GetInt(row, "rsok_tmg"), RsokTmg)
+                p.BSlsryo = GetDbl(row, "b_slsryo")
+                p.BIjiknr = GetDbl(row, "b_ijiknr")
+                p.BZanryo = GetDbl(row, "b_zanryo")
+                p.BSyutok = GetDbl(row, "b_syutok")
+                p.KsanRitu = GetDbl(row, "ksan_ritu")
+                p.BLbSoneki = If(IsDBNull(row("b_lb_soneki")), CType(Nothing, Double?), CDbl(row("b_lb_soneki")))
+                p.LbChukiF = GetBool(row, "lb_chuki_f")
+
+                ' リース期間が0以下の場合はスキップ
+                If p.Lkikan <= 0 Then Continue For
+
+                ' 減損スケジュール生成
+                Dim gsonSchedule As List(Of GsonScheduleEntry) = Nothing
+                If GetBool(row, "b_gson_f") Then
+                    gsonSchedule = GsonScheduleBuilder.Build(_crud, kykmId)
+                End If
+
+                ' 支払スケジュール生成 (注記用: ShiharaiSchEntry)
+                Dim shiharaiSch As List(Of ShiharaiSchEntry) = BuildShiharaiSchForChuki(row, p, kykmId)
+
+                ' 注記計算実行
+                Dim calcResult As ChukiCalcResult = ChukiCalcEngine.Calculate(p, shiharaiSch, gsonSchedule, _crud)
+
+                ' 結果を格納
+                Dim resultRow As New ChukiResultRow()
+                resultRow.KykmId = kykmId
+                resultRow.KykhId = CDbl(row("kykh_kykh_id"))
+                resultRow.KykmNo = CDbl(row("kykm_kykm_no"))
+                resultRow.BuknNm = If(IsDBNull(row("bukn_nm")), "", CStr(row("bukn_nm")))
+                resultRow.KykbnlNo = If(IsDBNull(row("kykbnl")), "", CStr(row("kykbnl")))
+                resultRow.LeakbnId = GetInt(row, "leakbn_id")
+                resultRow.KjkbnId = kjkbnId
+                resultRow.Result = calcResult
+                results.Add(resultRow)
+
+              Catch ex As Exception
+                Dim kykmIdStr As String = If(row.Table.Columns.Contains("kykm_kykm_id"), row("kykm_kykm_id").ToString(), "?")
+                Throw New Exception($"注記計算エラー (kykm_id={kykmIdStr}): {ex.Message}", ex)
+              End Try
+            Next
+
+            Return results
+
+        Catch ex As Exception
+            Throw New Exception(
+                $"注記計算でエラーが発生しました (期間: {kishuDt:yyyy/MM/dd}～{kimatDt:yyyy/MM/dd}): {ex.Message}", ex)
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' 注記用支払スケジュール生成 (Access版 gMake支払_SCH 相当)
+    ''' CashScheduleBuilder のスケジュールを ShiharaiSchEntry に変換する。
+    ''' </summary>
+    Private Function BuildShiharaiSchForChuki(
+        row As DataRow,
+        p As ChukiCalcParams,
+        kykmId As Double
+    ) As List(Of ShiharaiSchEntry)
+
+        Dim result As New List(Of ShiharaiSchEntry)()
+
+        ' 定額スケジュールを生成して変換
+        Dim klsryo As Double = GetDbl(row, "b_klsryo")
+        Dim shriCnt As Integer = GetInt(row, "shri_cnt")
+
+        Dim kishuDt As Date = p.KishuDt
+        Dim kimatDt As Date = p.KimatDt
+        Dim y1kimatDt As Date = CashScheduleBuilder.GetMonthEndDate(kimatDt.AddMonths(12))
+
+        ' 計上タイミング判定
+        Dim determination As (HensaiKind As HensaiKind, Ktmg As ShriKtmg) =
+            DetermineHensaiKindAndKtmg(row, New KeijoJoken() With {
+                .HensaiKindShinhoHiyo = HensaiKind.Teigaku
+            }, _sekouDt)
+        Dim ilKtmg As ShriKtmg = determination.Ktmg
+
+        ' --------------------------------------------------
+        ' 定額分のスケジュール生成 (Access版 gMake支払_SCH 定額セクション)
+        ' --------------------------------------------------
+        If shriCnt > 0 Then
+            Dim cashSch As List(Of CashScheduleEntry) = CashScheduleBuilder.BuildTeigakuSchedule(
+                ilKtmg, kishuDt, kimatDt, y1kimatDt,
+                GetBool(row, "jencho_f"),
+                GetInt(row, "shri_kn"), shriCnt,
+                GetDbl(row, "sshri_kn_m"), GetDbl(row, "sshri_kn_1"),
+                GetDbl(row, "sshri_kn_2"), GetDbl(row, "sshri_kn_3"),
+                GetNullableInt(row, "shho_m_id"), GetNullableInt(row, "shho_1_id"),
+                GetNullableInt(row, "shho_2_id"), GetNullableInt(row, "shho_3_id"),
+                GetNullableDate(row, "mae_dt"),
+                GetNullableDate(row, "shri_dt1"), GetNullableDate(row, "shri_dt2"),
+                GetInt(row, "shri_dt3"),
+                GetDbl(row, "zritu"),
+                klsryo, GetDbl(row, "b_kzei"),
+                GetDbl(row, "b_mlsryo"), GetDbl(row, "b_mzei"),
+                GetNullableDate(row, "ckaiyk_esdt_t")
+            )
+
+            ConvertCashToShiharai(cashSch, ilKtmg, result)
+        End If
+
+        ' --------------------------------------------------
+        ' 変額分のスケジュール生成 (Access版 gMake支払_SCH 変額セクション)
+        ' --------------------------------------------------
+        If GetBool(row, "b_henl_f") Then
+            Dim ckaiykEsdtH As Object = If(row.Table.Columns.Contains("ckaiyk_esdt_h"),
+                                           row("ckaiyk_esdt_h"), DBNull.Value)
+            Dim hengakuSch As List(Of CashScheduleEntry) = CashScheduleBuilder.BuildHengakuSchedule(
+                _crud, kykmId, ckaiykEsdtH)
+
+            ConvertCashToShiharai(hengakuSch, ilKtmg, result)
+        End If
+
+        Return result
+    End Function
+
+    ''' <summary>
+    ''' CashScheduleEntry リストを ShiharaiSchEntry に変換して結果リストに追加する
+    ''' </summary>
+    Private Sub ConvertCashToShiharai(
+        cashSch As List(Of CashScheduleEntry),
+        ilKtmg As ShriKtmg,
+        result As List(Of ShiharaiSchEntry)
+    )
+        For Each entry As CashScheduleEntry In cashSch
+            Dim shiharai As New ShiharaiSchEntry()
+            shiharai.ShriDt = entry.ShriDt
+            shiharai.SimeDt = entry.SimeDt
+            shiharai.KeijDt = If(ilKtmg = ShriKtmg.SimeDtBase, entry.SimeDt, entry.ShriDt)
+            shiharai.Cash = entry.Lsryo
+            shiharai.CkaiykF = entry.CkaiykF
+
+            Dim nen As Integer = 0, getu As Integer = 0
+            ScheduleHelper.GetGetuYYYYMM(entry.ShriDt, nen, getu)
+            shiharai.Nen = nen
+            shiharai.Getu = getu
+            ScheduleHelper.GetGetuYYYYMM(shiharai.KeijDt, nen, getu)
+            shiharai.KeijNen = nen
+            shiharai.KeijGetu = getu
+
+            result.Add(shiharai)
+        Next
+    End Sub
+
+    ' ======================================================================
     '  ソースデータ取得
     ' ======================================================================
 
@@ -1452,3 +1648,15 @@ End Module
 Public Enum LeakbnKind
     Itengai = 3  ' 移転外ファイナンスリース (Access版 cngLEAKBN_ITENGAI)
 End Enum
+
+''' <summary>注記計算結果行 (物件単位)</summary>
+Public Class ChukiResultRow
+    Public Property KykmId As Double
+    Public Property KykhId As Double
+    Public Property KykmNo As Double
+    Public Property BuknNm As String = ""
+    Public Property KykbnlNo As String = ""
+    Public Property LeakbnId As Integer
+    Public Property KjkbnId As Integer
+    Public Property Result As ChukiCalcResult
+End Class
