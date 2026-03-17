@@ -457,7 +457,8 @@ Partial Public Class Form_f_仕訳出力標準_KJ
         For i = 0 To kamokuArr.Length - 1
             For j = i + 1 To kamokuArr.Length - 1
                 ' Access版gCmpと等価: Null同士もTrue（統合対象）
-                If GCmp(kamokuArr(i).KamokuCD, kamokuArr(j).KamokuCD) Then
+                If GCmp(kamokuArr(i).KamokuCD, kamokuArr(j).KamokuCD) AndAlso
+                   GCmp(kamokuArr(i).KamokuNM, kamokuArr(j).KamokuNM) Then
                     kamokuArr(j).KamokuNo = kamokuArr(i).KamokuNo
                 End If
             Next
