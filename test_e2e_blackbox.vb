@@ -1,3 +1,6 @@
+Option Strict On
+Option Explicit On
+
 ' ブラックボックステスト: E2Eフロー確認（ログイン→契約参照→仕訳出力）
 ' Access版と入出力が一致することを検証する
 '
