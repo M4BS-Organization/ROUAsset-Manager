@@ -766,6 +766,12 @@
     <Compile Include="Form_f_flx_BUKN.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_MAIN.Designer.vb">
+      <DependentUpon>Form_f_仕訳出力標準_設定_MAIN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_MAIN.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Form_f_仕訳出力標準_設定_SH.Designer.vb">
       <DependentUpon>Form_f_仕訳出力標準_設定_SH.vb</DependentUpon>
     </Compile>

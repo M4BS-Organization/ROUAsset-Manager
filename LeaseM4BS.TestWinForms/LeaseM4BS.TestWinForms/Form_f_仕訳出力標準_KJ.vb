@@ -207,7 +207,7 @@ Partial Public Class Form_f_仕訳出力標準_KJ
     ' ================================================================
     Private Sub cmd_設定_Click(sender As Object, e As EventArgs) Handles cmd_設定.Click
         Try
-            Using frm As New Form_f_仕訳出力標準_設定_KJ()
+            Using frm As New Form_f_仕訳出力標準_設定_MAIN()
                 frm.ShowDialog(Me)
             End Using
         Catch ex As Exception
