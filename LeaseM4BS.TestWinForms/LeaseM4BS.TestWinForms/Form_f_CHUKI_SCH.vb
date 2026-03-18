@@ -265,7 +265,7 @@ Public Class Form_f_CHUKI_SCH
         HandleEnterKeyNavigation(Me, e)
     End Sub
 
-    ' 描画処理本体 todo印刷
+    ' 描画処理本体
     Private Sub PrintDocument1_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument1.PrintPage
         Dim g = e.Graphics
         Dim fontTitle As New Font("MS UI Gothic", 16, FontStyle.Bold)
