@@ -19,9 +19,18 @@ Public Class KlsryoCalculationEngine
         meisai As ShriMeisai
     ) As DataTable
 
-        ' *** 期首日/期末日の算出 (月末締め前提: ig締日=31)
+        ' *** 期首日/期末日の算出 (Access版 gKLSRYO_Main:行145-152)
+        Dim shimeDayInt As Integer = GetShimebi()
         Dim kishuDt As Date = New Date(dtFrom.Year, dtFrom.Month, 1)
         Dim kimatDt As Date = CashScheduleBuilder.GetMonthEndDate(dtTo)
+        If shimeDayInt <> 31 Then
+            ' 期首日補正: 前月締日+1日
+            ' Access版: dte_lKISHU_DT = DateAdd("d",1, CDate(Format(DateAdd("m",-1,dte_lKISHU_DT),"yyyy/mm") & "/" & ig締日))
+            kishuDt = GetShimeDateInMonth(dtFrom.AddMonths(-1).Year, dtFrom.AddMonths(-1).Month, shimeDayInt).AddDays(1)
+            ' 期末日補正: 当月締日
+            ' Access版: dte_lKIMAT_DT = CDate(Format(dte_lKIMAT_DT,"yyyy/mm") & "/" & ig締日)
+            kimatDt = GetShimeDateInMonth(dtTo.Year, dtTo.Month, shimeDayInt)
+        End If
 
         ' *** 翌期以降年度末(5年分)を算出
         Dim ynKimatDt(4) As Date
@@ -32,9 +41,12 @@ Public Class KlsryoCalculationEngine
             Else
                 wk = ynKimatDt(i - 1)
             End If
-            wk = CashScheduleBuilder.GetMonthEndDate(wk)
             wk = wk.AddMonths(12)
-            ynKimatDt(i) = CashScheduleBuilder.GetMonthEndDate(wk)
+            If shimeDayInt = 31 Then
+                ynKimatDt(i) = CashScheduleBuilder.GetMonthEndDate(wk)
+            Else
+                ynKimatDt(i) = GetShimeDateInMonth(wk.Year, wk.Month, shimeDayInt)
+            End If
         Next
 
         ' *** 月度開始/終了日を算出
@@ -1026,6 +1038,31 @@ Public Class KlsryoCalculationEngine
     Private Shared Function GetBool(row As DataRow, colName As String) As Boolean
         If IsDBNull(row(colName)) Then Return False
         Return CBool(row(colName))
+    End Function
+
+    ''' <summary>
+    ''' t_setteiから締日(1-31)を取得する (Access版 ig締日 に対応)
+    ''' GetSekouDt() と同パターン。レコード不在・NULL・例外時はデフォルト31を返す。
+    ''' </summary>
+    Private Function GetShimebi() As Integer
+        Try
+            Dim dt = _crud.GetDataTable("SELECT val_number FROM t_settei WHERE settei_nm = 'SHIMEBI'")
+            If dt.Rows.Count > 0 AndAlso Not IsDBNull(dt.Rows(0)("val_number")) Then
+                Return CInt(dt.Rows(0)("val_number"))
+            End If
+        Catch ex As Exception
+            DbConnectionManager.WriteError("設定値取得失敗(GetShimebi)", ex)
+        End Try
+        Return 31 ' デフォルト: 月末締め
+    End Function
+
+    ''' <summary>
+    ''' 指定年月に締日を適用したDateを返す。月内日数を超える場合は月末に切り下げる。
+    ''' 例: shimeDayInt=30, month=2 → 2月28日(または29日)
+    ''' </summary>
+    Private Shared Function GetShimeDateInMonth(year As Integer, month As Integer, shimeDayInt As Integer) As Date
+        Dim day As Integer = Math.Min(shimeDayInt, DateTime.DaysInMonth(year, month))
+        Return New Date(year, month, day)
     End Function
 
 End Class
