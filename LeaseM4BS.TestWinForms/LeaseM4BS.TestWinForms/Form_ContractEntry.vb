@@ -313,17 +313,10 @@ Partial Public Class Form_ContractEntry
                 ' 新規登録したIDを画面にセットしておく（連打防止）
                 txt_KYKH_ID.Text = currentKykhId.ToString()
             Else
-                ' Updateメソッドがない場合はSQLで実行
-                ' _crud.Update("d_kykh", valKykh, "kykh_id", currentKykhId) 
-                ' ※Updateヘルパーがない場合のSQL例:
-                Dim updateSql As String = "UPDATE d_kykh SET " &
-                                          "kykbnj=@kykbnj, k_glsryo=@k_glsryo, k_update_dt=@k_update_dt " &
-                                          "WHERE kykh_id = @id"
-                ' (ここではDictionaryを使ったUpdateメソッドがある前提とします)
-                ' もし無ければ、Insertと同じキー違反になるので、Updateロジックが必要です
-                MessageBox.Show("修正モードですが、Update処理が未実装のためInsertしようとしています。重複エラーになります。", "警告")
-                ' ★とりあえずInsertを実行してエラーを確認する場合はこのままでOK
-                ' _crud.Insert("d_kykh", valKykh) 
+                ' 修正モード: CrudHelper.Update を使用して d_kykh を更新
+                Dim whereParams As New List(Of NpgsqlParameter)
+                whereParams.Add(New NpgsqlParameter("@kykh_id", currentKykhId))
+                _crud.Update("d_kykh", valKykh, "kykh_id = @kykh_id", whereParams)
             End If
 
             ' ---------------------------------------------------------

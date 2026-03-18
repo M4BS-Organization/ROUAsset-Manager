@@ -2,7 +2,7 @@
     Private Const FMT_CURRENCY As String = "#,##0"
 
     ' オブジェクトを安全にIntegerに変換する
-    Public Function NzInt(value As Object, Optional defaultValue As Object = 0) As Object
+    Public Function NzInt(value As Object, Optional defaultValue As Integer = 0) As Integer
         If value Is Nothing OrElse IsDBNull(value) OrElse String.IsNullOrEmpty(value.ToString()) Then
             Return defaultValue
         End If

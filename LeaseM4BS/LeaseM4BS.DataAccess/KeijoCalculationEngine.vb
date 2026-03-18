@@ -124,6 +124,7 @@ Public Class KeijoCalculationEngine
                 Dim p As New ChukiCalcParams()
                 p.KishuDt = kishuDt
                 p.KimatDt = kimatDt
+                If IsDBNull(row("start_dt")) OrElse IsDBNull(row("b_rend_dt")) Then Continue For
                 p.StartDt = CDate(row("start_dt"))
                 p.Lkikan = GetInt(row, "lkikan")
                 p.BRendDt = CDate(row("b_rend_dt"))
@@ -159,8 +160,8 @@ Public Class KeijoCalculationEngine
                 ' 結果を格納
                 Dim resultRow As New ChukiResultRow()
                 resultRow.KykmId = kykmId
-                resultRow.KykhId = CDbl(row("kykh_kykh_id"))
-                resultRow.KykmNo = CDbl(row("kykm_kykm_no"))
+                resultRow.KykhId = GetDbl(row, "kykh_kykh_id")
+                resultRow.KykmNo = GetDbl(row, "kykm_kykm_no")
                 resultRow.BuknNm = If(IsDBNull(row("bukn_nm")), "", CStr(row("bukn_nm")))
                 resultRow.KykbnlNo = If(IsDBNull(row("kykbnl")), "", CStr(row("kykbnl")))
                 resultRow.LeakbnId = GetInt(row, "leakbn_id")

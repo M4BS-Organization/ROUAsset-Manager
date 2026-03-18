@@ -36,6 +36,7 @@ Public Class GsonScheduleBuilder
         Dim dt As DataTable = crud.GetDataTable(sql, params)
 
         For Each row As DataRow In dt.Rows
+            If IsDBNull(row("gson_dt")) Then Continue For
             Dim entry As New GsonScheduleEntry()
 
             Dim gsonDt As Date = CDate(row("gson_dt"))
@@ -80,6 +81,7 @@ Public Class GsonScheduleBuilder
         If rows Is Nothing OrElse rows.Count = 0 Then Return result
 
         For Each row As DataRow In rows
+            If IsDBNull(row("gson_dt")) Then Continue For
             Dim entry As New GsonScheduleEntry()
 
             Dim gsonDt As Date = CDate(row("gson_dt"))

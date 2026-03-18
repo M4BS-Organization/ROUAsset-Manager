@@ -99,7 +99,9 @@ Public Class MonthlyJournalEngine
                 If _crud.IsInTransaction Then
                     _crud.Rollback()
                 End If
-            Catch
+            Catch rollbackEx As Exception
+                ' Rollback 失敗は致命的でないが、記録する
+                System.Diagnostics.Debug.WriteLine($"Rollback失敗: {rollbackEx.Message}")
             End Try
 
             Throw New Exception($"月次仕訳計上処理でエラーが発生しました: {ex.Message}", ex)
@@ -150,7 +152,9 @@ Public Class MonthlyJournalEngine
                 If _crud.IsInTransaction Then
                     _crud.Rollback()
                 End If
-            Catch
+            Catch rollbackEx As Exception
+                ' Rollback 失敗は致命的でないが、記録する
+                System.Diagnostics.Debug.WriteLine($"Rollback失敗: {rollbackEx.Message}")
             End Try
 
             Throw New Exception($"注記計算処理でエラーが発生しました: {ex.Message}", ex)

@@ -79,14 +79,13 @@ Public Class CrudHelper
                 End Using
             End Using
 
-            ' 内部で生成した接続の場合はここで閉じる
-            If useInternalConnection Then
-                conn.Dispose()
-            End If
-
         Catch ex As Exception
             Dim detailedMsg As String = CreateErrorMessage(ex, sql, parameters)
             Throw New Exception(detailedMsg, ex)
+        Finally
+            If useInternalConnection AndAlso conn IsNot Nothing Then
+                conn.Dispose()
+            End If
         End Try
 
         Return dataTable
@@ -129,14 +128,13 @@ Public Class CrudHelper
                 rowsAffected = cmd.ExecuteNonQuery()
             End Using
 
-            ' 内部で生成した接続の場合はここで閉じる
-            If useInternalConnection Then
-                conn.Dispose()
-            End If
-
         Catch ex As Exception
             Dim detailedMsg As String = CreateErrorMessage(ex, sql, parameters)
             Throw New Exception(detailedMsg, ex)
+        Finally
+            If useInternalConnection AndAlso conn IsNot Nothing Then
+                conn.Dispose()
+            End If
         End Try
 
         Return rowsAffected
@@ -180,24 +178,22 @@ Public Class CrudHelper
                 result = cmd.ExecuteScalar()
             End Using
 
-            ' 内部で生成した接続の場合はここで閉じる
-            If useInternalConnection Then
-                conn.Dispose()
-            End If
-
-            ' === 【ここが改良ポイント】 NULL安全な型変換 ===
-            If result Is Nothing OrElse IsDBNull(result) Then
-                Return Nothing ' TがIntegerなら0, StringならNothing, BooleanならFalse
-            End If
-
-            ' 取得した値を指定の型(T)に変換して返す
-            Return CType(result, T)
-            ' ==========================================
-
         Catch ex As Exception
             Dim detailedMsg As String = CreateErrorMessage(ex, sql, parameters)
             Throw New Exception(detailedMsg, ex)
+        Finally
+            If useInternalConnection AndAlso conn IsNot Nothing Then
+                conn.Dispose()
+            End If
         End Try
+
+        ' === NULL安全な型変換 ===
+        If result Is Nothing OrElse IsDBNull(result) Then
+            Return Nothing ' TがIntegerなら0, StringならNothing, BooleanならFalse
+        End If
+
+        ' 取得した値を指定の型(T)に変換して返す
+        Return CType(result, T)
     End Function
     ' CrudHelper.vb に追加
 
@@ -436,7 +432,8 @@ Public Class CrudHelper
                 If _activeTransaction IsNot Nothing Then
                     Try
                         _activeTransaction.Rollback()
-                    Catch
+                    Catch rollbackEx As Exception
+                        _connectionManager.WriteError($"Rollback失敗: {rollbackEx.Message}")
                     End Try
                 End If
 
