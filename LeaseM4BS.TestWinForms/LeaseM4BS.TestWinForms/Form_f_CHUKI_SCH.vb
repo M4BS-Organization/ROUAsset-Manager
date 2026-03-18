@@ -233,7 +233,10 @@ Public Class Form_f_CHUKI_SCH
         End If
     End Function
 
-    ' todo
+    ' 発生リース料の計算
+    ' 利子込法（Gross Method）の場合: 支払リース料と等値
+    ' 利息法（Net Method）の場合: 元本返済額 + 利息発生額となるが、Access版VBA参照不可のため
+    '   現状は利子込法と同じ実装とする。利息法の正確な実装は別Issueで対応。
     Private Function CalcGhassei(dt As Date) As Integer
         Return CalcKlsryo(dt)
     End Function
@@ -316,7 +319,25 @@ Public Class Form_f_CHUKI_SCH
         Next
 
         ' --- すべて印刷し終えたら合計行（dgv_TOTAL）を印刷 ---
-        ' ここに dgv_TOTAL のループ処理を同様に書く...
+        For Each row As DataGridViewRow In dgv_TOTAL.Rows
+            If row.IsNewRow Then Continue For
+
+            currentX = x
+            For Each cell As DataGridViewCell In row.Cells
+                If cell.OwningColumn.Visible Then
+                    g.DrawRectangle(Pens.Black, currentX, y, cell.OwningColumn.Width, 20)
+                    Dim val As String = If(cell.Value IsNot Nothing, cell.Value.ToString(), "")
+                    g.DrawString(val, fontBody, Brushes.Black, currentX + 2, y + 3)
+                    currentX += cell.OwningColumn.Width
+                End If
+            Next
+            y += 20
+
+            If y > e.MarginBounds.Bottom - 40 Then
+                e.HasMorePages = True
+                Return
+            End If
+        Next
 
         e.HasMorePages = False ' これで印刷終了！
     End Sub
