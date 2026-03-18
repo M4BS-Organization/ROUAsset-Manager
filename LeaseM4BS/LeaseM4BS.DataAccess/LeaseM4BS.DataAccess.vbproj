@@ -130,6 +130,7 @@
     <Compile Include="RepaymentScheduleBuilder.vb" />
     <Compile Include="ScheduleTypes.vb" />
     <Compile Include="MonthlyJournalEngine.vb" />
+    <Compile Include="SetteiHelper.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

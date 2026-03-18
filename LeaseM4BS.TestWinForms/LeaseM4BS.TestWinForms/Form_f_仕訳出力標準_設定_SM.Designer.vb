@@ -17,6 +17,9 @@ Partial Public Class Form_f_仕訳出力標準_設定_SM
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.cmd_CLOSE = New System.Windows.Forms.Button()
+        Me.tab_設定 = New System.Windows.Forms.TabControl()
+        Me.page_1 = New System.Windows.Forms.TabPage()
+        Me.page_2 = New System.Windows.Forms.TabPage()
         Me.txt_SWKSM_SSN1_1D1_CNSTCD = New System.Windows.Forms.TextBox()
         Me.txt_SWKSM_SSN1_1D1_CNSTNM = New System.Windows.Forms.TextBox()
         Me.txt_SWKSM_SSN1_1D2_CNSTCD = New System.Windows.Forms.TextBox()
@@ -241,6 +244,41 @@ Partial Public Class Form_f_仕訳出力標準_設定_SM
         Me.chk_SWKSM_HIYO5_KNO_TOGO_F = New System.Windows.Forms.CheckBox()
         Me.chk_SWKSM_HIYO6_OUT_F = New System.Windows.Forms.CheckBox()
         Me.chk_SWKSM_HIYO6_KNO_TOGO_F = New System.Windows.Forms.CheckBox()
+        Me.cmb_SWKSM_SSN1_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN1_1D2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN1_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN1_2C2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN2_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN2_1D2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN2_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN2_2C2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN3_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN3_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN4_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN4_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN5_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN5_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN6_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_SSN6_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO1_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO1_1D2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO1_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO1_2C2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO2_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO2_1D2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO2_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO2_2C2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO3_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO3_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO4_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO4_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO5_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO5_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO6_1D1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKSM_HIYO6_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.tab_設定.SuspendLayout()
+        Me.page_1.SuspendLayout()
+        Me.page_2.SuspendLayout()
         Me.SuspendLayout()
         '
         ' cmd_CLOSE
@@ -251,6 +289,35 @@ Partial Public Class Form_f_仕訳出力標準_設定_SM
         Me.cmd_CLOSE.TabIndex = 0
         Me.cmd_CLOSE.Text = "戻る(&C)"
         Me.cmd_CLOSE.UseVisualStyleBackColor = True
+        '
+        ' tab_設定
+        '
+        Me.tab_設定.Controls.Add(Me.page_1)
+        Me.tab_設定.Controls.Add(Me.page_2)
+        Me.tab_設定.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.tab_設定.Location = New System.Drawing.Point(0, 0)
+        Me.tab_設定.Name = "tab_設定"
+        Me.tab_設定.SelectedIndex = 0
+        Me.tab_設定.Size = New System.Drawing.Size(774, 800)
+        Me.tab_設定.TabIndex = 225
+        '
+        ' page_1
+        '
+        Me.page_1.Text = "資産リース"
+        Me.page_1.Name = "page_1"
+        Me.page_1.Padding = New System.Windows.Forms.Padding(3)
+        Me.page_1.Size = New System.Drawing.Size(766, 774)
+        Me.page_1.TabIndex = 0
+        Me.page_1.UseVisualStyleBackColor = True
+        '
+        ' page_2
+        '
+        Me.page_2.Text = "費用リース"
+        Me.page_2.Name = "page_2"
+        Me.page_2.Padding = New System.Windows.Forms.Padding(3)
+        Me.page_2.Size = New System.Drawing.Size(766, 774)
+        Me.page_2.TabIndex = 1
+        Me.page_2.UseVisualStyleBackColor = True
         '
         ' txt_SWKSM_SSN1_1D1_CNSTCD
         '
@@ -2004,239 +2071,534 @@ Partial Public Class Form_f_仕訳出力標準_設定_SM
         Me.chk_SWKSM_HIYO6_KNO_TOGO_F.Text = ""
         Me.chk_SWKSM_HIYO6_KNO_TOGO_F.UseVisualStyleBackColor = True
         '
+        ' cmb_SWKSM_SSN1_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN1_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN1_1D1_FLDNM.Location = New System.Drawing.Point(384, 94)
+        Me.cmb_SWKSM_SSN1_1D1_FLDNM.Name = "cmb_SWKSM_SSN1_1D1_FLDNM"
+        Me.cmb_SWKSM_SSN1_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN1_1D1_FLDNM.TabIndex = 226
+        '
+        ' cmb_SWKSM_SSN1_1D2_FLDNM
+        '
+        Me.cmb_SWKSM_SSN1_1D2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN1_1D2_FLDNM.Location = New System.Drawing.Point(384, 113)
+        Me.cmb_SWKSM_SSN1_1D2_FLDNM.Name = "cmb_SWKSM_SSN1_1D2_FLDNM"
+        Me.cmb_SWKSM_SSN1_1D2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN1_1D2_FLDNM.TabIndex = 227
+        '
+        ' cmb_SWKSM_SSN1_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN1_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN1_2C1_FLDNM.Location = New System.Drawing.Point(384, 132)
+        Me.cmb_SWKSM_SSN1_2C1_FLDNM.Name = "cmb_SWKSM_SSN1_2C1_FLDNM"
+        Me.cmb_SWKSM_SSN1_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN1_2C1_FLDNM.TabIndex = 228
+        '
+        ' cmb_SWKSM_SSN1_2C2_FLDNM
+        '
+        Me.cmb_SWKSM_SSN1_2C2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN1_2C2_FLDNM.Location = New System.Drawing.Point(384, 151)
+        Me.cmb_SWKSM_SSN1_2C2_FLDNM.Name = "cmb_SWKSM_SSN1_2C2_FLDNM"
+        Me.cmb_SWKSM_SSN1_2C2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN1_2C2_FLDNM.TabIndex = 229
+        '
+        ' cmb_SWKSM_SSN2_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN2_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN2_1D1_FLDNM.Location = New System.Drawing.Point(384, 188)
+        Me.cmb_SWKSM_SSN2_1D1_FLDNM.Name = "cmb_SWKSM_SSN2_1D1_FLDNM"
+        Me.cmb_SWKSM_SSN2_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN2_1D1_FLDNM.TabIndex = 230
+        '
+        ' cmb_SWKSM_SSN2_1D2_FLDNM
+        '
+        Me.cmb_SWKSM_SSN2_1D2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN2_1D2_FLDNM.Location = New System.Drawing.Point(384, 207)
+        Me.cmb_SWKSM_SSN2_1D2_FLDNM.Name = "cmb_SWKSM_SSN2_1D2_FLDNM"
+        Me.cmb_SWKSM_SSN2_1D2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN2_1D2_FLDNM.TabIndex = 231
+        '
+        ' cmb_SWKSM_SSN2_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN2_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN2_2C1_FLDNM.Location = New System.Drawing.Point(384, 226)
+        Me.cmb_SWKSM_SSN2_2C1_FLDNM.Name = "cmb_SWKSM_SSN2_2C1_FLDNM"
+        Me.cmb_SWKSM_SSN2_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN2_2C1_FLDNM.TabIndex = 232
+        '
+        ' cmb_SWKSM_SSN2_2C2_FLDNM
+        '
+        Me.cmb_SWKSM_SSN2_2C2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN2_2C2_FLDNM.Location = New System.Drawing.Point(384, 245)
+        Me.cmb_SWKSM_SSN2_2C2_FLDNM.Name = "cmb_SWKSM_SSN2_2C2_FLDNM"
+        Me.cmb_SWKSM_SSN2_2C2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN2_2C2_FLDNM.TabIndex = 233
+        '
+        ' cmb_SWKSM_SSN3_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN3_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN3_1D1_FLDNM.Location = New System.Drawing.Point(384, 283)
+        Me.cmb_SWKSM_SSN3_1D1_FLDNM.Name = "cmb_SWKSM_SSN3_1D1_FLDNM"
+        Me.cmb_SWKSM_SSN3_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN3_1D1_FLDNM.TabIndex = 234
+        '
+        ' cmb_SWKSM_SSN3_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN3_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN3_2C1_FLDNM.Location = New System.Drawing.Point(384, 302)
+        Me.cmb_SWKSM_SSN3_2C1_FLDNM.Name = "cmb_SWKSM_SSN3_2C1_FLDNM"
+        Me.cmb_SWKSM_SSN3_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN3_2C1_FLDNM.TabIndex = 235
+        '
+        ' cmb_SWKSM_SSN4_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN4_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN4_1D1_FLDNM.Location = New System.Drawing.Point(384, 340)
+        Me.cmb_SWKSM_SSN4_1D1_FLDNM.Name = "cmb_SWKSM_SSN4_1D1_FLDNM"
+        Me.cmb_SWKSM_SSN4_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN4_1D1_FLDNM.TabIndex = 236
+        '
+        ' cmb_SWKSM_SSN4_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN4_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN4_2C1_FLDNM.Location = New System.Drawing.Point(384, 359)
+        Me.cmb_SWKSM_SSN4_2C1_FLDNM.Name = "cmb_SWKSM_SSN4_2C1_FLDNM"
+        Me.cmb_SWKSM_SSN4_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN4_2C1_FLDNM.TabIndex = 237
+        '
+        ' cmb_SWKSM_SSN5_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN5_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN5_1D1_FLDNM.Location = New System.Drawing.Point(384, 396)
+        Me.cmb_SWKSM_SSN5_1D1_FLDNM.Name = "cmb_SWKSM_SSN5_1D1_FLDNM"
+        Me.cmb_SWKSM_SSN5_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN5_1D1_FLDNM.TabIndex = 238
+        '
+        ' cmb_SWKSM_SSN5_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN5_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN5_2C1_FLDNM.Location = New System.Drawing.Point(384, 415)
+        Me.cmb_SWKSM_SSN5_2C1_FLDNM.Name = "cmb_SWKSM_SSN5_2C1_FLDNM"
+        Me.cmb_SWKSM_SSN5_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN5_2C1_FLDNM.TabIndex = 239
+        '
+        ' cmb_SWKSM_SSN6_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN6_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN6_1D1_FLDNM.Location = New System.Drawing.Point(384, 453)
+        Me.cmb_SWKSM_SSN6_1D1_FLDNM.Name = "cmb_SWKSM_SSN6_1D1_FLDNM"
+        Me.cmb_SWKSM_SSN6_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN6_1D1_FLDNM.TabIndex = 240
+        '
+        ' cmb_SWKSM_SSN6_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_SSN6_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_SSN6_2C1_FLDNM.Location = New System.Drawing.Point(384, 472)
+        Me.cmb_SWKSM_SSN6_2C1_FLDNM.Name = "cmb_SWKSM_SSN6_2C1_FLDNM"
+        Me.cmb_SWKSM_SSN6_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_SSN6_2C1_FLDNM.TabIndex = 241
+        '
+        ' cmb_SWKSM_HIYO1_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO1_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO1_1D1_FLDNM.Location = New System.Drawing.Point(384, 94)
+        Me.cmb_SWKSM_HIYO1_1D1_FLDNM.Name = "cmb_SWKSM_HIYO1_1D1_FLDNM"
+        Me.cmb_SWKSM_HIYO1_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO1_1D1_FLDNM.TabIndex = 242
+        '
+        ' cmb_SWKSM_HIYO1_1D2_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO1_1D2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO1_1D2_FLDNM.Location = New System.Drawing.Point(384, 113)
+        Me.cmb_SWKSM_HIYO1_1D2_FLDNM.Name = "cmb_SWKSM_HIYO1_1D2_FLDNM"
+        Me.cmb_SWKSM_HIYO1_1D2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO1_1D2_FLDNM.TabIndex = 243
+        '
+        ' cmb_SWKSM_HIYO1_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO1_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO1_2C1_FLDNM.Location = New System.Drawing.Point(384, 132)
+        Me.cmb_SWKSM_HIYO1_2C1_FLDNM.Name = "cmb_SWKSM_HIYO1_2C1_FLDNM"
+        Me.cmb_SWKSM_HIYO1_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO1_2C1_FLDNM.TabIndex = 244
+        '
+        ' cmb_SWKSM_HIYO1_2C2_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO1_2C2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO1_2C2_FLDNM.Location = New System.Drawing.Point(384, 151)
+        Me.cmb_SWKSM_HIYO1_2C2_FLDNM.Name = "cmb_SWKSM_HIYO1_2C2_FLDNM"
+        Me.cmb_SWKSM_HIYO1_2C2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO1_2C2_FLDNM.TabIndex = 245
+        '
+        ' cmb_SWKSM_HIYO2_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO2_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO2_1D1_FLDNM.Location = New System.Drawing.Point(384, 188)
+        Me.cmb_SWKSM_HIYO2_1D1_FLDNM.Name = "cmb_SWKSM_HIYO2_1D1_FLDNM"
+        Me.cmb_SWKSM_HIYO2_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO2_1D1_FLDNM.TabIndex = 246
+        '
+        ' cmb_SWKSM_HIYO2_1D2_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO2_1D2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO2_1D2_FLDNM.Location = New System.Drawing.Point(384, 207)
+        Me.cmb_SWKSM_HIYO2_1D2_FLDNM.Name = "cmb_SWKSM_HIYO2_1D2_FLDNM"
+        Me.cmb_SWKSM_HIYO2_1D2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO2_1D2_FLDNM.TabIndex = 247
+        '
+        ' cmb_SWKSM_HIYO2_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO2_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO2_2C1_FLDNM.Location = New System.Drawing.Point(384, 226)
+        Me.cmb_SWKSM_HIYO2_2C1_FLDNM.Name = "cmb_SWKSM_HIYO2_2C1_FLDNM"
+        Me.cmb_SWKSM_HIYO2_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO2_2C1_FLDNM.TabIndex = 248
+        '
+        ' cmb_SWKSM_HIYO2_2C2_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO2_2C2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO2_2C2_FLDNM.Location = New System.Drawing.Point(384, 245)
+        Me.cmb_SWKSM_HIYO2_2C2_FLDNM.Name = "cmb_SWKSM_HIYO2_2C2_FLDNM"
+        Me.cmb_SWKSM_HIYO2_2C2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO2_2C2_FLDNM.TabIndex = 249
+        '
+        ' cmb_SWKSM_HIYO3_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO3_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO3_1D1_FLDNM.Location = New System.Drawing.Point(384, 283)
+        Me.cmb_SWKSM_HIYO3_1D1_FLDNM.Name = "cmb_SWKSM_HIYO3_1D1_FLDNM"
+        Me.cmb_SWKSM_HIYO3_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO3_1D1_FLDNM.TabIndex = 250
+        '
+        ' cmb_SWKSM_HIYO3_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO3_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO3_2C1_FLDNM.Location = New System.Drawing.Point(384, 302)
+        Me.cmb_SWKSM_HIYO3_2C1_FLDNM.Name = "cmb_SWKSM_HIYO3_2C1_FLDNM"
+        Me.cmb_SWKSM_HIYO3_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO3_2C1_FLDNM.TabIndex = 251
+        '
+        ' cmb_SWKSM_HIYO4_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO4_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO4_1D1_FLDNM.Location = New System.Drawing.Point(384, 340)
+        Me.cmb_SWKSM_HIYO4_1D1_FLDNM.Name = "cmb_SWKSM_HIYO4_1D1_FLDNM"
+        Me.cmb_SWKSM_HIYO4_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO4_1D1_FLDNM.TabIndex = 252
+        '
+        ' cmb_SWKSM_HIYO4_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO4_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO4_2C1_FLDNM.Location = New System.Drawing.Point(384, 359)
+        Me.cmb_SWKSM_HIYO4_2C1_FLDNM.Name = "cmb_SWKSM_HIYO4_2C1_FLDNM"
+        Me.cmb_SWKSM_HIYO4_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO4_2C1_FLDNM.TabIndex = 253
+        '
+        ' cmb_SWKSM_HIYO5_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO5_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO5_1D1_FLDNM.Location = New System.Drawing.Point(384, 396)
+        Me.cmb_SWKSM_HIYO5_1D1_FLDNM.Name = "cmb_SWKSM_HIYO5_1D1_FLDNM"
+        Me.cmb_SWKSM_HIYO5_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO5_1D1_FLDNM.TabIndex = 254
+        '
+        ' cmb_SWKSM_HIYO5_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO5_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO5_2C1_FLDNM.Location = New System.Drawing.Point(384, 415)
+        Me.cmb_SWKSM_HIYO5_2C1_FLDNM.Name = "cmb_SWKSM_HIYO5_2C1_FLDNM"
+        Me.cmb_SWKSM_HIYO5_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO5_2C1_FLDNM.TabIndex = 255
+        '
+        ' cmb_SWKSM_HIYO6_1D1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO6_1D1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO6_1D1_FLDNM.Location = New System.Drawing.Point(384, 453)
+        Me.cmb_SWKSM_HIYO6_1D1_FLDNM.Name = "cmb_SWKSM_HIYO6_1D1_FLDNM"
+        Me.cmb_SWKSM_HIYO6_1D1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO6_1D1_FLDNM.TabIndex = 256
+        '
+        ' cmb_SWKSM_HIYO6_2C1_FLDNM
+        '
+        Me.cmb_SWKSM_HIYO6_2C1_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKSM_HIYO6_2C1_FLDNM.Location = New System.Drawing.Point(384, 472)
+        Me.cmb_SWKSM_HIYO6_2C1_FLDNM.Name = "cmb_SWKSM_HIYO6_2C1_FLDNM"
+        Me.cmb_SWKSM_HIYO6_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKSM_HIYO6_2C1_FLDNM.TabIndex = 257
+        '
         ' Form_f_仕訳出力標準_設定_SM
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(774, 800)
-        Me.Controls.Add(Me.chk_SWKSM_SSN1_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN1_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN2_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN2_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN3_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN3_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN4_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN4_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN5_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN5_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN6_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_SSN6_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO1_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO1_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO2_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO2_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO3_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO3_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO4_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO4_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO5_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO5_KNO_TOGO_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO6_OUT_F)
-        Me.Controls.Add(Me.chk_SWKSM_HIYO6_KNO_TOGO_F)
-        Me.Controls.Add(Me.ラベル29)
-        Me.Controls.Add(Me.ラベル873)
-        Me.Controls.Add(Me.ラベル875)
-        Me.Controls.Add(Me.ラベル876)
-        Me.Controls.Add(Me.ラベル877)
-        Me.Controls.Add(Me.ラベル881)
-        Me.Controls.Add(Me.ラベル883)
-        Me.Controls.Add(Me.ラベル885)
-        Me.Controls.Add(Me.ラベル887)
-        Me.Controls.Add(Me.ラベル888)
-        Me.Controls.Add(Me.ラベル889)
-        Me.Controls.Add(Me.ラベル893)
-        Me.Controls.Add(Me.ラベル895)
-        Me.Controls.Add(Me.ラベル897)
-        Me.Controls.Add(Me.ラベル898)
-        Me.Controls.Add(Me.ラベル899)
-        Me.Controls.Add(Me.ラベル900)
-        Me.Controls.Add(Me.ラベル901)
-        Me.Controls.Add(Me.ラベル920)
-        Me.Controls.Add(Me.ラベル924)
-        Me.Controls.Add(Me.ラベル1129)
-        Me.Controls.Add(Me.ラベル1135)
-        Me.Controls.Add(Me.ラベル930)
-        Me.Controls.Add(Me.ラベル932)
-        Me.Controls.Add(Me.ラベル935)
-        Me.Controls.Add(Me.ラベル1141)
-        Me.Controls.Add(Me.ラベル942)
-        Me.Controls.Add(Me.ラベル951)
-        Me.Controls.Add(Me.ラベル952)
-        Me.Controls.Add(Me.ラベル956)
-        Me.Controls.Add(Me.ラベル958)
-        Me.Controls.Add(Me.ラベル959)
-        Me.Controls.Add(Me.ラベル1147)
-        Me.Controls.Add(Me.ラベル963)
-        Me.Controls.Add(Me.ラベル922)
-        Me.Controls.Add(Me.ラベル928)
-        Me.Controls.Add(Me.ラベル937)
-        Me.Controls.Add(Me.ラベル961)
-        Me.Controls.Add(Me.ラベル969)
-        Me.Controls.Add(Me.ラベル1068)
-        Me.Controls.Add(Me.ラベル1069)
-        Me.Controls.Add(Me.ラベル1072)
-        Me.Controls.Add(Me.ラベル1074)
-        Me.Controls.Add(Me.ラベル1075)
-        Me.Controls.Add(Me.ラベル1079)
-        Me.Controls.Add(Me.ラベル1127)
-        Me.Controls.Add(Me.ラベル1130)
-        Me.Controls.Add(Me.ラベル1131)
-        Me.Controls.Add(Me.ラベル1137)
-        Me.Controls.Add(Me.ラベル1139)
-        Me.Controls.Add(Me.ラベル1142)
-        Me.Controls.Add(Me.ラベル1143)
-        Me.Controls.Add(Me.ラベル1149)
-        Me.Controls.Add(Me.ラベル1152)
-        Me.Controls.Add(Me.ラベル1153)
-        Me.Controls.Add(Me.ラベル1154)
-        Me.Controls.Add(Me.ラベル1155)
-        Me.Controls.Add(Me.ラベル1156)
-        Me.Controls.Add(Me.ラベル1157)
-        Me.Controls.Add(Me.ラベル975)
-        Me.Controls.Add(Me.ラベル1160)
-        Me.Controls.Add(Me.ラベル1289)
-        Me.Controls.Add(Me.ラベル1290)
-        Me.Controls.Add(Me.ラベル1164)
-        Me.Controls.Add(Me.ラベル1294)
-        Me.Controls.Add(Me.ラベル1297)
-        Me.Controls.Add(Me.ラベル1300)
-        Me.Controls.Add(Me.ラベル1303)
-        Me.Controls.Add(Me.ラベル1288)
-        Me.Controls.Add(Me.ラベル1029)
-        Me.Controls.Add(Me.ラベル1030)
-        Me.Controls.Add(Me.ラベル1031)
-        Me.Controls.Add(Me.ラベル1032)
-        Me.Controls.Add(Me.ラベル1033)
-        Me.Controls.Add(Me.ラベル1171)
-        Me.Controls.Add(Me.ラベル1173)
-        Me.Controls.Add(Me.ラベル1174)
-        Me.Controls.Add(Me.ラベル1175)
-        Me.Controls.Add(Me.ラベル1179)
-        Me.Controls.Add(Me.ラベル1181)
-        Me.Controls.Add(Me.ラベル1183)
-        Me.Controls.Add(Me.ラベル1185)
-        Me.Controls.Add(Me.ラベル1186)
-        Me.Controls.Add(Me.ラベル1187)
-        Me.Controls.Add(Me.ラベル1191)
-        Me.Controls.Add(Me.ラベル1193)
-        Me.Controls.Add(Me.ラベル1197)
-        Me.Controls.Add(Me.ラベル1200)
-        Me.Controls.Add(Me.ラベル1199)
-        Me.Controls.Add(Me.ラベル1204)
-        Me.Controls.Add(Me.ラベル1206)
-        Me.Controls.Add(Me.ラベル1208)
-        Me.Controls.Add(Me.ラベル1211)
-        Me.Controls.Add(Me.ラベル1210)
-        Me.Controls.Add(Me.ラベル1216)
-        Me.Controls.Add(Me.ラベル1218)
-        Me.Controls.Add(Me.ラベル1219)
-        Me.Controls.Add(Me.ラベル1220)
-        Me.Controls.Add(Me.ラベル1221)
-        Me.Controls.Add(Me.ラベル1222)
-        Me.Controls.Add(Me.ラベル1215)
-        Me.Controls.Add(Me.ラベル1225)
-        Me.Controls.Add(Me.ラベル1228)
-        Me.Controls.Add(Me.ラベル1232)
-        Me.Controls.Add(Me.ラベル1237)
-        Me.Controls.Add(Me.ラベル1241)
-        Me.Controls.Add(Me.ラベル1246)
-        Me.Controls.Add(Me.ラベル1252)
-        Me.Controls.Add(Me.ラベル1253)
-        Me.Controls.Add(Me.ラベル1255)
-        Me.Controls.Add(Me.ラベル1256)
-        Me.Controls.Add(Me.ラベル1257)
-        Me.Controls.Add(Me.ラベル1258)
-        Me.Controls.Add(Me.ラベル1259)
-        Me.Controls.Add(Me.ラベル1260)
-        Me.Controls.Add(Me.ラベル1261)
-        Me.Controls.Add(Me.ラベル1262)
-        Me.Controls.Add(Me.ラベル1263)
-        Me.Controls.Add(Me.ラベル1264)
-        Me.Controls.Add(Me.ラベル1265)
-        Me.Controls.Add(Me.ラベル1266)
-        Me.Controls.Add(Me.ラベル1268)
-        Me.Controls.Add(Me.ラベル1269)
-        Me.Controls.Add(Me.ラベル1270)
-        Me.Controls.Add(Me.ラベル1271)
-        Me.Controls.Add(Me.ラベル1272)
-        Me.Controls.Add(Me.ラベル1273)
-        Me.Controls.Add(Me.ラベル1250)
-        Me.Controls.Add(Me.ラベル1276)
-        Me.Controls.Add(Me.ラベル1306)
-        Me.Controls.Add(Me.ラベル1309)
-        Me.Controls.Add(Me.ラベル1280)
-        Me.Controls.Add(Me.ラベル1312)
-        Me.Controls.Add(Me.ラベル1315)
-        Me.Controls.Add(Me.ラベル1318)
-        Me.Controls.Add(Me.ラベル1321)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_1D2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_1D2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_2C2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN1_2C2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_1D2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_1D2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_2C2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN2_2C2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN3_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN3_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN3_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN3_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN4_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN4_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN4_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN4_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN5_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN5_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN5_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN5_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN6_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN6_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_SSN6_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_SSN6_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_1D2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_1D2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_2C2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO1_2C2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_1D2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_1D2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_2C2_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO2_2C2_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO3_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO3_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO3_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO3_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO4_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO4_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO4_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO4_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO5_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO5_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO5_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO5_2C1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO6_1D1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO6_1D1_CNSTNM)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO6_2C1_CNSTCD)
-        Me.Controls.Add(Me.txt_SWKSM_HIYO6_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN1_OUT_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN1_KNO_TOGO_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN2_OUT_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN2_KNO_TOGO_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN3_OUT_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN3_KNO_TOGO_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN4_OUT_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN4_KNO_TOGO_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN5_OUT_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN5_KNO_TOGO_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN6_OUT_F)
+        Me.page_1.Controls.Add(Me.chk_SWKSM_SSN6_KNO_TOGO_F)
+        Me.page_1.Controls.Add(Me.ラベル29)
+        Me.page_1.Controls.Add(Me.ラベル873)
+        Me.page_1.Controls.Add(Me.ラベル875)
+        Me.page_1.Controls.Add(Me.ラベル876)
+        Me.page_1.Controls.Add(Me.ラベル877)
+        Me.page_1.Controls.Add(Me.ラベル881)
+        Me.page_1.Controls.Add(Me.ラベル883)
+        Me.page_1.Controls.Add(Me.ラベル885)
+        Me.page_1.Controls.Add(Me.ラベル887)
+        Me.page_1.Controls.Add(Me.ラベル888)
+        Me.page_1.Controls.Add(Me.ラベル889)
+        Me.page_1.Controls.Add(Me.ラベル893)
+        Me.page_1.Controls.Add(Me.ラベル895)
+        Me.page_1.Controls.Add(Me.ラベル897)
+        Me.page_1.Controls.Add(Me.ラベル898)
+        Me.page_1.Controls.Add(Me.ラベル899)
+        Me.page_1.Controls.Add(Me.ラベル900)
+        Me.page_1.Controls.Add(Me.ラベル901)
+        Me.page_1.Controls.Add(Me.ラベル920)
+        Me.page_1.Controls.Add(Me.ラベル924)
+        Me.page_1.Controls.Add(Me.ラベル1129)
+        Me.page_1.Controls.Add(Me.ラベル1135)
+        Me.page_1.Controls.Add(Me.ラベル930)
+        Me.page_1.Controls.Add(Me.ラベル932)
+        Me.page_1.Controls.Add(Me.ラベル935)
+        Me.page_1.Controls.Add(Me.ラベル1141)
+        Me.page_1.Controls.Add(Me.ラベル942)
+        Me.page_1.Controls.Add(Me.ラベル951)
+        Me.page_1.Controls.Add(Me.ラベル952)
+        Me.page_1.Controls.Add(Me.ラベル956)
+        Me.page_1.Controls.Add(Me.ラベル958)
+        Me.page_1.Controls.Add(Me.ラベル959)
+        Me.page_1.Controls.Add(Me.ラベル1147)
+        Me.page_1.Controls.Add(Me.ラベル963)
+        Me.page_1.Controls.Add(Me.ラベル922)
+        Me.page_1.Controls.Add(Me.ラベル928)
+        Me.page_1.Controls.Add(Me.ラベル937)
+        Me.page_1.Controls.Add(Me.ラベル961)
+        Me.page_1.Controls.Add(Me.ラベル969)
+        Me.page_1.Controls.Add(Me.ラベル1068)
+        Me.page_1.Controls.Add(Me.ラベル1069)
+        Me.page_1.Controls.Add(Me.ラベル1072)
+        Me.page_1.Controls.Add(Me.ラベル1074)
+        Me.page_1.Controls.Add(Me.ラベル1075)
+        Me.page_1.Controls.Add(Me.ラベル1079)
+        Me.page_1.Controls.Add(Me.ラベル1127)
+        Me.page_1.Controls.Add(Me.ラベル1130)
+        Me.page_1.Controls.Add(Me.ラベル1131)
+        Me.page_1.Controls.Add(Me.ラベル1137)
+        Me.page_1.Controls.Add(Me.ラベル1139)
+        Me.page_1.Controls.Add(Me.ラベル1142)
+        Me.page_1.Controls.Add(Me.ラベル1143)
+        Me.page_1.Controls.Add(Me.ラベル1149)
+        Me.page_1.Controls.Add(Me.ラベル1152)
+        Me.page_1.Controls.Add(Me.ラベル1153)
+        Me.page_1.Controls.Add(Me.ラベル1154)
+        Me.page_1.Controls.Add(Me.ラベル1155)
+        Me.page_1.Controls.Add(Me.ラベル1156)
+        Me.page_1.Controls.Add(Me.ラベル1157)
+        Me.page_1.Controls.Add(Me.ラベル975)
+        Me.page_1.Controls.Add(Me.ラベル1160)
+        Me.page_1.Controls.Add(Me.ラベル1289)
+        Me.page_1.Controls.Add(Me.ラベル1290)
+        Me.page_1.Controls.Add(Me.ラベル1164)
+        Me.page_1.Controls.Add(Me.ラベル1294)
+        Me.page_1.Controls.Add(Me.ラベル1297)
+        Me.page_1.Controls.Add(Me.ラベル1300)
+        Me.page_1.Controls.Add(Me.ラベル1303)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_1D1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_1D1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_1D2_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_1D2_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_2C1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_2C2_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN1_2C2_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_1D1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_1D1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_1D2_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_1D2_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_2C1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_2C2_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN2_2C2_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN3_1D1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN3_1D1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN3_2C1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN3_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN4_1D1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN4_1D1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN4_2C1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN4_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN5_1D1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN5_1D1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN5_2C1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN5_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN6_1D1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN6_1D1_CNSTNM)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN6_2C1_CNSTCD)
+        Me.page_1.Controls.Add(Me.txt_SWKSM_SSN6_2C1_CNSTNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN1_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN1_1D2_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN1_2C1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN1_2C2_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN2_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN2_1D2_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN2_2C1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN2_2C2_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN3_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN3_2C1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN4_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN4_2C1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN5_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN5_2C1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN6_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKSM_SSN6_2C1_FLDNM)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO1_OUT_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO1_KNO_TOGO_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO2_OUT_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO2_KNO_TOGO_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO3_OUT_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO3_KNO_TOGO_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO4_OUT_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO4_KNO_TOGO_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO5_OUT_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO5_KNO_TOGO_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO6_OUT_F)
+        Me.page_2.Controls.Add(Me.chk_SWKSM_HIYO6_KNO_TOGO_F)
+        Me.page_2.Controls.Add(Me.ラベル1288)
+        Me.page_2.Controls.Add(Me.ラベル1029)
+        Me.page_2.Controls.Add(Me.ラベル1030)
+        Me.page_2.Controls.Add(Me.ラベル1031)
+        Me.page_2.Controls.Add(Me.ラベル1032)
+        Me.page_2.Controls.Add(Me.ラベル1033)
+        Me.page_2.Controls.Add(Me.ラベル1171)
+        Me.page_2.Controls.Add(Me.ラベル1173)
+        Me.page_2.Controls.Add(Me.ラベル1174)
+        Me.page_2.Controls.Add(Me.ラベル1175)
+        Me.page_2.Controls.Add(Me.ラベル1179)
+        Me.page_2.Controls.Add(Me.ラベル1181)
+        Me.page_2.Controls.Add(Me.ラベル1183)
+        Me.page_2.Controls.Add(Me.ラベル1185)
+        Me.page_2.Controls.Add(Me.ラベル1186)
+        Me.page_2.Controls.Add(Me.ラベル1187)
+        Me.page_2.Controls.Add(Me.ラベル1191)
+        Me.page_2.Controls.Add(Me.ラベル1193)
+        Me.page_2.Controls.Add(Me.ラベル1197)
+        Me.page_2.Controls.Add(Me.ラベル1200)
+        Me.page_2.Controls.Add(Me.ラベル1199)
+        Me.page_2.Controls.Add(Me.ラベル1204)
+        Me.page_2.Controls.Add(Me.ラベル1206)
+        Me.page_2.Controls.Add(Me.ラベル1208)
+        Me.page_2.Controls.Add(Me.ラベル1211)
+        Me.page_2.Controls.Add(Me.ラベル1210)
+        Me.page_2.Controls.Add(Me.ラベル1216)
+        Me.page_2.Controls.Add(Me.ラベル1218)
+        Me.page_2.Controls.Add(Me.ラベル1219)
+        Me.page_2.Controls.Add(Me.ラベル1220)
+        Me.page_2.Controls.Add(Me.ラベル1221)
+        Me.page_2.Controls.Add(Me.ラベル1222)
+        Me.page_2.Controls.Add(Me.ラベル1215)
+        Me.page_2.Controls.Add(Me.ラベル1225)
+        Me.page_2.Controls.Add(Me.ラベル1228)
+        Me.page_2.Controls.Add(Me.ラベル1232)
+        Me.page_2.Controls.Add(Me.ラベル1237)
+        Me.page_2.Controls.Add(Me.ラベル1241)
+        Me.page_2.Controls.Add(Me.ラベル1246)
+        Me.page_2.Controls.Add(Me.ラベル1252)
+        Me.page_2.Controls.Add(Me.ラベル1253)
+        Me.page_2.Controls.Add(Me.ラベル1255)
+        Me.page_2.Controls.Add(Me.ラベル1256)
+        Me.page_2.Controls.Add(Me.ラベル1257)
+        Me.page_2.Controls.Add(Me.ラベル1258)
+        Me.page_2.Controls.Add(Me.ラベル1259)
+        Me.page_2.Controls.Add(Me.ラベル1260)
+        Me.page_2.Controls.Add(Me.ラベル1261)
+        Me.page_2.Controls.Add(Me.ラベル1262)
+        Me.page_2.Controls.Add(Me.ラベル1263)
+        Me.page_2.Controls.Add(Me.ラベル1264)
+        Me.page_2.Controls.Add(Me.ラベル1265)
+        Me.page_2.Controls.Add(Me.ラベル1266)
+        Me.page_2.Controls.Add(Me.ラベル1268)
+        Me.page_2.Controls.Add(Me.ラベル1269)
+        Me.page_2.Controls.Add(Me.ラベル1270)
+        Me.page_2.Controls.Add(Me.ラベル1271)
+        Me.page_2.Controls.Add(Me.ラベル1272)
+        Me.page_2.Controls.Add(Me.ラベル1273)
+        Me.page_2.Controls.Add(Me.ラベル1250)
+        Me.page_2.Controls.Add(Me.ラベル1276)
+        Me.page_2.Controls.Add(Me.ラベル1306)
+        Me.page_2.Controls.Add(Me.ラベル1309)
+        Me.page_2.Controls.Add(Me.ラベル1280)
+        Me.page_2.Controls.Add(Me.ラベル1312)
+        Me.page_2.Controls.Add(Me.ラベル1315)
+        Me.page_2.Controls.Add(Me.ラベル1318)
+        Me.page_2.Controls.Add(Me.ラベル1321)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_1D1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_1D1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_1D2_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_1D2_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_2C1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_2C1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_2C2_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO1_2C2_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_1D1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_1D1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_1D2_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_1D2_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_2C1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_2C1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_2C2_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO2_2C2_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO3_1D1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO3_1D1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO3_2C1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO3_2C1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO4_1D1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO4_1D1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO4_2C1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO4_2C1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO5_1D1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO5_1D1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO5_2C1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO5_2C1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO6_1D1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO6_1D1_CNSTNM)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO6_2C1_CNSTCD)
+        Me.page_2.Controls.Add(Me.txt_SWKSM_HIYO6_2C1_CNSTNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO1_1D1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO1_1D2_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO1_2C1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO1_2C2_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO2_1D1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO2_1D2_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO2_2C1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO2_2C2_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO3_1D1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO3_2C1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO4_1D1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO4_2C1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO5_1D1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO5_2C1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO6_1D1_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKSM_HIYO6_2C1_FLDNM)
+        ' Form直下には tab_設定 と cmd_CLOSE のみ
+        Me.Controls.Add(Me.tab_設定)
         Me.Controls.Add(Me.cmd_CLOSE)
         Me.Name = "Form_f_仕訳出力標準_設定_SM"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "リース債務返済明細表 仕訳出力設定"
+        Me.tab_設定.ResumeLayout(False)
+        Me.page_1.ResumeLayout(False)
+        Me.page_1.PerformLayout()
+        Me.page_2.ResumeLayout(False)
+        Me.page_2.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -2467,5 +2829,40 @@ Partial Public Class Form_f_仕訳出力標準_設定_SM
     Friend WithEvents chk_SWKSM_HIYO5_KNO_TOGO_F As System.Windows.Forms.CheckBox
     Friend WithEvents chk_SWKSM_HIYO6_OUT_F As System.Windows.Forms.CheckBox
     Friend WithEvents chk_SWKSM_HIYO6_KNO_TOGO_F As System.Windows.Forms.CheckBox
+    Friend WithEvents tab_設定 As System.Windows.Forms.TabControl
+    Friend WithEvents page_1 As System.Windows.Forms.TabPage
+    Friend WithEvents page_2 As System.Windows.Forms.TabPage
+    Friend WithEvents cmb_SWKSM_SSN1_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN1_1D2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN1_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN1_2C2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN2_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN2_1D2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN2_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN2_2C2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN3_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN3_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN4_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN4_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN5_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN5_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN6_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_SSN6_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO1_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO1_1D2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO1_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO1_2C2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO2_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO2_1D2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO2_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO2_2C2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO3_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO3_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO4_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO4_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO5_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO5_2C1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO6_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKSM_HIYO6_2C1_FLDNM As System.Windows.Forms.ComboBox
 
 End Class
