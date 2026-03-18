@@ -118,6 +118,9 @@ Public Class Form_MAIN
             menu_TOUSEI_OPT.Enabled = False
             menu_ENV_SETTING.Enabled = False
             menu_SWKK_FIXED.Enabled = False
+            ' セキュリティ管理画面は管理者のみ (Access版 Case 201,202)
+            menu_SEC_USER.Enabled = False
+            menu_SEC_KNGN.Enabled = False
         End If
 
         ' ---------------------------------------------------------
@@ -876,9 +879,22 @@ Public Class Form_MAIN
         MessageBox.Show("統制オプション機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
+    ' [システム利用者] Access版 Case 201
+    Private Sub menu_SEC_USER_Click(sender As Object, e As EventArgs) Handles menu_SEC_USER.Click
+        Dim frm As New Form_f_flx_SEC_USER()
+        frm.ShowDialog()
+    End Sub
+
+    ' [システム利用権限] Access版 Case 202
+    Private Sub menu_SEC_KNGN_Click(sender As Object, e As EventArgs) Handles menu_SEC_KNGN.Click
+        Dim frm As New Form_f_flx_SEC_KNGN()
+        frm.ShowDialog()
+    End Sub
+
     ' [パスワード変更] Access版 Case 408
     Private Sub menu_PWD_CHANGE_Click(sender As Object, e As EventArgs) Handles menu_PWD_CHANGE.Click
-        MessageBox.Show("パスワード変更機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Dim frm As New Form_f_CHANGE_PASSWORD()
+        frm.ShowDialog()
     End Sub
 
     ' [ログ管理 - 参照ログ] Access版 Case 621

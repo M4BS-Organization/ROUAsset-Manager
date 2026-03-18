@@ -309,19 +309,24 @@ Public Module LoginSession
     Public Sub WriteAuditLog(operationType As String, detail As String)
         Try
             Dim crud As New CrudHelper()
-            Dim sql As String = "INSERT INTO sec_slog (user_id, user_cd, op_kbn, op_detail, op_dt) " &
-                                "VALUES (@user_id, @user_cd, @op_kbn, @op_detail, @op_dt)"
+            ' l_slog テーブル（DDL定義済み）に操作ログを記録
+            ' Access版 olSLOG.OutputSLOG に準拠
+            Dim sql As String = "INSERT INTO l_slog (op_st_dt, op_en_dt, op_kbn, op_user_cd, op_user_nm, " &
+                                "op_detail1, pc_name) " &
+                                "VALUES (@op_st_dt, @op_en_dt, @op_kbn, @op_user_cd, @op_user_nm, " &
+                                "@op_detail1, @pc_name)"
             Dim prms As New List(Of NpgsqlParameter) From {
-                New NpgsqlParameter("@user_id", LoggedInUserId),
-                New NpgsqlParameter("@user_cd", If(LoggedInUserCd, "")),
+                New NpgsqlParameter("@op_st_dt", DateTime.Now),
+                New NpgsqlParameter("@op_en_dt", DateTime.Now),
                 New NpgsqlParameter("@op_kbn", operationType),
-                New NpgsqlParameter("@op_detail", detail),
-                New NpgsqlParameter("@op_dt", DateTime.Now)
+                New NpgsqlParameter("@op_user_cd", If(LoggedInUserCd, "")),
+                New NpgsqlParameter("@op_user_nm", If(LoggedInUserNm, "")),
+                New NpgsqlParameter("@op_detail1", detail),
+                New NpgsqlParameter("@pc_name", Environment.MachineName)
             }
             crud.ExecuteNonQuery(sql, prms)
         Catch ex As Exception
             ' ログ記録失敗は握りつぶす（業務処理に影響させない）
-            ' デバッグ時はConsoleに出力
             Console.WriteLine($"[WriteAuditLog] ログ記録失敗: {ex.Message}")
         End Try
     End Sub
