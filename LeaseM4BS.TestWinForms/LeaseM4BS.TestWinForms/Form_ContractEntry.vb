@@ -747,7 +747,27 @@ Partial Public Class Form_ContractEntry
         Dim _crud As New CrudHelper()
         Try
             ' -----------------------------------------------------
-            ' 3. 削除実行 (子テーブル -> 親テーブルの順)
+            ' 3. 操作ログ記録 + 削除前データ取得 (Access版 p_LOG_KYKH_DEL 準拠)
+            ' -----------------------------------------------------
+            Dim slogNo = LoginSession.WriteAuditLog(
+                LoginSession.OP_KBN_KYKH, "契約番号:" & kyakNo,
+                opNm:="リース契約", opS:="削除", updSbt:="更新")
+
+            If slogNo >= 0 Then
+                ' Access版準拠: 複数テーブルの削除前データをULOG記録
+                Dim idPrm As New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@kykh_id", targetId)
+                }
+                AuditLogger.WriteUpdateLogBatch(slogNo,
+                    "SELECT * FROM d_kykh WHERE kykh_id = @kykh_id", "D_KYKH", "削除",
+                    "kykh_id", "契約ID", selectParams:=idPrm, crud:=_crud)
+                AuditLogger.WriteUpdateLogBatch(slogNo,
+                    "SELECT * FROM d_kykm WHERE kykh_id = @kykh_id ORDER BY kykm_id", "D_KYKM", "削除",
+                    "kykm_id", "期間ID", selectParams:=idPrm, crud:=_crud)
+            End If
+
+            ' -----------------------------------------------------
+            ' 4. 削除実行 (子テーブル -> 親テーブルの順)
             ' -----------------------------------------------------
 
             ' A. 明細 (d_kykm) の削除
@@ -759,10 +779,9 @@ Partial Public Class Form_ContractEntry
 
             ' B. ヘッダ (d_kykh) の削除
             Dim sqlDelHead As String = "DELETE FROM d_kykh WHERE kykh_id = @id"
-            ' パラメータは同じものが使えるので再利用
             _crud.ExecuteNonQuery(sqlDelHead, prm)
 
-            ' 4. 完了処理
+            ' 5. 完了処理
             MessageBox.Show("削除しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
             ' 画面を閉じる (一覧に戻る)

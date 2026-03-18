@@ -87,6 +87,16 @@ Partial Public Class Form_f_M_BCAT_INP
         ' 新規行を追加
         _crud.Insert("m_bcat", bcat)
 
+        ' --- 操作ログ + 更新ログ記録 (Access版 p_LOG準拠) ---
+        Dim slogNo = LoginSession.WriteAuditLog(
+            LoginSession.OP_KBN_KYKH, "契約分類:" & txt_BCAT1_CD.Text,
+            opNm:="管理部署マスタ", opS:="新規", updSbt:="更新")
+        If slogNo >= 0 Then
+            AuditLogger.WriteUpdateLog(slogNo, "M_BCAT", "追加",
+                "管理部署コード", txt_BCAT1_CD.Text,
+                rec2:=AuditLogger.SerializeRecord(bcat))
+        End If
+
         Me.Close()
     End Sub
 

@@ -31,7 +31,7 @@ Namespace My
             LoginSession.IsSessionActive = True
 
             ' --- 操作ログ記録: ログイン成功 ---
-            LoginSession.WriteAuditLog(LoginSession.OP_LOGIN, "アプリケーション起動")
+            LoginSession.WriteAuditLog(LoginSession.OP_KBN_SYSSTART, "アプリケーション起動")
         End Sub
 
         ''' <summary>
@@ -40,7 +40,7 @@ Namespace My
         Private Sub MyApplication_Shutdown(sender As Object, e As EventArgs) Handles Me.Shutdown
             If LoginSession.IsSessionActive Then
                 ' --- 操作ログ記録: ログアウト ---
-                LoginSession.WriteAuditLog(LoginSession.OP_LOGOUT, "アプリケーション終了")
+                LoginSession.WriteAuditLog(LoginSession.OP_KBN_SYSEND, "アプリケーション終了")
 
                 ' --- セッションクリア ---
                 LoginSession.IsSessionActive = False

@@ -316,6 +316,7 @@
     </Compile>
     <Compile Include="FormHelper.vb" />
     <Compile Include="LoginSession.vb" />
+    <Compile Include="AuditLogger.vb" />
     <Compile Include="SecurityChecker.vb" />
     <Compile Include="PasswordValidator.vb" />
     <Compile Include="Form_f_flx_SEC_USER.Designer.vb">

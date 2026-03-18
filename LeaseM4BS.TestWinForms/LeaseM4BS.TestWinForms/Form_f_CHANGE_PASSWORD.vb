@@ -121,7 +121,7 @@ Partial Public Class Form_f_CHANGE_PASSWORD
             LoginSession.IsFirstLogin = False
 
             ' 監査ログ
-            LoginSession.WriteAuditLog(LoginSession.OP_PWD_CHANGE, "パスワード変更")
+            LoginSession.WriteAuditLog(LoginSession.OP_KBN_USERPASSWORD, "パスワード変更")
 
             MessageBox.Show("パスワードを変更しました。", "完了",
                             MessageBoxButtons.OK, MessageBoxIcon.Information)
