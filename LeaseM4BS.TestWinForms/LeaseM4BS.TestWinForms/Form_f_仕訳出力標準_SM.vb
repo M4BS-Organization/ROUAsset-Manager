@@ -351,6 +351,30 @@ Partial Public Class Form_f_仕訳出力標準_SM
                 Next
             Next
 
+            ' Access版準拠の書式設定（フォント・列書式・列幅・行凍結）
+            xlSheet.Cells.Font.Name = "ＭＳ Ｐゴシック"
+            xlSheet.Cells.Font.Size = 9
+
+            For c As Integer = 0 To dt.Columns.Count - 1
+                Dim colType = dt.Columns(c).DataType
+                Dim fmt As String = Nothing
+                If colType Is GetType(Date) Then
+                    fmt = "yyyy/mm/dd"
+                ElseIf colType Is GetType(Decimal) OrElse colType Is GetType(Double) OrElse colType Is GetType(Single) Then
+                    fmt = "#,##0"
+                ElseIf colType Is GetType(Integer) OrElse colType Is GetType(Long) OrElse colType Is GetType(Short) Then
+                    fmt = "0"
+                End If
+                If fmt IsNot Nothing Then
+                    xlSheet.Columns(c + 1).NumberFormatLocal = fmt
+                End If
+            Next
+
+            xlSheet.Cells.EntireColumn.AutoFit()
+            xlSheet.Cells(2, 1).Select()
+            xlApp.ActiveWindow.FreezePanes = True
+            xlSheet.Cells(1, 1).Select()
+
             xlBook.SaveAs(filePath)
         Finally
             If xlBook IsNot Nothing Then

@@ -4,7 +4,7 @@ Imports Microsoft.Office.Interop ' クラスの先頭に追加
 
 Public Class FileHelper
     ' Excelファイルとして出力
-    Public Sub ToExcelFile(dgv As DataGridView)
+    Public Sub ToExcelFile(dgv As DataGridView, Optional outputHeader As Boolean = True)
         ' 保存ダイアログを表示
         Dim sfd As New SaveFileDialog()
         sfd.Filter = "Excelブック(*.xlsx)|*.xlsx"
@@ -25,15 +25,19 @@ Public Class FileHelper
             xlSheets = xlBook.Worksheets
             xlSheet = DirectCast(xlSheets(1), Excel.Worksheet)
 
-            ' 1. ヘッダー（列名）の書き込み
-            Dim colCount As Integer = 0
-            For i As Integer = 0 To dgv.Columns.Count - 1
-                ' 非表示の列（col_IS_OLDなど）は出力しない
-                If dgv.Columns(i).Visible Then
-                    colCount += 1
-                    xlSheet.Cells(1, colCount) = dgv.Columns(i).HeaderText
-                End If
-            Next
+            ' 1. ヘッダー（列名）の書き込み（Access版 chk_ColNmOut_F に対応）
+            Dim dataStartRow As Integer = 1
+            If outputHeader Then
+                Dim colCount As Integer = 0
+                For i As Integer = 0 To dgv.Columns.Count - 1
+                    ' 非表示の列（col_IS_OLDなど）は出力しない
+                    If dgv.Columns(i).Visible Then
+                        colCount += 1
+                        xlSheet.Cells(1, colCount) = dgv.Columns(i).HeaderText
+                    End If
+                Next
+                dataStartRow = 2
+            End If
 
             ' 2. データの書き込み
             For r As Integer = 0 To dgv.Rows.Count - 1
@@ -44,12 +48,35 @@ Public Class FileHelper
                     If dgv.Columns(c).Visible Then
                         excelCol += 1
                         ' セルの値（FormattedValueを使うと画面上の見た目通りに出ます）
-                        xlSheet.Cells(r + 2, excelCol) = dgv.Rows(r).Cells(c).FormattedValue
+                        xlSheet.Cells(r + dataStartRow, excelCol) = dgv.Rows(r).Cells(c).FormattedValue
                     End If
                 Next
             Next
 
-            ' 3. ファイルを保存
+            ' 3. Access版準拠の書式設定（フォント・列幅・列書式・行凍結）
+            xlSheet.Cells.Font.Name = "ＭＳ Ｐゴシック"
+            xlSheet.Cells.Font.Size = 9
+
+            ' 列ごとのNumberFormatLocal（Access版 FormatXLS に対応）
+            Dim fmtCol As Integer = 0
+            For i As Integer = 0 To dgv.Columns.Count - 1
+                If dgv.Columns(i).Visible Then
+                    fmtCol += 1
+                    Dim fmt As String = GetExcelFormatFromType(dgv.Columns(i).ValueType, dgv.Columns(i).DefaultCellStyle.Format)
+                    If fmt IsNot Nothing Then
+                        xlSheet.Columns(fmtCol).NumberFormatLocal = fmt
+                    End If
+                End If
+            Next
+
+            xlSheet.Cells.EntireColumn.AutoFit()
+            If dataStartRow = 2 Then
+                xlSheet.Cells(2, 1).Select()
+                xlApp.ActiveWindow.FreezePanes = True
+            End If
+            xlSheet.Cells(1, 1).Select()
+
+            ' 4. ファイルを保存
             xlBook.SaveAs(sfd.FileName)
             MessageBox.Show("Excel出力を完了しました。")
 
@@ -70,7 +97,7 @@ Public Class FileHelper
     End Sub
 
     ' Csvファイルとして出力
-    Public Sub ToCsvFile(dgv As DataGridView, Optional delimiter As String = ",", Optional textQualifier As String = """")
+    Public Sub ToCsvFile(dgv As DataGridView, Optional delimiter As String = ",", Optional textQualifier As String = """", Optional outputHeader As Boolean = True)
         ' 保存ダイアログ
         Dim sfd As New SaveFileDialog()
         sfd.Filter = "CSVファイル(*.csv)|*.csv"
@@ -84,18 +111,20 @@ Public Class FileHelper
             Dim sjis As Encoding = Encoding.GetEncoding("Shift_JIS")
 
             Using sw As New StreamWriter(sfd.FileName, False, sjis)
-                ' 1. ヘッダーの書き込み
-                Dim headerList As New List(Of String)
-                For Each col As DataGridViewColumn In dgv.Columns
-                    If col.Visible Then
-                        If String.IsNullOrEmpty(textQualifier) Then
-                            headerList.Add(col.HeaderText)
-                        Else
-                            headerList.Add(textQualifier & col.HeaderText.Replace(textQualifier, textQualifier & textQualifier) & textQualifier)
+                ' 1. ヘッダーの書き込み（Access版 chk_ColNmOut_F に対応）
+                If outputHeader Then
+                    Dim headerList As New List(Of String)
+                    For Each col As DataGridViewColumn In dgv.Columns
+                        If col.Visible Then
+                            If String.IsNullOrEmpty(textQualifier) Then
+                                headerList.Add(col.HeaderText)
+                            Else
+                                headerList.Add(textQualifier & col.HeaderText.Replace(textQualifier, textQualifier & textQualifier) & textQualifier)
+                            End If
                         End If
-                    End If
-                Next
-                sw.WriteLine(String.Join(delimiter, headerList))
+                    Next
+                    sw.WriteLine(String.Join(delimiter, headerList))
+                End If
 
                 ' 2. データの書き込み
                 For Each row As DataGridViewRow In dgv.Rows
@@ -160,6 +189,35 @@ Public Class FileHelper
             MessageBox.Show("出力エラー: " & ex.Message)
         End Try
     End Sub
+
+    ''' <summary>
+    ''' DGV列の型・書式からExcel NumberFormatLocal文字列を返します（Access版 FormatXLS に対応）
+    ''' </summary>
+    Private Function GetExcelFormatFromType(valueType As Type, dgvFormat As String) As String
+        ' DGV側に明示的なFormat指定があればそれを優先
+        If Not String.IsNullOrEmpty(dgvFormat) Then Return dgvFormat
+
+        If valueType Is Nothing Then Return Nothing
+
+        ' 日付型
+        If valueType Is GetType(Date) Then
+            Return "yyyy/mm/dd"
+        End If
+
+        ' 整数型
+        If valueType Is GetType(Integer) OrElse valueType Is GetType(Long) OrElse
+           valueType Is GetType(Short) Then
+            Return "0"
+        End If
+
+        ' 小数型（金額等）
+        If valueType Is GetType(Decimal) OrElse valueType Is GetType(Double) OrElse
+           valueType Is GetType(Single) Then
+            Return "#,##0"
+        End If
+
+        Return Nothing
+    End Function
 
     ''' <summary>
     ''' 列のバイト幅を取得します（辞書 → Tag → デフォルトの優先順位）

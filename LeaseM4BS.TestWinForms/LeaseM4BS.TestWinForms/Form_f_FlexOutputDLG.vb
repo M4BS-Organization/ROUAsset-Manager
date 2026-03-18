@@ -23,11 +23,11 @@ Partial Public Class Form_f_FlexOutputDLG
         Dim fileHelper As FileHelper = New FileHelper()
 
         If radio_EXCEL.Checked Then
-            fileHelper.ToExcelFile(Dgv)
+            fileHelper.ToExcelFile(Dgv, chk_ColNmOut_F.Checked)
         ElseIf radio_CSV.Checked Then
             Dim qualifier As String = If(cmb_DELIMITER.SelectedItem?.ToString(), """")
             If qualifier = "なし" Then qualifier = ""
-            fileHelper.ToCsvFile(Dgv, ",", qualifier)
+            fileHelper.ToCsvFile(Dgv, ",", qualifier, chk_ColNmOut_F.Checked)
         Else
             fileHelper.ToFixedLengthFile(Dgv)
         End If
