@@ -157,8 +157,12 @@ Partial Public Class Form_f_CHUKI_JOKEN
 
         labelText &= txt_DT_FROM.Value.ToString("yyyy/MM") & "～" & txt_DT_TO.Value.ToString("yyyy/MM") & "  "
 
-        ' todo どの条件でもなぜか表示されるテキスト
-        labelText &= "所有権移転外ファイナンスリースの計算条件  "
+        ' 所有権移転外ファイナンスリース（leakbn_id = 1）が選択されている場合のみ表示
+        ' NOTE: c_leakbn テーブルの ID値: 1=所有権移転外, 2=オペレーティング
+        '       chk_LEAKBN_ITENGAI_F は leakbn_id=1（所有権移転外）に対応
+        If chk_LEAKBN_ITENGAI_F.Checked Then
+            labelText &= "所有権移転外ファイナンスリースの計算条件  "
+        End If
 
         If radio_TEIGAKU.Checked Then
             labelText &= "償却方法：リース定額  "
@@ -263,7 +267,8 @@ Partial Public Class Form_f_CHUKI_JOKEN
 
         labelText &= dtFrom.ToString("yyyy/MM") & "～" & dtTo.ToString("yyyy/MM") & "  "
 
-        ' todo どの条件でもなぜか表示されるテキスト
+        ' Pure Function ではコントロール参照不可のため常時出力
+        ' 実フォームでは GenerateLabelText() 内で chk_LEAKBN_ITENGAI_F.Checked で制御
         labelText &= "所有権移転外ファイナンスリースの計算条件  "
 
         If teigakuF Then

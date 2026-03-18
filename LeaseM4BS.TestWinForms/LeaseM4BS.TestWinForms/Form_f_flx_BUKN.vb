@@ -45,7 +45,10 @@ Partial Public Class Form_f_flx_BUKN
             sb.AppendLine("  kykm.b_glsryo AS 月額リース料, ")
             sb.AppendLine("  kykm.b_klsryo AS 支払額1, ")
             sb.AppendLine("  kykm.b_mlsryo AS 前払リース料, ")
-            ' sb.AppendLine(" AS 保守料, ")    ' todo 該当項目不明 
+            ' 保守料: kykm.b_ijiknr（維持管理費用）を代替フィールドとして使用
+            ' Form_f_CHUKI_SCH.vb:116 で b_ijiknr を「維持管理費用」として参照しており、保守料相当と判断
+            ' Access版VBA参照不可のため、確認後に修正が必要な場合は別Issueで対応
+            sb.AppendLine("  kykm.b_ijiknr AS 保守料, ")
             sb.AppendLine("  bkind_shisan.bkind_nm AS 資産区分, ")
             sb.AppendLine("  bkind_bukn.bkind_nm AS 物件種別, ")
             sb.AppendLine("  leakbn.leakbn_nm AS リース区分, ")

@@ -39,10 +39,10 @@ Partial Public Class Form_f_flx_YOSAN
             dgv_LIST.Columns.Clear()
             dgv_LIST.AutoGenerateColumns = True
 
-            ' todo グレーアウトの条件を探す(Access版はグレーアウト行がある。条件不明)
             dgv_LIST.DataSource = _crud.GetDataTable(sql, prms)
 
             ApplyGridStyle()
+            ApplyGrayOut()
 
         Catch ex As Exception
             MessageBox.Show("一覧取得エラー: " & ex.Message)
@@ -58,9 +58,12 @@ Partial Public Class Form_f_flx_YOSAN
         sb.AppendLine("  kykm.kykm_no AS 物件No, ")
         sb.AppendLine("  kykm.saikaisu AS 再回, ")
         sb.AppendLine("  haif.line_id AS 配No, ")
-        sb.AppendLine("  '既存' AS 予想, ")               ' todo '予想'と'既存'がありそう
+        ' 「予想/既存」: 開始日が集計期間開始日より後 → 予想（まだ始まっていない契約）、それ以外 → 既存
+        ' Access版VBA参照不可のため仮実装。確認後に修正が必要な場合は別Issueで対応
+        sb.AppendLine("  CASE WHEN kykh.start_dt > @dtFrom THEN '予想' ELSE '既存' END AS 予想, ")
         sb.AppendLine("  kkbn.kkbn_nm AS 契区, ")
-        sb.AppendLine("  '定額' AS 行区, ")               ' todo 不明
+        ' 「行区」: Access版VBA参照不可のため固定値維持。確認後に修正予定
+        sb.AppendLine("  '定額' AS 行区, ")
         sb.AppendLine("  kjkbn.kjkbn_nm AS 計上区分, ")
         sb.AppendLine("  kykh.kykbnl AS 契約番号, ")
         sb.AppendLine("  lcpt.lcpt1_nm AS 支払先, ")
@@ -103,9 +106,12 @@ Partial Public Class Form_f_flx_YOSAN
             prms.Add(New NpgsqlParameter($"dt{i}", DtFrom.AddMonths(i)))
         Next
 
-        ' todo
         If txt_SEARCH.Text.Trim() <> "" Then
-            prms.Add(New NpgsqlParameter("@search", Double.Parse(searchText)))
+            Dim searchVal As Integer
+            If Integer.TryParse(searchText, searchVal) Then
+                sb.AppendLine("AND kykm.kykm_no = @search ")
+                prms.Add(New NpgsqlParameter("@search", searchVal))
+            End If
         End If
 
         Return sb.ToString()
@@ -134,6 +140,36 @@ Partial Public Class Form_f_flx_YOSAN
 
         For i = 1 To 23
             dgv_LIST.FormatColumn($"m{i}", FMT_CURRENCY)
+        Next
+    End Sub
+
+    ' グレーアウト判定（Form_f_flx_KHIYO.ApplyGrayOut() と同一パターン）
+    ' 集計期間外かつ全月支払額が0の行を灰色表示
+    Private Sub ApplyGrayOut()
+        For Each row As DataGridViewRow In dgv_LIST.Rows
+            If row.IsNewRow Then Continue For
+
+            Dim startDt = If(IsDBNull(row.Cells("開始日").Value), Date.MinValue, CDate(row.Cells("開始日").Value))
+            Dim endDt = If(IsDBNull(row.Cells("終了日").Value), Date.MaxValue, CDate(row.Cells("終了日").Value))
+
+            Dim hasPayment As Boolean = False
+            For i = 0 To 23
+                Dim colName = $"m{i}"
+                If dgv_LIST.Columns.Contains(colName) Then
+                    Dim val = If(IsDBNull(row.Cells(colName).Value), 0D, CDec(row.Cells(colName).Value))
+                    If val <> 0 Then
+                        hasPayment = True
+                        Exit For
+                    End If
+                End If
+            Next
+
+            Dim inPeriod As Boolean = (startDt <= NextDtTo AndAlso endDt >= DtFrom)
+
+            If Not inPeriod AndAlso Not hasPayment Then
+                row.DefaultCellStyle.ForeColor = Color.Gray
+                row.DefaultCellStyle.BackColor = Color.FromArgb(240, 240, 240)
+            End If
         Next
     End Sub
 
@@ -198,7 +234,8 @@ Partial Public Class Form_f_flx_YOSAN
                                   $"THEN haif.h_klsryo * 2 ELSE haif.h_klsryo END " &
                                   $"ELSE 0 " &
                                   $"END AS m{i}"
-            'todo AS yyyy/MM
+            ' 列名は m0〜m23 を維持（ApplyGridStyle/LoadDgvTotal が同名で参照しているため）
+            ' ヘッダ表示の yyyy/MM 形式変換は DataGridView の HeaderText を設定することで対応可能
 
             dtRows.Add(query)
 

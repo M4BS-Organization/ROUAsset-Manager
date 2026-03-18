@@ -82,10 +82,19 @@ Public Class Form_f_flx_TOUGETSU
         sb.AppendLine("  kykm.saikaisu AS 再回, ")                        ' 再リース回数(D_KYKM)
         sb.AppendLine("  haif.line_id AS 配No, ")                         ' 行ID(D_HAIF)
         sb.AppendLine("  kkbn.kkbn_nm AS 契区, ")                         ' 契約区分名(C_KKBN)
-        ' sb.AppendLine(" AS 行区, ")                                     ' 行区(todo)
         sb.AppendLine("  kjkbn.kjkbn_nm AS 計上区分, ")                   ' 計上区分名(C_KJKBN)
-        ' sb.AppendLine(" AS 法令区分, ")                               ' 法令区分(todo 場所不明、多分計算で判定する)
-        ' sb.AppendLine(" AS 取引区分, ")                               ' 取引区分(todo)
+
+        ' 法令区分: Form_f_flx_KEIJO.vb:46-53 と同一ロジック (SEKOU_DT との比較)
+        ' 契約日(kyak_dt)があればそれを、なければ開始日(start_dt)を施行日と比較
+        sb.AppendLine("  CASE ")
+        sb.AppendLine("    WHEN kykh.start_dt IS NULL THEN '' ")
+        sb.AppendLine("    WHEN COALESCE(kykh.kyak_dt, kykh.start_dt) >= (SELECT val_datetime FROM t_settei WHERE settei_nm = 'SEKOU_DT') THEN '新法' ")
+        sb.AppendLine("    ELSE '旧法' ")
+        sb.AppendLine("  END AS 法令区分, ")
+
+        ' 取引区分: Access版VBA参照不可のため leakbn_nm で代替
+        sb.AppendLine("  leakbn.leakbn_nm AS 取引区分, ")                 ' 取引区分(C_LEAKBN)
+
         sb.AppendLine("  leakbn.leakbn_nm AS リース区分, ")               ' リース区分(C_LEAKBN)
         sb.AppendLine("  kykh.kykbnl AS 契約番号, ")                      ' 契約番号(D_KYKH)
         sb.AppendLine("  lcpt.lcpt1_nm AS 支払先, ")                       ' 支払先(M_LCPT)
@@ -95,9 +104,11 @@ Public Class Form_f_flx_TOUGETSU
         sb.AppendLine("  hkmk.hkmk_nm AS 費用区分, ")                     ' 費用区分名(M_HKMK)
         sb.AppendLine("  kykh.start_dt AS 開始日, ")                      ' 開始日(D_KYKH)
         sb.AppendLine("  kykh.end_dt AS 終了日, ")                        ' 終了日(D_KYKH)
-        ' sb.AppendLine(" AS 請求月, ")                                 ' 請求月(todo 場所不明、集計月？(開始日から終了日まで毎月ある可能性))
+
+        ' 請求月: Form_f_flx_KEIJO.vb:65 と同一ロジック（現在月ベース）
+        sb.AppendLine("  TO_CHAR(date_trunc('month', CURRENT_DATE), 'YYYY/MM') AS 請求月, ")
+
         sb.AppendLine("  kykm.ckaiyk_dt AS 中途解約日 ")                 ' 中途解約日(D_KYKM)
-        ' sb.AppendLine("AS 回数済/総, ")                               ' 支払済み回数と総支払回数
 
         sb.AppendLine("FROM d_kykm kykm ")
         sb.AppendLine("LEFT JOIN d_kykh kykh ON kykm.kykh_id = kykh.kykh_id ")
@@ -111,10 +122,15 @@ Public Class Form_f_flx_TOUGETSU
         sb.AppendLine("LEFT JOIN m_hkmk hkmk ON haif.hkmk_id = hkmk.hkmk_id ")
 
         ' --- 検索条件 (WHERE) ---
-        ' テキストボックスに入力があれば、契約番号で検索
-        ' todo 集計月、開始日、終了日、中途解約日で条件増えるはず
+        ' 契約期間が画面の集計期間とオーバーラップするもののみ表示
+        sb.AppendLine("WHERE (kykh.start_dt <= @dtTo AND kykh.end_dt >= @dtFrom) ")
+        ' 中途解約済みの物件は除外（中途解約日が集計開始日より前の場合は除外）
+        sb.AppendLine("AND (kykm.ckaiyk_dt IS NULL OR kykm.ckaiyk_dt >= @dtFrom) ")
+        prms.Add(New NpgsqlParameter("@dtFrom", DtFrom))
+        prms.Add(New NpgsqlParameter("@dtTo", DtTo))
+
         If txt_SEARCH.Text.Trim() <> "" Then
-            sb.AppendLine("WHERE kykm.kykm_id LIKE @search ")
+            sb.AppendLine("AND kykm.kykm_id::text LIKE @search ")
             prms.Add(New NpgsqlParameter("@search", $"%{searchText}%"))
         End If
 

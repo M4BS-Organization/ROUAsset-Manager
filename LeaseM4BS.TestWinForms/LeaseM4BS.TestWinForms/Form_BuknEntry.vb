@@ -302,11 +302,27 @@ Partial Public Class Form_BuknEntry
             Return
         End If
 
-        ' todo 削除処理
+        Try
+            _crud.BeginTransaction()
 
-        MessageBox.Show("削除しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            ' 子テーブル d_haif を先に削除（外部キー制約: d_haif.kykm_id → d_kykm）
+            _crud.ExecuteNonQuery(
+                "DELETE FROM d_haif WHERE kykm_id = @kykmId",
+                New List(Of Npgsql.NpgsqlParameter) From {New Npgsql.NpgsqlParameter("@kykmId", CInt(KykmId))})
 
-        Me.Close()
+            ' 親テーブル d_kykm を削除
+            _crud.ExecuteNonQuery(
+                "DELETE FROM d_kykm WHERE kykm_id = @kykmId",
+                New List(Of Npgsql.NpgsqlParameter) From {New Npgsql.NpgsqlParameter("@kykmId", CInt(KykmId))})
+
+            _crud.Commit()
+
+            MessageBox.Show("削除しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Me.Close()
+        Catch ex As Exception
+            _crud.Rollback()
+            MessageBox.Show("削除に失敗しました。" & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub FormKeyDown(sender As Object, e As KeyEventArgs) Handles MyBase.KeyDown

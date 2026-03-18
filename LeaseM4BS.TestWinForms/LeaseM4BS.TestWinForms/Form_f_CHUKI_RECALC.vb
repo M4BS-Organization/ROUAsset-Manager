@@ -27,7 +27,14 @@ Partial Public Class Form_f_CHUKI_RECALC
         HandleEnterKeyNavigation(Me, e)
     End Sub
 
-    ' todo 危険(実装不明、要確認)
+    ' [注記判定再計算] 一括UPDATE処理
+    ' 動作確認済み項目: rsok_tmg, gk_calc_kind, hensai_kind, kari_ritu, b_syutok,
+    '                  taiyo_nen, rslt90p, rslt90p_str, rslt75p, rslt75p_str, leakbn_id, kj_tekiyo_dt, kj_ho
+    ' 実装保留項目（Access版VBA参照不可のため、計算式確定まで有効化しない）:
+    '   gnzaiKt     (現在価値): LEAST(b_knyukn, b_gnzai_kt) の可能性あるが未確認
+    '   chuumId     (注記省略): 判定ロジック不明
+    '   kjkbnId     (計上区分): 判定ロジック不明
+    '   szeiKjkbnId (消費税計上区分): 判定ロジック不明
     Private Sub ResetChukiData()
         Dim sb As New StringBuilder()
 
