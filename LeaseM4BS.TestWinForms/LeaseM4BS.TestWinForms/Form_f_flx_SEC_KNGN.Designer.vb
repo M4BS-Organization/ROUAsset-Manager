@@ -40,6 +40,12 @@ Partial Public Class Form_f_flx_SEC_KNGN
         Me.txt_KNGN_ID = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.txt_ACCESS_KIND_B_STR = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.txt_ID = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_ADMIN = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_MASTER_UPDATE = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_APPROVAL = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_FILE_OUTPUT = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_PRINT = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_LOG_REF = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlHeader.SuspendLayout()
         CType(Me.dgvMain, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
@@ -188,7 +194,7 @@ Partial Public Class Form_f_flx_SEC_KNGN
         Me.dgvMain.AllowUserToDeleteRows = False
         Me.dgvMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvMain.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {
-            Me.txt_KNGN_CD, Me.txt_KNGN_NM, Me.txt_ACCESS_KIND_STR, Me.txt_BIKO, Me.txt_CREATE_DT, Me.txt_UPDATE_DT, Me.txt_KNGN_ID, Me.txt_ACCESS_KIND_B_STR, Me.txt_ID})
+            Me.txt_KNGN_CD, Me.txt_KNGN_NM, Me.txt_ACCESS_KIND_STR, Me.txt_ACCESS_KIND_B_STR, Me.txt_ADMIN, Me.txt_MASTER_UPDATE, Me.txt_APPROVAL, Me.txt_FILE_OUTPUT, Me.txt_PRINT, Me.txt_LOG_REF, Me.txt_BIKO, Me.txt_CREATE_DT, Me.txt_UPDATE_DT, Me.txt_KNGN_ID, Me.txt_ID})
         Me.dgvMain.Dock = System.Windows.Forms.DockStyle.Fill
         Me.dgvMain.Location = New System.Drawing.Point(0, 40)
         Me.dgvMain.MultiSelect = False
@@ -263,6 +269,54 @@ Partial Public Class Form_f_flx_SEC_KNGN
         Me.txt_ACCESS_KIND_B_STR.ReadOnly = True
         Me.txt_ACCESS_KIND_B_STR.Width = 151
         '
+        ' txt_ADMIN
+        '
+        Me.txt_ADMIN.DataPropertyName = "ADMIN"
+        Me.txt_ADMIN.HeaderText = "管理者"
+        Me.txt_ADMIN.Name = "txt_ADMIN"
+        Me.txt_ADMIN.ReadOnly = True
+        Me.txt_ADMIN.Width = 60
+        '
+        ' txt_MASTER_UPDATE
+        '
+        Me.txt_MASTER_UPDATE.DataPropertyName = "MASTER_UPDATE"
+        Me.txt_MASTER_UPDATE.HeaderText = "ﾏｽﾀ更新"
+        Me.txt_MASTER_UPDATE.Name = "txt_MASTER_UPDATE"
+        Me.txt_MASTER_UPDATE.ReadOnly = True
+        Me.txt_MASTER_UPDATE.Width = 60
+        '
+        ' txt_APPROVAL
+        '
+        Me.txt_APPROVAL.DataPropertyName = "APPROVAL"
+        Me.txt_APPROVAL.HeaderText = "承認"
+        Me.txt_APPROVAL.Name = "txt_APPROVAL"
+        Me.txt_APPROVAL.ReadOnly = True
+        Me.txt_APPROVAL.Width = 60
+        '
+        ' txt_FILE_OUTPUT
+        '
+        Me.txt_FILE_OUTPUT.DataPropertyName = "FILE_OUTPUT"
+        Me.txt_FILE_OUTPUT.HeaderText = "ﾌｧｲﾙ出力"
+        Me.txt_FILE_OUTPUT.Name = "txt_FILE_OUTPUT"
+        Me.txt_FILE_OUTPUT.ReadOnly = True
+        Me.txt_FILE_OUTPUT.Width = 60
+        '
+        ' txt_PRINT
+        '
+        Me.txt_PRINT.DataPropertyName = "PRINT"
+        Me.txt_PRINT.HeaderText = "印刷"
+        Me.txt_PRINT.Name = "txt_PRINT"
+        Me.txt_PRINT.ReadOnly = True
+        Me.txt_PRINT.Width = 60
+        '
+        ' txt_LOG_REF
+        '
+        Me.txt_LOG_REF.DataPropertyName = "LOG_REF"
+        Me.txt_LOG_REF.HeaderText = "ﾛｸﾞ参照"
+        Me.txt_LOG_REF.Name = "txt_LOG_REF"
+        Me.txt_LOG_REF.ReadOnly = True
+        Me.txt_LOG_REF.Width = 60
+        '
         ' txt_ID
         '
         Me.txt_ID.DataPropertyName = "ID"
@@ -312,5 +366,11 @@ Partial Public Class Form_f_flx_SEC_KNGN
     Friend WithEvents txt_KNGN_ID As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents txt_ACCESS_KIND_B_STR As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents txt_ID As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_ADMIN As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_MASTER_UPDATE As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_APPROVAL As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_FILE_OUTPUT As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_PRINT As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_LOG_REF As System.Windows.Forms.DataGridViewTextBoxColumn
 
 End Class

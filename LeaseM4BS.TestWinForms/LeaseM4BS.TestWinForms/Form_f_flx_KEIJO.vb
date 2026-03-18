@@ -12,6 +12,7 @@ Public Class Form_f_flx_KEIJO
         lbl_CONDITION.Text = LabelText
 
         SearchData()
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()

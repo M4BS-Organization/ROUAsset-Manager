@@ -33,6 +33,7 @@ Partial Public Class Form_f_flx_BEPPYO2
         SearchData()
 
         LoadDgvTotal()
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()

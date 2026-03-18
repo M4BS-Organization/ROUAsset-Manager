@@ -3,6 +3,7 @@
 ' Access版 typ_gLogin 構造体に相当
 ' ログイン成功時にセットし、アプリ全体で参照する
 ' =========================================================
+Imports System.Data
 Imports LeaseM4BS.DataAccess
 Imports Npgsql
 
@@ -51,6 +52,32 @@ Public Module LoginSession
     Public PasswordExpireDate As DateTime = DateTime.MinValue
     Public IsFirstLogin As Boolean = False
 
+    ' --- 契約管理単位別権限 (Access版 tgKKNRI_LIST に相当) ---
+    Public KknriList As New List(Of KknriAccessEntry)()
+    ' --- 部門管理単位別権限 (Access版 tgBKNRI_LIST に相当) ---
+    Public BknriList As New List(Of BknriAccessEntry)()
+
+    ' --- パスワードポリシー (Access版 typ_gLogin のパスワード関連フィールド) ---
+    Public PasswordMinLength As Integer = 0       ' PWD_MIN
+    Public PwdMojiChk As Boolean = False          ' PWD_MOJI_CHK
+    Public PwdAlphChk As Boolean = False          ' PWD_ALPH_CHK
+    Public PwdNumChk As Boolean = False           ' PWD_NUM_CHK
+    Public PwdSymbolChk As Boolean = False        ' PWD_SYMBOL_CHK
+    Public PwdLifeTime As Integer = 0             ' PWD_LIFE_TIME
+    Public PwdGraceTime As Integer = 0            ' PWD_GRACE_TIME
+    Public PwdUpdDt As DateTime? = Nothing        ' PWD_UPD_DT
+
+    ' --- 管理単位別権限の構造体 ---
+    Public Structure KknriAccessEntry
+        Public KknriId As Integer
+        Public AccessKind As Integer  ' 1=更新, 2=参照
+    End Structure
+
+    Public Structure BknriAccessEntry
+        Public BknriId As Integer
+        Public AccessKind As Integer  ' 1=更新, 2=参照
+    End Structure
+
     ' --- 操作ログ種別定数 (Access版 engOP_KBN に相当) ---
     Public Const OP_LOGIN As String = "LOGIN"            ' ログイン成功
     Public Const OP_LOGIN_ERR As String = "LOGIN_ERR"    ' ログイン失敗
@@ -84,6 +111,85 @@ Public Module LoginSession
         LoginSession.CanPrint = If(row("print") IsNot DBNull.Value, CBool(row("print")), False)
         LoginSession.CanLogRef = If(row("log_ref") IsNot DBNull.Value, CBool(row("log_ref")), False)
         LoginSession.CanApproval = If(row("approval") IsNot DBNull.Value, CBool(row("approval")), False)
+
+        ' --- 追加: 管理単位別権限の読込 (Access版 gSetPublic_KNGN 行860-894 相当) ---
+        Try
+            LoadKknriPermissions(kngnIdParam, crud)
+            LoadBknriPermissions(kngnIdParam, crud)
+        Catch ex As Exception
+            ' 失敗しても認証フローは止めない（空リストで続行）
+            KknriList = New List(Of KknriAccessEntry)()
+            BknriList = New List(Of BknriAccessEntry)()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' sec_kngn_kknri テーブルから契約管理単位別権限を読み込む
+    ''' Access版 pc_StartUp.txt 行861-876 相当
+    ''' </summary>
+    Private Sub LoadKknriPermissions(kngnIdParam As Integer, crud As CrudHelper)
+        KknriList = New List(Of KknriAccessEntry)()
+        Dim sql As String = "SELECT kknri_id, access_kind FROM sec_kngn_kknri WHERE kngn_id = @kngn_id"
+        Dim prms As New List(Of NpgsqlParameter) From {
+            New NpgsqlParameter("@kngn_id", kngnIdParam)
+        }
+        Dim dt = crud.GetDataTable(sql, prms)
+        For Each r As DataRow In dt.Rows
+            Dim entry As New KknriAccessEntry()
+            entry.KknriId = If(r("kknri_id") IsNot DBNull.Value, CInt(r("kknri_id")), 0)
+            entry.AccessKind = If(r("access_kind") IsNot DBNull.Value, CInt(r("access_kind")), 0)
+            KknriList.Add(entry)
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' sec_kngn_bknri テーブルから部門管理単位別権限を読み込む
+    ''' Access版 pc_StartUp.txt 行879-894 相当
+    ''' </summary>
+    Private Sub LoadBknriPermissions(kngnIdParam As Integer, crud As CrudHelper)
+        BknriList = New List(Of BknriAccessEntry)()
+        Dim sql As String = "SELECT bknri_id, access_kind FROM sec_kngn_bknri WHERE kngn_id = @kngn_id"
+        Dim prms As New List(Of NpgsqlParameter) From {
+            New NpgsqlParameter("@kngn_id", kngnIdParam)
+        }
+        Dim dt = crud.GetDataTable(sql, prms)
+        For Each r As DataRow In dt.Rows
+            Dim entry As New BknriAccessEntry()
+            entry.BknriId = If(r("bknri_id") IsNot DBNull.Value, CInt(r("bknri_id")), 0)
+            entry.AccessKind = If(r("access_kind") IsNot DBNull.Value, CInt(r("access_kind")), 0)
+            BknriList.Add(entry)
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' sec_user テーブルからパスワードポリシー情報を読み込む
+    ''' Access版 gSetPublic_KNGN 行803-840 相当
+    ''' </summary>
+    Public Sub LoadPasswordPolicy(userIdParam As Integer)
+        Try
+            Dim crud As New CrudHelper()
+            Dim sql As String = "SELECT pwd_min, pwd_moji_chk, pwd_alph_chk, pwd_num_chk, pwd_symbol_chk, " &
+                                "pwd_life_time, pwd_grace_time, pwd_upd_dt " &
+                                "FROM sec_user WHERE user_id = @user_id"
+            Dim prms As New List(Of NpgsqlParameter) From {
+                New NpgsqlParameter("@user_id", userIdParam)
+            }
+            Dim dt = crud.GetDataTable(sql, prms)
+            If dt.Rows.Count = 0 Then Return
+
+            Dim row = dt.Rows(0)
+            PasswordMinLength = If(row("pwd_min") IsNot DBNull.Value, CInt(row("pwd_min")), 0)
+            PwdMojiChk = If(row("pwd_moji_chk") IsNot DBNull.Value, CBool(row("pwd_moji_chk")), False)
+            PwdAlphChk = If(row("pwd_alph_chk") IsNot DBNull.Value, CBool(row("pwd_alph_chk")), False)
+            PwdNumChk = If(row("pwd_num_chk") IsNot DBNull.Value, CBool(row("pwd_num_chk")), False)
+            PwdSymbolChk = If(row("pwd_symbol_chk") IsNot DBNull.Value, CBool(row("pwd_symbol_chk")), False)
+            PwdLifeTime = If(row("pwd_life_time") IsNot DBNull.Value, CInt(row("pwd_life_time")), 0)
+            PwdGraceTime = If(row("pwd_grace_time") IsNot DBNull.Value, CInt(row("pwd_grace_time")), 0)
+            PwdUpdDt = If(row("pwd_upd_dt") IsNot DBNull.Value, CDate(row("pwd_upd_dt")), CType(Nothing, DateTime?))
+        Catch ex As Exception
+            ' パスワードポリシー読込失敗はスキップ
+            Console.WriteLine($"[LoadPasswordPolicy] 読込失敗: {ex.Message}")
+        End Try
     End Sub
 
     ''' <summary>
@@ -121,6 +227,18 @@ Public Module LoginSession
         ' パスワード関連
         PasswordExpireDate = DateTime.MinValue
         IsFirstLogin = False
+        ' 管理単位別権限
+        KknriList = New List(Of KknriAccessEntry)()
+        BknriList = New List(Of BknriAccessEntry)()
+        ' パスワードポリシー
+        PasswordMinLength = 0
+        PwdMojiChk = False
+        PwdAlphChk = False
+        PwdNumChk = False
+        PwdSymbolChk = False
+        PwdLifeTime = 0
+        PwdGraceTime = 0
+        PwdUpdDt = Nothing
     End Sub
 
     ''' <summary>
@@ -191,19 +309,24 @@ Public Module LoginSession
     Public Sub WriteAuditLog(operationType As String, detail As String)
         Try
             Dim crud As New CrudHelper()
-            Dim sql As String = "INSERT INTO sec_slog (user_id, user_cd, op_kbn, op_detail, op_dt) " &
-                                "VALUES (@user_id, @user_cd, @op_kbn, @op_detail, @op_dt)"
+            ' l_slog テーブル（DDL定義済み）に操作ログを記録
+            ' Access版 olSLOG.OutputSLOG に準拠
+            Dim sql As String = "INSERT INTO l_slog (op_st_dt, op_en_dt, op_kbn, op_user_cd, op_user_nm, " &
+                                "op_detail1, pc_name) " &
+                                "VALUES (@op_st_dt, @op_en_dt, @op_kbn, @op_user_cd, @op_user_nm, " &
+                                "@op_detail1, @pc_name)"
             Dim prms As New List(Of NpgsqlParameter) From {
-                New NpgsqlParameter("@user_id", LoggedInUserId),
-                New NpgsqlParameter("@user_cd", If(LoggedInUserCd, "")),
+                New NpgsqlParameter("@op_st_dt", DateTime.Now),
+                New NpgsqlParameter("@op_en_dt", DateTime.Now),
                 New NpgsqlParameter("@op_kbn", operationType),
-                New NpgsqlParameter("@op_detail", detail),
-                New NpgsqlParameter("@op_dt", DateTime.Now)
+                New NpgsqlParameter("@op_user_cd", If(LoggedInUserCd, "")),
+                New NpgsqlParameter("@op_user_nm", If(LoggedInUserNm, "")),
+                New NpgsqlParameter("@op_detail1", detail),
+                New NpgsqlParameter("@pc_name", Environment.MachineName)
             }
             crud.ExecuteNonQuery(sql, prms)
         Catch ex As Exception
             ' ログ記録失敗は握りつぶす（業務処理に影響させない）
-            ' デバッグ時はConsoleに出力
             Console.WriteLine($"[WriteAuditLog] ログ記録失敗: {ex.Message}")
         End Try
     End Sub

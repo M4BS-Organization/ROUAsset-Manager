@@ -36,6 +36,7 @@ Partial Public Class Form_f_flx_KHIYO
         lbl_CONDITION.Text = GetLabelText()
 
         SearchData()
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()

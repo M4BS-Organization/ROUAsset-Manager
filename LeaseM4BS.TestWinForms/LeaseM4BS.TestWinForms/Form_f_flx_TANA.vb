@@ -19,6 +19,7 @@ Partial Public Class Form_f_flx_TANA
         lbl_TANA_DATE.Text = "棚卸日： " + TanaDate.ToString(FMT_DATE)
 
         SearchData()
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()

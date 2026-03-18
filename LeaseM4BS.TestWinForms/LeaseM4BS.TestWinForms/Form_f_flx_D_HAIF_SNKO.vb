@@ -7,4 +7,8 @@ Partial Public Class Form_f_flx_D_HAIF_SNKO
         InitializeComponent()
     End Sub
 
+    Private Sub Form_f_flx_D_HAIF_SNKO_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        SecurityChecker.ApplyDataUpdateLimit(Me)
+    End Sub
+
 End Class

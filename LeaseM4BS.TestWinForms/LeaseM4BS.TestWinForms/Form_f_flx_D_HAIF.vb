@@ -16,6 +16,7 @@ Partial Public Class Form_f_flx_D_HAIF
     Private Sub Form_f_flx_D_HAIF_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         ' 初期表示：全件検索
         SearchData()
+        SecurityChecker.ApplyDataUpdateLimit(Me)
     End Sub
 
     Private Sub SearchData()

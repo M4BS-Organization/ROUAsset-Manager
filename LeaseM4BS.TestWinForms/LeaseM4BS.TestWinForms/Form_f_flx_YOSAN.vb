@@ -29,6 +29,7 @@ Partial Public Class Form_f_flx_YOSAN
         LoadDgvTotal()
 
         lbl_CONDITION.Text = "集計期間：  " & DtFrom.ToString("yyyy/MM") & "～" & NextDtTo.ToString("yyyy/MM")
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()

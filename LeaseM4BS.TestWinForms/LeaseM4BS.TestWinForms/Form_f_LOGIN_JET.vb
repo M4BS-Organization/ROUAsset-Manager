@@ -123,6 +123,11 @@ Partial Public Class Form_f_LOGIN_JET
 
         ' --- パスワード照合 (Gap 11: SHA256ハッシュ比較 + 平文フォールバック) ---
         If Not VerifyPassword(pwd, storedPwd) Then
+            ' 監査ログ: ログイン失敗 (Access版 cngOP_KBN_LOGINERR 相当)
+            LoginSession.LoggedInUserCd = userCd  ' ログ記録用に一時セット
+            LoginSession.WriteAuditLog(LoginSession.OP_LOGIN_ERR, "パスワード不正 ユーザー:" & userCd)
+            LoginSession.LoggedInUserCd = ""       ' クリア
+
             ' 失敗: err_ct をインクリメント + last_err_dt を更新
             errCt += 1
 
@@ -200,6 +205,9 @@ Partial Public Class Form_f_LOGIN_JET
         ' 権限情報をロード
         LoginSession.LoadPermissions(kngnId)
 
+        ' パスワードポリシーをロード
+        LoginSession.LoadPasswordPolicy(userId)
+
         ' --- Gap 4: DBバージョン＆整合性チェック ---
         If Not CheckDatabaseVersion() Then
             ' バージョン不一致でアプリ終了
@@ -222,6 +230,13 @@ Partial Public Class Form_f_LOGIN_JET
 
         ' --- Gap 11: パスワード有効期限チェック (Access版 gPWD_KIGEN に相当) ---
         CheckPasswordExpiry(row)
+
+        ' セッション状態を有効化
+        LoginSession.LoginDateTime = DateTime.Now
+        LoginSession.IsSessionActive = True
+
+        ' 監査ログ: ログイン成功 (Access版 olSLOG.OutputSLOG 相当)
+        LoginSession.WriteAuditLog(LoginSession.OP_LOGIN, "ログイン成功")
 
         ' 次回用にユーザーコードを保存
         txt_USER_CD_SAVE.Text = userCd
@@ -421,7 +436,10 @@ Partial Public Class Form_f_LOGIN_JET
                     "パスワードが設定されていません。" & vbCrLf & "パスワードを設定しますか？",
                     "パスワード設定",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-                ' パスワード変更画面がないため、メッセージのみ表示
+                If result = DialogResult.Yes Then
+                    Dim frmPwd As New Form_f_CHANGE_PASSWORD()
+                    frmPwd.ShowDialog()
+                End If
                 Return
             End If
 
@@ -435,7 +453,10 @@ Partial Public Class Form_f_LOGIN_JET
                         "パスワードの有効期限が切れました。" & vbCrLf & "パスワードを変更しますか？",
                         "パスワード期限切れ",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-                    ' パスワード変更画面がないため、メッセージのみ表示
+                    If result = DialogResult.Yes Then
+                        Dim frmPwd As New Form_f_CHANGE_PASSWORD()
+                        frmPwd.ShowDialog()
+                    End If
                 ElseIf daysRemaining <= PWD_EXPIRE_WARNING_DAYS Then
                     ' 期限切迫（30日以内）: 警告メッセージ
                     MessageBox.Show(

@@ -22,6 +22,7 @@ Partial Public Class Form_f_flx_SAIMU
         SearchData()
 
         LoadDgvTotal()
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()

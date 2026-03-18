@@ -316,6 +316,56 @@
     </Compile>
     <Compile Include="FormHelper.vb" />
     <Compile Include="LoginSession.vb" />
+    <Compile Include="SecurityChecker.vb" />
+    <Compile Include="PasswordValidator.vb" />
+    <Compile Include="Form_f_flx_SEC_USER.Designer.vb">
+      <DependentUpon>Form_f_flx_SEC_USER.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_flx_SEC_USER.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_SEC_USER_INP.Designer.vb">
+      <DependentUpon>Form_f_SEC_USER_INP.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_SEC_USER_INP.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_flx_SEC_KNGN.Designer.vb">
+      <DependentUpon>Form_f_flx_SEC_KNGN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_flx_SEC_KNGN.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_SEC_KNGN_INP.Designer.vb">
+      <DependentUpon>Form_f_SEC_KNGN_INP.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_SEC_KNGN_INP.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_SEC_KNGN_INP_SUB.Designer.vb">
+      <DependentUpon>Form_f_SEC_KNGN_INP_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_SEC_KNGN_INP_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_SEC_KNGN_INP_B_SUB.Designer.vb">
+      <DependentUpon>Form_f_SEC_KNGN_INP_B_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_SEC_KNGN_INP_B_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_CHANGE_PASSWORD.Designer.vb">
+      <DependentUpon>Form_f_CHANGE_PASSWORD.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_CHANGE_PASSWORD.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00DataPass.Designer.vb">
+      <DependentUpon>Form_f_00DataPass.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00DataPass.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Form_f_LOGIN_JET.Designer.vb">
       <DependentUpon>Form_f_LOGIN_JET.vb</DependentUpon>
     </Compile>

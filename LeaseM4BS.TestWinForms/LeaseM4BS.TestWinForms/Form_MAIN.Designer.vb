@@ -87,6 +87,8 @@ Partial Class Form_MAIN
         Me.menu_LOG_SAVE_RESTORE = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_LOG_DELETE = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_SWKK_FIXED = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_SEC_USER = New System.Windows.Forms.ToolStripMenuItem()
+        Me.menu_SEC_KNGN = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_VERSION_INFO = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_LOGOUT = New System.Windows.Forms.ToolStripMenuItem()
         Me.menu_EXIT = New System.Windows.Forms.ToolStripMenuItem()
@@ -401,7 +403,7 @@ Partial Class Form_MAIN
         '
         'システムToolStripMenuItem
         '
-        Me.システムToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DB管理ToolStripMenuItem, Me.menu_ENV_SETTING, Me.menu_TOUSEI_OPT, Me.menu_PWD_CHANGE, Me.ログ管理ToolStripMenuItem, Me.menu_SWKK_FIXED, Me.menu_VERSION_INFO, Me.menu_LOGOUT, Me.menu_EXIT})
+        Me.システムToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.menu_SEC_USER, Me.menu_SEC_KNGN, Me.DB管理ToolStripMenuItem, Me.menu_ENV_SETTING, Me.menu_TOUSEI_OPT, Me.menu_PWD_CHANGE, Me.ログ管理ToolStripMenuItem, Me.menu_SWKK_FIXED, Me.menu_VERSION_INFO, Me.menu_LOGOUT, Me.menu_EXIT})
         Me.システムToolStripMenuItem.Name = "システムToolStripMenuItem"
         Me.システムToolStripMenuItem.Size = New System.Drawing.Size(82, 29)
         Me.システムToolStripMenuItem.Text = "システム"
@@ -490,6 +492,18 @@ Partial Class Form_MAIN
         Me.menu_TOUSEI_OPT.Name = "menu_TOUSEI_OPT"
         Me.menu_TOUSEI_OPT.Size = New System.Drawing.Size(270, 34)
         Me.menu_TOUSEI_OPT.Text = "統制オプション"
+        '
+        'menu_SEC_USER
+        '
+        Me.menu_SEC_USER.Name = "menu_SEC_USER"
+        Me.menu_SEC_USER.Size = New System.Drawing.Size(270, 34)
+        Me.menu_SEC_USER.Text = "システム利用者"
+        '
+        'menu_SEC_KNGN
+        '
+        Me.menu_SEC_KNGN.Name = "menu_SEC_KNGN"
+        Me.menu_SEC_KNGN.Size = New System.Drawing.Size(270, 34)
+        Me.menu_SEC_KNGN.Text = "システム利用権限"
         '
         'menu_PWD_CHANGE
         '
@@ -600,6 +614,8 @@ Partial Class Form_MAIN
     Friend WithEvents menu_DB_EXPORT As ToolStripMenuItem
     Friend WithEvents menu_ENV_SETTING As ToolStripMenuItem
     Friend WithEvents menu_TOUSEI_OPT As ToolStripMenuItem
+    Friend WithEvents menu_SEC_USER As ToolStripMenuItem
+    Friend WithEvents menu_SEC_KNGN As ToolStripMenuItem
     Friend WithEvents menu_PWD_CHANGE As ToolStripMenuItem
     Friend WithEvents ログ管理ToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents menu_LOG_REF As ToolStripMenuItem
