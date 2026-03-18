@@ -101,7 +101,7 @@ Public Class MonthlyJournalEngine
                 End If
             Catch rollbackEx As Exception
                 ' Rollback 失敗は致命的でないが、記録する
-                System.Diagnostics.Debug.WriteLine($"Rollback失敗: {rollbackEx.Message}")
+                DbConnectionManager.WriteError("Rollback失敗", rollbackEx)
             End Try
 
             Throw New Exception($"月次仕訳計上処理でエラーが発生しました: {ex.Message}", ex)
@@ -154,7 +154,7 @@ Public Class MonthlyJournalEngine
                 End If
             Catch rollbackEx As Exception
                 ' Rollback 失敗は致命的でないが、記録する
-                System.Diagnostics.Debug.WriteLine($"Rollback失敗: {rollbackEx.Message}")
+                DbConnectionManager.WriteError("Rollback失敗", rollbackEx)
             End Try
 
             Throw New Exception($"注記計算処理でエラーが発生しました: {ex.Message}", ex)

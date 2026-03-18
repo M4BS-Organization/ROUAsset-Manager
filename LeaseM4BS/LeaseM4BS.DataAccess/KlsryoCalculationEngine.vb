@@ -358,7 +358,7 @@ Public Class KlsryoCalculationEngine
                     " ORDER BY d_haif.kykm_id, d_haif.line_id"
                 haifDt = _crud.GetDataTable(haifSql)
             Catch ex As Exception
-                System.Diagnostics.Debug.WriteLine($"配賦情報取得失敗: {ex.Message}")
+                DbConnectionManager.WriteError("配賦情報取得失敗", ex)
             End Try
         End If
 
@@ -994,7 +994,7 @@ Public Class KlsryoCalculationEngine
             If dt.Rows.Count > 0 Then Return CDate(dt.Rows(0)("val_datetime"))
         Catch ex As Exception
             ' デフォルト値を返すが、エラーはログに記録する
-            System.Diagnostics.Debug.WriteLine($"設定値取得失敗(GetSekouDt): {ex.Message}")
+            DbConnectionManager.WriteError("設定値取得失敗(GetSekouDt)", ex)
         End Try
         Return New Date(2008, 4, 1) ' デフォルト施行日
     End Function
@@ -1008,7 +1008,7 @@ Public Class KlsryoCalculationEngine
             If dt.Rows.Count > 0 Then Return dt.Rows(0)(0)
         Catch ex As Exception
             ' デフォルト値を返すが、エラーはログに記録する
-            System.Diagnostics.Debug.WriteLine($"マスタ名称取得失敗(GetNameFromMaster): {ex.Message}")
+            DbConnectionManager.WriteError("マスタ名称取得失敗(GetNameFromMaster)", ex)
         End Try
         Return DBNull.Value
     End Function
