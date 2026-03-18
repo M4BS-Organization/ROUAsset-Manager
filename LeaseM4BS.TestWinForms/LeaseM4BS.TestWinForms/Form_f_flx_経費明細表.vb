@@ -7,4 +7,8 @@ Partial Public Class Form_f_flx_経費明細表
         InitializeComponent()
     End Sub
 
+    Private Sub Form_f_flx_経費明細表_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        SecurityChecker.ApplyListLimit(Me)
+    End Sub
+
 End Class

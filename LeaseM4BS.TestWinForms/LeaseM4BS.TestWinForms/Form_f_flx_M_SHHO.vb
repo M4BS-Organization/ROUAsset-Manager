@@ -12,6 +12,7 @@ Partial Public Class Form_f_flx_M_SHHO
 
     Private Sub Form_f_flx_M_LCPT_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SearchData()
+        SecurityChecker.ApplyMasterUpdateLimit(Me)
     End Sub
 
     Private Sub SearchData()

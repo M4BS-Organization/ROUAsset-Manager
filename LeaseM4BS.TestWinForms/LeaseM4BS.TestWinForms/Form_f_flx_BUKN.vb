@@ -11,6 +11,7 @@ Partial Public Class Form_f_flx_BUKN
     Private Sub FrmPropertyList_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         ' 初期表示：全件検索
         SearchData()
+        SecurityChecker.ApplyDataUpdateLimit(Me)
     End Sub
 
     ' ---------------------------------------------------------

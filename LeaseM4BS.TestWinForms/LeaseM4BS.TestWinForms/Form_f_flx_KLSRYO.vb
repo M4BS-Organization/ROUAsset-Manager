@@ -21,6 +21,7 @@ Partial Public Class Form_f_flx_KLSRYO
 
     Private Sub Form_f_flx_KLSRYO_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SearchData()
+        SecurityChecker.ApplyListLimit(Me)
     End Sub
 
     Private Sub SearchData()
