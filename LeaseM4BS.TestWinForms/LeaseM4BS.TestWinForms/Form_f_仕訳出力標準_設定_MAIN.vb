@@ -33,6 +33,17 @@ Partial Public Class Form_f_仕訳出力標準_設定_MAIN
             chk_SWKKY_KMKNM_HOKAN.Checked = GetBoolFromWorkTable(kyData, "swkky_kmknm_hokan")
             chk_SWKKY_DC_BETU_F.Checked = GetBoolFromWorkTable(kyData, "swkky_dc_betu_f")
 
+            ' 4. バージョン確認 (Access版: gCHK_VERSION_SH/KJ/SM/KY)
+            If Not _setteiHelper.CheckVersion("SWKSH_VER", "1.0") OrElse
+               Not _setteiHelper.CheckVersion("SWKKJ_VER", "1.0") OrElse
+               Not _setteiHelper.CheckVersion("SWKSM_VER", "1.0") OrElse
+               Not _setteiHelper.CheckVersion("SWKKY_VER", "1.0") Then
+                MessageBox.Show("仕訳出力設定のバージョンが異なるため、処理が実行できません。管理者に連絡してください。",
+                                "バージョンエラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Me.Close()
+                Return
+            End If
+
         Catch ex As Exception
             MessageBox.Show($"設定の読み込みに失敗しました。{vbCrLf}{ex.Message}",
                             "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -94,6 +105,11 @@ Partial Public Class Form_f_仕訳出力標準_設定_MAIN
             ' 5. DB登録
             _setteiHelper.SaveWorkTablesToTSettei()
 
+            ' NOTE: Access版では登録後、SH画面が開いている場合にKEIJO_DT_KINDを更新していた
+            '       (gIsLoadedFrm("f_仕訳出力標準_SH") → Form_f_仕訳出力標準_SH.gSET_KEIJO_DT_KIND)
+            '       WinForms版ではShowDialog()でモーダル表示するため、MAIN登録時にSH画面は閉じている。
+            '       そのため、この処理はWinForms版では不要。
+
             ' 6. フォームクローズ
             Me.DialogResult = DialogResult.OK
             Me.Close()
@@ -127,15 +143,33 @@ Partial Public Class Form_f_仕訳出力標準_設定_MAIN
     Private Function mCHK_必須フィールド() As Boolean
         ' SH ワークテーブルチェック
         Dim shData As Dictionary(Of String, Object) = _setteiHelper.LoadFromWorkTable("tw_f_仕訳出力標準_設定_swksh")
-        If Not CheckRequiredFields(shData, "月次支払照合フレックス(SH)") Then Return False
+        If Not CheckRequiredFields(shData, "月次支払照合フレックス(SH)") Then
+            ' Access版: 必須チェック失敗時にSH画面を開く
+            Using frm As New Form_f_仕訳出力標準_設定_SH()
+                frm.ShowDialog(Me)
+            End Using
+            Return False
+        End If
 
         ' KJ ワークテーブルチェック
         Dim kjData As Dictionary(Of String, Object) = _setteiHelper.LoadFromWorkTable("tw_f_仕訳出力標準_設定_swkkj")
-        If Not CheckRequiredFields(kjData, "月次仕訳計上フレックス(KJ)") Then Return False
+        If Not CheckRequiredFields(kjData, "月次仕訳計上フレックス(KJ)") Then
+            ' Access版: 必須チェック失敗時にKJ画面を開く
+            Using frm As New Form_f_仕訳出力標準_設定_KJ()
+                frm.ShowDialog(Me)
+            End Using
+            Return False
+        End If
 
         ' SM ワークテーブルチェック
         Dim smData As Dictionary(Of String, Object) = _setteiHelper.LoadFromWorkTable("tw_f_仕訳出力標準_設定_swksm")
-        If Not CheckRequiredFields(smData, "リース債務返済明細表(SM)") Then Return False
+        If Not CheckRequiredFields(smData, "リース債務返済明細表(SM)") Then
+            ' Access版: 必須チェック失敗時にSM画面を開く
+            Using frm As New Form_f_仕訳出力標準_設定_SM()
+                frm.ShowDialog(Me)
+            End Using
+            Return False
+        End If
 
         Return True
     End Function
@@ -176,85 +210,340 @@ Partial Public Class Form_f_仕訳出力標準_設定_MAIN
     End Function
 
     ' ================================================================
-    '  mCHK_組合わせ - Access版の組合わせ検証 (20パターン)
+    '  mCHK_組合わせ - Access版の項目間チェック (23パターン)
+    '  各パターンに固有メッセージとフォーム遷移を実装
     ' ================================================================
 
     Private Function mCHK_組合わせ() As Boolean
         Dim shData As Dictionary(Of String, Object) = _setteiHelper.LoadFromWorkTable("tw_f_仕訳出力標準_設定_swksh")
         Dim kjData As Dictionary(Of String, Object) = _setteiHelper.LoadFromWorkTable("tw_f_仕訳出力標準_設定_swkkj")
         Dim smData As Dictionary(Of String, Object) = _setteiHelper.LoadFromWorkTable("tw_f_仕訳出力標準_設定_swksm")
+        Dim msg As String
 
-        ' --- SH内チェック（7パターン）---
-        If Not CheckCombination(shData, "swksh_ssn1_out_f", shData, "swksh_ssn2_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_ssn1_out_f", shData, "swksh_ssn3_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_ssn2_out_f", shData, "swksh_ssn3_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo1_out_f", shData, "swksh_hiyo2_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo1_out_f", shData, "swksh_hiyo3_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo1_out_f", shData, "swksh_hiyo4_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo3_out_f", shData, "swksh_hiyo4_out_f") Then Return False
+        ' ==============================================================
+        ' SH内チェック（7パターン）: 失敗時→SH画面を開く
+        ' ==============================================================
 
-        ' --- KJ内チェック（1パターン: 3つ全てONの場合）---
+        ' --- SH 資産リース ---
+        ' SSN1 && SSN2
+        If GetBoolFromWorkTable(shData, "swksh_ssn1_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_ssn2_out_f") Then
+            msg = "月次支払照合フレックス　資産リース「1.貸出1(組合)」「2.貸出2」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SSN1 && SSN3
+        If GetBoolFromWorkTable(shData, "swksh_ssn1_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_ssn3_out_f") Then
+            msg = "月次支払照合フレックス　資産リース「1.貸出1(組合)」「3.貸出3(リース料引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SSN2 && SSN3
+        If GetBoolFromWorkTable(shData, "swksh_ssn2_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_ssn3_out_f") Then
+            msg = "月次支払照合フレックス　資産リース「2.貸出2」「3.貸出3(リース料引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' --- SH 費用リース ---
+        ' HIYO1 && HIYO2
+        If GetBoolFromWorkTable(shData, "swksh_hiyo1_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_hiyo2_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「1.貸出1」「2.貸出2(リース料引落)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' HIYO1 && HIYO3
+        If GetBoolFromWorkTable(shData, "swksh_hiyo1_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_hiyo3_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「1.貸出1」「3.貸出3(一括引落)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' HIYO1 && HIYO4
+        If GetBoolFromWorkTable(shData, "swksh_hiyo1_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_hiyo4_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「1.貸出1」「4.貸出4(一括引落リース料のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' HIYO3 && HIYO4
+        If GetBoolFromWorkTable(shData, "swksh_hiyo3_out_f") AndAlso GetBoolFromWorkTable(shData, "swksh_hiyo4_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「3.貸出3(一括引落)」「4.貸出4(一括引落リース料のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' ==============================================================
+        ' KJ内チェック（1パターン）: 失敗時→KJ画面を開く
+        ' ==============================================================
+
+        ' SSN6 && SSN7 && SSN6_KAIYK_OUT_F
         If GetBoolFromWorkTable(kjData, "swkkj_ssn6_out_f") AndAlso
            GetBoolFromWorkTable(kjData, "swkkj_ssn7_out_f") AndAlso
            GetBoolFromWorkTable(kjData, "swkkj_ssn6_kaiyk_out_f") Then
-            If Not ShowCombinationWarning() Then Return False
+            msg = "月次仕訳計上フレックス　資産リース「6.終了(資産) 解約分出力:ON」「7.解約末償(資産)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_KJ()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
         End If
 
-        ' --- SM内チェック（8パターン）---
-        If Not CheckCombination(smData, "swksm_ssn1_out_f", smData, "swksm_ssn3_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_ssn1_out_f", smData, "swksm_ssn5_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_ssn2_out_f", smData, "swksm_ssn4_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_ssn2_out_f", smData, "swksm_ssn6_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_hiyo1_out_f", smData, "swksm_hiyo3_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_hiyo1_out_f", smData, "swksm_hiyo5_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_hiyo2_out_f", smData, "swksm_hiyo4_out_f") Then Return False
-        If Not CheckCombination(smData, "swksm_hiyo2_out_f", smData, "swksm_hiyo6_out_f") Then Return False
+        ' ==============================================================
+        ' SM内チェック（8パターン）: 失敗時→SM画面を開く
+        ' ==============================================================
 
-        ' --- SH⇔KJクロスチェック（7パターン）---
-        If Not CheckCombination(shData, "swksh_ssn1_out_f", kjData, "swkkj_ssn4_out_f") Then Return False
+        ' --- SM 資産リース ---
+        ' SSN1 && SSN3
+        If GetBoolFromWorkTable(smData, "swksm_ssn1_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_ssn3_out_f") Then
+            msg = "リース債務返済明細表　資産リース「1.返済振替」「3.返済振替2(リース料のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
 
-        ' SH.SSN2 && KJ.SSN4 && KJ.SSN4_KRZEI
+        ' SSN1 && SSN5
+        If GetBoolFromWorkTable(smData, "swksm_ssn1_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_ssn5_out_f") Then
+            msg = "リース債務返済明細表　資産リース「1.返済振替」「5.返済振替3(口座引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SSN2 && SSN4
+        If GetBoolFromWorkTable(smData, "swksm_ssn2_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_ssn4_out_f") Then
+            msg = "リース債務返済明細表　資産リース「2.返済振替戻し」「4.返済振替戻し2(リース料のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SSN2 && SSN6
+        If GetBoolFromWorkTable(smData, "swksm_ssn2_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_ssn6_out_f") Then
+            msg = "リース債務返済明細表　資産リース「2.返済振替戻し」「6.返済振替戻し3(口座引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' --- SM 費用リース ---
+        ' HIYO1 && HIYO3
+        If GetBoolFromWorkTable(smData, "swksm_hiyo1_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_hiyo3_out_f") Then
+            msg = "リース債務返済明細表　費用リース「1.返済振替」「3.返済振替2(口座引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' HIYO1 && HIYO5
+        If GetBoolFromWorkTable(smData, "swksm_hiyo1_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_hiyo5_out_f") Then
+            msg = "リース債務返済明細表　費用リース「1.返済振替」「5.返済振替3(口座引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' HIYO2 && HIYO4
+        If GetBoolFromWorkTable(smData, "swksm_hiyo2_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_hiyo4_out_f") Then
+            msg = "リース債務返済明細表　費用リース「2.返済振替戻し」「4.返済振替戻し2(口座引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' HIYO2 && HIYO6
+        If GetBoolFromWorkTable(smData, "swksm_hiyo2_out_f") AndAlso GetBoolFromWorkTable(smData, "swksm_hiyo6_out_f") Then
+            msg = "リース債務返済明細表　費用リース「2.返済振替戻し」「6.返済振替戻し3(口座引落のみ)」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SM()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' ==============================================================
+        ' SH⇔KJクロスチェック（7パターン）: 失敗時→SH画面を開く
+        ' ==============================================================
+
+        ' --- 資産リース ---
+        ' SH.SSN1 && KJ.SSN4
+        If GetBoolFromWorkTable(shData, "swksh_ssn1_out_f") AndAlso GetBoolFromWorkTable(kjData, "swkkj_ssn4_out_f") Then
+            msg = "月次支払照合フレックス　資産リース「1.貸出1(組合)」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　資産リース「4.組合」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SH.SSN2 && KJ.SSN4 && KJ.SSN4_KRZEI_OUT_F
         If GetBoolFromWorkTable(shData, "swksh_ssn2_out_f") AndAlso
            GetBoolFromWorkTable(kjData, "swkkj_ssn4_out_f") AndAlso
            GetBoolFromWorkTable(kjData, "swkkj_ssn4_krzei_out_f") Then
-            If Not ShowCombinationWarning() Then Return False
+            msg = "月次支払照合フレックス　資産リース「2.貸出2」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　資産リース「4.組合 繰延リース料出力:ON」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
         End If
 
-        ' SH.SSN3 && KJ.SSN4 && KJ.SSN4_KRZEI
+        ' SH.SSN3 && KJ.SSN4 && KJ.SSN4_KRZEI_OUT_F
         If GetBoolFromWorkTable(shData, "swksh_ssn3_out_f") AndAlso
            GetBoolFromWorkTable(kjData, "swkkj_ssn4_out_f") AndAlso
            GetBoolFromWorkTable(kjData, "swkkj_ssn4_krzei_out_f") Then
-            If Not ShowCombinationWarning() Then Return False
+            msg = "月次支払照合フレックス　資産リース「3.貸出3(リース料引落のみ)」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　資産リース「4.組合 繰延リース料出力:ON」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
         End If
 
-        If Not CheckCombination(shData, "swksh_hiyo1_out_f", kjData, "swkkj_hiyo2_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo2_out_f", kjData, "swkkj_hiyo2_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo3_out_f", kjData, "swkkj_hiyo2_out_f") Then Return False
-        If Not CheckCombination(shData, "swksh_hiyo4_out_f", kjData, "swkkj_hiyo2_out_f") Then Return False
-
-        Return True
-    End Function
-
-    ''' <summary>
-    ''' 2つのフラグが両方ONの場合に二重仕訳警告を表示する。
-    ''' ユーザーがNoを選んだ場合Falseを返す。
-    ''' </summary>
-    Private Function CheckCombination(data1 As Dictionary(Of String, Object), key1 As String,
-                                       data2 As Dictionary(Of String, Object), key2 As String) As Boolean
-        If GetBoolFromWorkTable(data1, key1) AndAlso GetBoolFromWorkTable(data2, key2) Then
-            Return ShowCombinationWarning()
+        ' --- 費用リース (クロスチェック) ---
+        ' SH.HIYO1 && KJ.HIYO2
+        If GetBoolFromWorkTable(shData, "swksh_hiyo1_out_f") AndAlso GetBoolFromWorkTable(kjData, "swkkj_hiyo2_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「1.貸出1」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　費用リース「2.費用計上」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
         End If
-        Return True
-    End Function
 
-    ''' <summary>
-    ''' 仕訳二重警告を表示する。Yesで続行(True)、Noで中断(False)。
-    ''' </summary>
-    Private Function ShowCombinationWarning() As Boolean
-        Dim result As DialogResult = MessageBox.Show(
-            "仕訳二重になる可能性があります。よろしいですか？",
-            "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
-        Return (result = DialogResult.Yes)
+        ' SH.HIYO2 && KJ.HIYO2
+        If GetBoolFromWorkTable(shData, "swksh_hiyo2_out_f") AndAlso GetBoolFromWorkTable(kjData, "swkkj_hiyo2_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「2.貸出2(リース料引落)」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　費用リース「2.費用計上」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SH.HIYO3 && KJ.HIYO2
+        If GetBoolFromWorkTable(shData, "swksh_hiyo3_out_f") AndAlso GetBoolFromWorkTable(kjData, "swkkj_hiyo2_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「3.貸出3(一括引落)」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　費用リース「2.費用計上」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        ' SH.HIYO4 && KJ.HIYO2
+        If GetBoolFromWorkTable(shData, "swksh_hiyo4_out_f") AndAlso GetBoolFromWorkTable(kjData, "swkkj_hiyo2_out_f") Then
+            msg = "月次支払照合フレックス　費用リース「4.貸出4(一括引落リース料のみ)」" & vbCrLf & vbCrLf &
+                  "月次仕訳計上フレックス　費用リース「2.費用計上」" & vbCrLf & vbCrLf &
+                  "を同時出力すると２重仕訳になる可能性がありますがよろしいですか？"
+            If MessageBox.Show(msg, "組合わせ確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                Using frm As New Form_f_仕訳出力標準_設定_SH()
+                    frm.tab_設定.SelectedTab = frm.page_2  ' タブを費用に切替
+                    frm.ShowDialog(Me)
+                End Using
+                Return False
+            End If
+        End If
+
+        Return True
     End Function
 
     ' ================================================================

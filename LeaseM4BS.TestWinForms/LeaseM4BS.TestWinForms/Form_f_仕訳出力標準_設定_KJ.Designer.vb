@@ -348,6 +348,12 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
         Me.cmb_SWKKJ_HIYO6_1D1_FLDNM = New System.Windows.Forms.ComboBox()
         Me.cmb_SWKKJ_HIYO6_1D2_FLDNM = New System.Windows.Forms.ComboBox()
         Me.cmb_SWKKJ_HIYO6_2C1_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKKJ_SSN4_1D4_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKKJ_SSN4_1D5_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKKJ_SSN7_1D2_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKKJ_SSN7_1D3_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKKJ_SSN8_1D3_FLDNM = New System.Windows.Forms.ComboBox()
+        Me.cmb_SWKKJ_HIYO2_1D4_FLDNM = New System.Windows.Forms.ComboBox()
         Me.tab_設定.SuspendLayout()
         Me.page_1.SuspendLayout()
         Me.page_2.SuspendLayout()
@@ -2957,6 +2963,54 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
         Me.cmb_SWKKJ_HIYO6_2C1_FLDNM.Size = New System.Drawing.Size(120, 20)
         Me.cmb_SWKKJ_HIYO6_2C1_FLDNM.TabIndex = 329
         '
+        ' cmb_SWKKJ_SSN4_1D4_FLDNM
+        '
+        Me.cmb_SWKKJ_SSN4_1D4_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKKJ_SSN4_1D4_FLDNM.Location = New System.Drawing.Point(384, 359)
+        Me.cmb_SWKKJ_SSN4_1D4_FLDNM.Name = "cmb_SWKKJ_SSN4_1D4_FLDNM"
+        Me.cmb_SWKKJ_SSN4_1D4_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKKJ_SSN4_1D4_FLDNM.TabIndex = 330
+        '
+        ' cmb_SWKKJ_SSN4_1D5_FLDNM
+        '
+        Me.cmb_SWKKJ_SSN4_1D5_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKKJ_SSN4_1D5_FLDNM.Location = New System.Drawing.Point(384, 377)
+        Me.cmb_SWKKJ_SSN4_1D5_FLDNM.Name = "cmb_SWKKJ_SSN4_1D5_FLDNM"
+        Me.cmb_SWKKJ_SSN4_1D5_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKKJ_SSN4_1D5_FLDNM.TabIndex = 331
+        '
+        ' cmb_SWKKJ_SSN7_1D2_FLDNM
+        '
+        Me.cmb_SWKKJ_SSN7_1D2_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKKJ_SSN7_1D2_FLDNM.Location = New System.Drawing.Point(384, 604)
+        Me.cmb_SWKKJ_SSN7_1D2_FLDNM.Name = "cmb_SWKKJ_SSN7_1D2_FLDNM"
+        Me.cmb_SWKKJ_SSN7_1D2_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKKJ_SSN7_1D2_FLDNM.TabIndex = 332
+        '
+        ' cmb_SWKKJ_SSN7_1D3_FLDNM
+        '
+        Me.cmb_SWKKJ_SSN7_1D3_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKKJ_SSN7_1D3_FLDNM.Location = New System.Drawing.Point(384, 623)
+        Me.cmb_SWKKJ_SSN7_1D3_FLDNM.Name = "cmb_SWKKJ_SSN7_1D3_FLDNM"
+        Me.cmb_SWKKJ_SSN7_1D3_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKKJ_SSN7_1D3_FLDNM.TabIndex = 333
+        '
+        ' cmb_SWKKJ_SSN8_1D3_FLDNM
+        '
+        Me.cmb_SWKKJ_SSN8_1D3_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKKJ_SSN8_1D3_FLDNM.Location = New System.Drawing.Point(384, 718)
+        Me.cmb_SWKKJ_SSN8_1D3_FLDNM.Name = "cmb_SWKKJ_SSN8_1D3_FLDNM"
+        Me.cmb_SWKKJ_SSN8_1D3_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKKJ_SSN8_1D3_FLDNM.TabIndex = 334
+        '
+        ' cmb_SWKKJ_HIYO2_1D4_FLDNM
+        '
+        Me.cmb_SWKKJ_HIYO2_1D4_FLDNM.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_SWKKJ_HIYO2_1D4_FLDNM.Location = New System.Drawing.Point(384, 207)
+        Me.cmb_SWKKJ_HIYO2_1D4_FLDNM.Name = "cmb_SWKKJ_HIYO2_1D4_FLDNM"
+        Me.cmb_SWKKJ_HIYO2_1D4_FLDNM.Size = New System.Drawing.Size(120, 20)
+        Me.cmb_SWKKJ_HIYO2_1D4_FLDNM.TabIndex = 335
+        '
         ' Form_f_仕訳出力標準_設定_KJ
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
@@ -3151,6 +3205,8 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN4_1D1_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN4_1D2_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN4_1D3_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN4_1D4_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN4_1D5_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN4_2C1_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN5_1D1_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN5_2C1_FLDNM)
@@ -3159,9 +3215,12 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN6_1D3_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN6_2C1_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN7_1D1_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN7_1D2_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN7_1D3_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN7_2C1_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN8_1D1_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN8_1D2_FLDNM)
+        Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN8_1D3_FLDNM)
         Me.page_1.Controls.Add(Me.cmb_SWKKJ_SSN8_2C1_FLDNM)
         Me.page_2.Controls.Add(Me.ラベル1288)
         Me.page_2.Controls.Add(Me.ラベル172)
@@ -3280,6 +3339,7 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
         Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO2_1D1_FLDNM)
         Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO2_1D2_FLDNM)
         Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO2_1D3_FLDNM)
+        Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO2_1D4_FLDNM)
         Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO2_2C1_FLDNM)
         Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO3_1D1_FLDNM)
         Me.page_2.Controls.Add(Me.cmb_SWKKJ_HIYO3_2C1_FLDNM)
@@ -3610,6 +3670,8 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
     Friend WithEvents cmb_SWKKJ_SSN4_1D1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN4_1D2_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN4_1D3_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKKJ_SSN4_1D4_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKKJ_SSN4_1D5_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN4_2C1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN5_1D1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN5_2C1_FLDNM As System.Windows.Forms.ComboBox
@@ -3618,15 +3680,19 @@ Partial Public Class Form_f_仕訳出力標準_設定_KJ
     Friend WithEvents cmb_SWKKJ_SSN6_1D3_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN6_2C1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN7_1D1_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKKJ_SSN7_1D2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKKJ_SSN7_1D3_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN7_2C1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN8_1D1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN8_1D2_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKKJ_SSN8_1D3_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_SSN8_2C1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO1_1D1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO1_2C1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO2_1D1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO2_1D2_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO2_1D3_FLDNM As System.Windows.Forms.ComboBox
+    Friend WithEvents cmb_SWKKJ_HIYO2_1D4_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO2_2C1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO3_1D1_FLDNM As System.Windows.Forms.ComboBox
     Friend WithEvents cmb_SWKKJ_HIYO3_2C1_FLDNM As System.Windows.Forms.ComboBox
