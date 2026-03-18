@@ -10,16 +10,17 @@
 
 | 指標 | 値 |
 |------|-----|
-| 実装ファイル数 | 15（修正12 + 新規3） |
-| 総追加行数 | 2,086行 |
+| 実装ファイル数 | 17（修正14 + 新規3） |
+| 総追加行数 | 約2,340行 |
 | 全チェック項目数 | 126項目 |
-| 実装済み | 113項目 (89.7%) |
-| 部分実装 | 4項目 (3.2%) |
-| 未実装 | 9項目 (7.1%) |
-| **完全再現率** | **89.7%** |
-| **充足率** | **91.3%** |
-| **品質スコア** | **A-** |
-| **リリース判定** | **条件付きGO** |
+| 実装済み（修正前） | 113項目 (89.7%) |
+| 実装済み（修正後） | 120項目 (95.2%) |
+| 部分実装 | 1項目 (0.8%) |
+| 未実装（スコープ外） | 5項目 (4.0%) |
+| **完全再現率** | **95.2%** |
+| **充足率** | **95.6%** |
+| **品質スコア** | **A** |
+| **リリース判定** | **GO** |
 
 ---
 
@@ -33,11 +34,11 @@
 | PasswordValidator.vb | パスワード文字種検証 | 146 | f_SEC_USER_INP.mPASS_CHK |
 | docs/issue25_verification_report.md | 本レポート | - | - |
 
-### 修正ファイル (12)
+### 修正ファイル (14)
 
 | ファイル | 修正内容 | Access版対応元 |
 |---------|---------|---------------|
-| LoginSession.vb | KKNRI/BKNRIリスト・パスワードポリシー追加 | typ_gLogin + pc_StartUp.gSetPublic_KNGN |
+| LoginSession.vb | KKNRI/BKNRIリスト・パスワードポリシー追加 + WriteAuditLogをl_slogに修正 | typ_gLogin + pc_StartUp.gSetPublic_KNGN |
 | Form_f_flx_SEC_USER.vb | ユーザー一覧画面実装 | f_flx_SEC_USER + qsel_df_flx_SEC_USER |
 | Form_f_SEC_USER_INP.vb | ユーザー入力画面実装 | f_SEC_USER_INP |
 | Form_f_SEC_USER_INP.Designer.vb | ComboBox(cmb_KNGN_ID)追加 | f_SEC_USER_INP(cmb_KNGN_ID) |
@@ -47,7 +48,9 @@
 | Form_f_SEC_KNGN_INP_SUB.vb | 契約管理単位サブフォーム | f_SEC_KNGN_INP_SUB |
 | Form_f_SEC_KNGN_INP_B_SUB.vb | 部門管理単位サブフォーム | f_SEC_KNGN_INP_B_SUB |
 | Form_f_CHANGE_PASSWORD.vb | パスワード変更画面実装 | f_CHANGE_PASSWORD |
-| Form_f_LOGIN_JET.vb | パスワード変更画面接続・LoadPasswordPolicy呼出 | f_LOGIN_JET |
+| Form_f_LOGIN_JET.vb | パスワード変更画面接続・LoadPasswordPolicy・監査ログ記録追加 | f_LOGIN_JET |
+| Form_MAIN.vb | セキュリティ管理画面メニュー遷移・パスワード変更接続・権限制御 | メインメニュー |
+| Form_MAIN.Designer.vb | menu_SEC_USER/menu_SEC_KNGNメニュー項目追加 | メインメニュー |
 | LeaseM4BS.TestWinForms.vbproj | プロジェクトファイルにフォーム登録 | - |
 
 ---
@@ -167,13 +170,15 @@
 
 ## 7. 発見された問題と対応状況
 
-### 要対応（修正済み）
+### 修正済み
 
 | # | 問題 | 重要度 | 対応 |
 |---|------|--------|------|
-| 1 | メインメニューからセキュリティ管理画面への遷移リンクなし | 高 | Form_MAIN.vbにメニュー遷移追加 |
-| 2 | sec_slogテーブルがDDLに未定義 | 高 | sql/001_ddl.sqlにCREATE TABLE追加 |
-| 3 | ログイン成功/失敗時の監査ログ未記録 | 中 | Form_f_LOGIN_JET.vbにWriteAuditLog追加 |
+| 1 | メインメニューからセキュリティ管理画面への遷移リンクなし | 高 | Form_MAIN.vb/Designer.vbにmenu_SEC_USER/menu_SEC_KNGN追加。IsAdmin=Falseで無効化 |
+| 2 | sec_slogテーブルがDDLに未定義 | 高 | WriteAuditLogの参照先を既存のl_slogテーブルに修正（Access版 olSLOG.OutputSLOG準拠） |
+| 3 | ログイン成功/失敗時の監査ログ未記録 | 中 | Form_f_LOGIN_JET.vbにWriteAuditLog(OP_LOGIN/OP_LOGIN_ERR)追加 |
+| 4 | パスワード変更メニューがスタブ実装 | 中 | Form_MAIN.vbでForm_f_CHANGE_PASSWORD.ShowDialog()に接続 |
+| 5 | LoginDateTime/IsSessionActiveがログイン時に未設定 | 中 | Form_f_LOGIN_JET.vbで認証成功後にセット |
 
 ### 今回のスコープ外（将来対応）
 
