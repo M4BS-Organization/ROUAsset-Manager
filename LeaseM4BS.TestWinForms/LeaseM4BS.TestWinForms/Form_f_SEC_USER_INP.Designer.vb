@@ -24,6 +24,7 @@ Partial Public Class Form_f_SEC_USER_INP
         Me.txt_Mode = New System.Windows.Forms.TextBox()
         Me.txt_BIKO = New System.Windows.Forms.TextBox()
         Me.txt_ID = New System.Windows.Forms.TextBox()
+        Me.cmb_KNGN_ID = New System.Windows.Forms.ComboBox()
         Me.txt_KNGN_NM = New System.Windows.Forms.TextBox()
         Me.txt_PWD_INP = New System.Windows.Forms.TextBox()
         Me.txt_PWD_INP_RETRY = New System.Windows.Forms.TextBox()
@@ -138,12 +139,21 @@ Partial Public Class Form_f_SEC_USER_INP
         Me.txt_ID.Size = New System.Drawing.Size(75, 19)
         Me.txt_ID.TabIndex = 7
         '
+        ' cmb_KNGN_ID
+        '
+        Me.cmb_KNGN_ID.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmb_KNGN_ID.Location = New System.Drawing.Point(120, 109)
+        Me.cmb_KNGN_ID.Name = "cmb_KNGN_ID"
+        Me.cmb_KNGN_ID.Size = New System.Drawing.Size(264, 20)
+        Me.cmb_KNGN_ID.TabIndex = 8
+        '
         ' txt_KNGN_NM
         '
         Me.txt_KNGN_NM.Location = New System.Drawing.Point(230, 109)
         Me.txt_KNGN_NM.Name = "txt_KNGN_NM"
         Me.txt_KNGN_NM.Size = New System.Drawing.Size(264, 19)
-        Me.txt_KNGN_NM.TabIndex = 8
+        Me.txt_KNGN_NM.TabIndex = 58
+        Me.txt_KNGN_NM.Visible = False
         '
         ' txt_PWD_INP
         '
@@ -569,6 +579,7 @@ Partial Public Class Form_f_SEC_USER_INP
         Me.Controls.Add(Me.txt_Mode)
         Me.Controls.Add(Me.txt_BIKO)
         Me.Controls.Add(Me.txt_ID)
+        Me.Controls.Add(Me.cmb_KNGN_ID)
         Me.Controls.Add(Me.txt_KNGN_NM)
         Me.Controls.Add(Me.txt_PWD_INP)
         Me.Controls.Add(Me.txt_PWD_INP_RETRY)
@@ -605,6 +616,7 @@ Partial Public Class Form_f_SEC_USER_INP
     Friend WithEvents txt_Mode As System.Windows.Forms.TextBox
     Friend WithEvents txt_BIKO As System.Windows.Forms.TextBox
     Friend WithEvents txt_ID As System.Windows.Forms.TextBox
+    Friend WithEvents cmb_KNGN_ID As System.Windows.Forms.ComboBox
     Friend WithEvents txt_KNGN_NM As System.Windows.Forms.TextBox
     Friend WithEvents txt_PWD_INP As System.Windows.Forms.TextBox
     Friend WithEvents txt_PWD_INP_RETRY As System.Windows.Forms.TextBox

@@ -44,6 +44,7 @@ Partial Public Class Form_f_flx_SEC_USER
         Me.txt_PWD_LIFE_TIME = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.txt_PWD_GRACE_TIME = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.txt_PWD_MIN = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.txt_PWD_MOJI_CHK = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.txt_ERR_CT = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.txt_LAST_ERR_DT = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlHeader.SuspendLayout()
@@ -204,7 +205,7 @@ Partial Public Class Form_f_flx_SEC_USER
         Me.dgvMain.AllowUserToDeleteRows = False
         Me.dgvMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvMain.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {
-            Me.txt_USER_CD, Me.txt_USER_NM, Me.txt_KNGN_NM, Me.txt_BIKO, Me.txt_CREATE_DT, Me.txt_UPDATE_DT, Me.txt_ID, Me.txt_HISTORY_F, Me.txt_LOGIN_ATTEMPTS, Me.txt_PWD_LIFE_TIME, Me.txt_PWD_GRACE_TIME, Me.txt_PWD_MIN, Me.txt_ERR_CT, Me.txt_LAST_ERR_DT})
+            Me.txt_USER_CD, Me.txt_USER_NM, Me.txt_KNGN_NM, Me.txt_BIKO, Me.txt_CREATE_DT, Me.txt_UPDATE_DT, Me.txt_ID, Me.txt_HISTORY_F, Me.txt_LOGIN_ATTEMPTS, Me.txt_PWD_LIFE_TIME, Me.txt_PWD_GRACE_TIME, Me.txt_PWD_MIN, Me.txt_PWD_MOJI_CHK, Me.txt_ERR_CT, Me.txt_LAST_ERR_DT})
         Me.dgvMain.Dock = System.Windows.Forms.DockStyle.Fill
         Me.dgvMain.Location = New System.Drawing.Point(0, 40)
         Me.dgvMain.MultiSelect = False
@@ -311,6 +312,14 @@ Partial Public Class Form_f_flx_SEC_USER
         Me.txt_PWD_MIN.ReadOnly = True
         Me.txt_PWD_MIN.Width = 60
         '
+        ' txt_PWD_MOJI_CHK
+        '
+        Me.txt_PWD_MOJI_CHK.DataPropertyName = "PWD_MOJI_CHK"
+        Me.txt_PWD_MOJI_CHK.HeaderText = "文字種ﾁｪｯｸ"
+        Me.txt_PWD_MOJI_CHK.Name = "txt_PWD_MOJI_CHK"
+        Me.txt_PWD_MOJI_CHK.ReadOnly = True
+        Me.txt_PWD_MOJI_CHK.Width = 60
+        '
         ' txt_ERR_CT
         '
         Me.txt_ERR_CT.DataPropertyName = "ERR_CT"
@@ -372,6 +381,7 @@ Partial Public Class Form_f_flx_SEC_USER
     Friend WithEvents txt_PWD_LIFE_TIME As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents txt_PWD_GRACE_TIME As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents txt_PWD_MIN As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents txt_PWD_MOJI_CHK As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents txt_ERR_CT As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents txt_LAST_ERR_DT As System.Windows.Forms.DataGridViewTextBoxColumn
 

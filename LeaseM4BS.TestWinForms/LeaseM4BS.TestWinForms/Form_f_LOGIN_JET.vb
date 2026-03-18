@@ -200,6 +200,9 @@ Partial Public Class Form_f_LOGIN_JET
         ' 権限情報をロード
         LoginSession.LoadPermissions(kngnId)
 
+        ' パスワードポリシーをロード
+        LoginSession.LoadPasswordPolicy(userId)
+
         ' --- Gap 4: DBバージョン＆整合性チェック ---
         If Not CheckDatabaseVersion() Then
             ' バージョン不一致でアプリ終了
@@ -421,7 +424,10 @@ Partial Public Class Form_f_LOGIN_JET
                     "パスワードが設定されていません。" & vbCrLf & "パスワードを設定しますか？",
                     "パスワード設定",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-                ' パスワード変更画面がないため、メッセージのみ表示
+                If result = DialogResult.Yes Then
+                    Dim frmPwd As New Form_f_CHANGE_PASSWORD()
+                    frmPwd.ShowDialog()
+                End If
                 Return
             End If
 
@@ -435,7 +441,10 @@ Partial Public Class Form_f_LOGIN_JET
                         "パスワードの有効期限が切れました。" & vbCrLf & "パスワードを変更しますか？",
                         "パスワード期限切れ",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-                    ' パスワード変更画面がないため、メッセージのみ表示
+                    If result = DialogResult.Yes Then
+                        Dim frmPwd As New Form_f_CHANGE_PASSWORD()
+                        frmPwd.ShowDialog()
+                    End If
                 ElseIf daysRemaining <= PWD_EXPIRE_WARNING_DAYS Then
                     ' 期限切迫（30日以内）: 警告メッセージ
                     MessageBox.Show(
