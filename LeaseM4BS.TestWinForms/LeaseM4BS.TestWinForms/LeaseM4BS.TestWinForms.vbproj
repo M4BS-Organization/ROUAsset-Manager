@@ -766,6 +766,30 @@
     <Compile Include="Form_f_flx_BUKN.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_MAIN.Designer.vb">
+      <DependentUpon>Form_f_仕訳出力標準_設定_MAIN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_MAIN.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_SH.Designer.vb">
+      <DependentUpon>Form_f_仕訳出力標準_設定_SH.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_SH.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_KJ.Designer.vb">
+      <DependentUpon>Form_f_仕訳出力標準_設定_KJ.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_KJ.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_SM.Designer.vb">
+      <DependentUpon>Form_f_仕訳出力標準_設定_SM.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_仕訳出力標準_設定_SM.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\ApplicationEvents.vb" />
     <Compile Include="My Project\Application.Designer.vb">
