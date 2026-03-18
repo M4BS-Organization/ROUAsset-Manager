@@ -17,13 +17,13 @@ Partial Public Class Form_f_KLSRYO_JOKEN
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.ラベル485 = New System.Windows.Forms.Label()
-        Me.chk_SHIME = New System.Windows.Forms.RadioButton()
-        Me.オプション483 = New System.Windows.Forms.RadioButton()
-        Me.オプション504 = New System.Windows.Forms.RadioButton()
-        Me.オプション506 = New System.Windows.Forms.RadioButton()
-        Me.オプション508 = New System.Windows.Forms.RadioButton()
-        Me.オプション487 = New System.Windows.Forms.RadioButton()
-        Me.オプション489 = New System.Windows.Forms.RadioButton()
+        Me.radio_SIME = New System.Windows.Forms.RadioButton()
+        Me.radio_SHRI = New System.Windows.Forms.RadioButton()
+        Me.radio_LSRYO = New System.Windows.Forms.RadioButton()
+        Me.radio_HOSHU = New System.Windows.Forms.RadioButton()
+        Me.radio_ZENBU = New System.Windows.Forms.RadioButton()
+        Me.radio_BUKN = New System.Windows.Forms.RadioButton()
+        Me.radio_HAIF = New System.Windows.Forms.RadioButton()
         Me.Label10 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
@@ -58,88 +58,88 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         Me.ラベル485.TabIndex = 10
         Me.ラベル485.Text = "計上ﾀｲﾐﾝｸﾞ"
         '
-        'chk_SHIME
+        'radio_SIME
         '
-        Me.chk_SHIME.AutoSize = True
-        Me.chk_SHIME.Location = New System.Drawing.Point(242, 16)
-        Me.chk_SHIME.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.chk_SHIME.Name = "chk_SHIME"
-        Me.chk_SHIME.Size = New System.Drawing.Size(131, 22)
-        Me.chk_SHIME.TabIndex = 22
-        Me.chk_SHIME.Text = "〆支払ベース"
-        Me.chk_SHIME.UseVisualStyleBackColor = True
+        Me.radio_SIME.AutoSize = True
+        Me.radio_SIME.Checked = True
+        Me.radio_SIME.Location = New System.Drawing.Point(242, 16)
+        Me.radio_SIME.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_SIME.Name = "radio_SIME"
+        Me.radio_SIME.Size = New System.Drawing.Size(131, 22)
+        Me.radio_SIME.TabIndex = 22
+        Me.radio_SIME.TabStop = True
+        Me.radio_SIME.Text = "〆支払ベース"
+        Me.radio_SIME.UseVisualStyleBackColor = True
         '
-        'オプション483
+        'radio_SHRI
         '
-        Me.オプション483.AutoSize = True
-        Me.オプション483.Checked = True
-        Me.オプション483.Location = New System.Drawing.Point(439, 16)
-        Me.オプション483.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.オプション483.Name = "オプション483"
-        Me.オプション483.Size = New System.Drawing.Size(131, 22)
-        Me.オプション483.TabIndex = 23
-        Me.オプション483.TabStop = True
-        Me.オプション483.Text = "支払日ベース"
-        Me.オプション483.UseVisualStyleBackColor = True
+        Me.radio_SHRI.AutoSize = True
+        Me.radio_SHRI.Location = New System.Drawing.Point(439, 16)
+        Me.radio_SHRI.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_SHRI.Name = "radio_SHRI"
+        Me.radio_SHRI.Size = New System.Drawing.Size(131, 22)
+        Me.radio_SHRI.TabIndex = 23
+        Me.radio_SHRI.Text = "支払日ベース"
+        Me.radio_SHRI.UseVisualStyleBackColor = True
         '
-        'オプション504
+        'radio_LSRYO
         '
-        Me.オプション504.AutoSize = True
-        Me.オプション504.Location = New System.Drawing.Point(242, 18)
-        Me.オプション504.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.オプション504.Name = "オプション504"
-        Me.オプション504.Size = New System.Drawing.Size(91, 22)
-        Me.オプション504.TabIndex = 24
-        Me.オプション504.Text = "リース料"
-        Me.オプション504.UseVisualStyleBackColor = True
+        Me.radio_LSRYO.AutoSize = True
+        Me.radio_LSRYO.Location = New System.Drawing.Point(242, 18)
+        Me.radio_LSRYO.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_LSRYO.Name = "radio_LSRYO"
+        Me.radio_LSRYO.Size = New System.Drawing.Size(91, 22)
+        Me.radio_LSRYO.TabIndex = 24
+        Me.radio_LSRYO.Text = "リース料"
+        Me.radio_LSRYO.UseVisualStyleBackColor = True
         '
-        'オプション506
+        'radio_HOSHU
         '
-        Me.オプション506.AutoSize = True
-        Me.オプション506.Location = New System.Drawing.Point(439, 18)
-        Me.オプション506.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.オプション506.Name = "オプション506"
-        Me.オプション506.Size = New System.Drawing.Size(87, 22)
-        Me.オプション506.TabIndex = 25
-        Me.オプション506.Text = "保守料"
-        Me.オプション506.UseVisualStyleBackColor = True
+        Me.radio_HOSHU.AutoSize = True
+        Me.radio_HOSHU.Location = New System.Drawing.Point(439, 18)
+        Me.radio_HOSHU.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_HOSHU.Name = "radio_HOSHU"
+        Me.radio_HOSHU.Size = New System.Drawing.Size(87, 22)
+        Me.radio_HOSHU.TabIndex = 25
+        Me.radio_HOSHU.Text = "保守料"
+        Me.radio_HOSHU.UseVisualStyleBackColor = True
         '
-        'オプション508
+        'radio_ZENBU
         '
-        Me.オプション508.AutoSize = True
-        Me.オプション508.Checked = True
-        Me.オプション508.Location = New System.Drawing.Point(626, 18)
-        Me.オプション508.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.オプション508.Name = "オプション508"
-        Me.オプション508.Size = New System.Drawing.Size(69, 22)
-        Me.オプション508.TabIndex = 26
-        Me.オプション508.TabStop = True
-        Me.オプション508.Text = "全部"
-        Me.オプション508.UseVisualStyleBackColor = True
+        Me.radio_ZENBU.AutoSize = True
+        Me.radio_ZENBU.Checked = True
+        Me.radio_ZENBU.Location = New System.Drawing.Point(626, 18)
+        Me.radio_ZENBU.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_ZENBU.Name = "radio_ZENBU"
+        Me.radio_ZENBU.Size = New System.Drawing.Size(69, 22)
+        Me.radio_ZENBU.TabIndex = 26
+        Me.radio_ZENBU.TabStop = True
+        Me.radio_ZENBU.Text = "全部"
+        Me.radio_ZENBU.UseVisualStyleBackColor = True
         '
-        'オプション487
+        'radio_BUKN
         '
-        Me.オプション487.AutoSize = True
-        Me.オプション487.Location = New System.Drawing.Point(242, 18)
-        Me.オプション487.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.オプション487.Name = "オプション487"
-        Me.オプション487.Size = New System.Drawing.Size(105, 22)
-        Me.オプション487.TabIndex = 27
-        Me.オプション487.Text = "物件単位"
-        Me.オプション487.UseVisualStyleBackColor = True
+        Me.radio_BUKN.AutoSize = True
+        Me.radio_BUKN.Location = New System.Drawing.Point(242, 18)
+        Me.radio_BUKN.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_BUKN.Name = "radio_BUKN"
+        Me.radio_BUKN.Size = New System.Drawing.Size(105, 22)
+        Me.radio_BUKN.TabIndex = 27
+        Me.radio_BUKN.Text = "物件単位"
+        Me.radio_BUKN.UseVisualStyleBackColor = True
         '
-        'オプション489
+        'radio_HAIF
         '
-        Me.オプション489.AutoSize = True
-        Me.オプション489.Checked = True
-        Me.オプション489.Location = New System.Drawing.Point(439, 18)
-        Me.オプション489.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.オプション489.Name = "オプション489"
-        Me.オプション489.Size = New System.Drawing.Size(105, 22)
-        Me.オプション489.TabIndex = 28
-        Me.オプション489.TabStop = True
-        Me.オプション489.Text = "配賦単位"
-        Me.オプション489.UseVisualStyleBackColor = True
+        Me.radio_HAIF.AutoSize = True
+        Me.radio_HAIF.Checked = True
+        Me.radio_HAIF.Location = New System.Drawing.Point(439, 18)
+        Me.radio_HAIF.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.radio_HAIF.Name = "radio_HAIF"
+        Me.radio_HAIF.Size = New System.Drawing.Size(105, 22)
+        Me.radio_HAIF.TabIndex = 28
+        Me.radio_HAIF.TabStop = True
+        Me.radio_HAIF.Text = "配賦単位"
+        Me.radio_HAIF.UseVisualStyleBackColor = True
         '
         'Label10
         '
@@ -236,8 +236,8 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         'Panel1
         '
         Me.Panel1.Controls.Add(Me.ラベル485)
-        Me.Panel1.Controls.Add(Me.オプション483)
-        Me.Panel1.Controls.Add(Me.chk_SHIME)
+        Me.Panel1.Controls.Add(Me.radio_SHRI)
+        Me.Panel1.Controls.Add(Me.radio_SIME)
         Me.Panel1.Location = New System.Drawing.Point(66, 56)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(833, 51)
@@ -267,9 +267,9 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         'Panel3
         '
         Me.Panel3.Controls.Add(Me.Label5)
-        Me.Panel3.Controls.Add(Me.オプション504)
-        Me.Panel3.Controls.Add(Me.オプション506)
-        Me.Panel3.Controls.Add(Me.オプション508)
+        Me.Panel3.Controls.Add(Me.radio_LSRYO)
+        Me.Panel3.Controls.Add(Me.radio_HOSHU)
+        Me.Panel3.Controls.Add(Me.radio_ZENBU)
         Me.Panel3.Location = New System.Drawing.Point(66, 58)
         Me.Panel3.Name = "Panel3"
         Me.Panel3.Size = New System.Drawing.Size(833, 51)
@@ -288,8 +288,8 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         'Panel2
         '
         Me.Panel2.Controls.Add(Me.Label4)
-        Me.Panel2.Controls.Add(Me.オプション489)
-        Me.Panel2.Controls.Add(Me.オプション487)
+        Me.Panel2.Controls.Add(Me.radio_HAIF)
+        Me.Panel2.Controls.Add(Me.radio_BUKN)
         Me.Panel2.Location = New System.Drawing.Point(66, 133)
         Me.Panel2.Name = "Panel2"
         Me.Panel2.Size = New System.Drawing.Size(833, 51)
@@ -340,13 +340,13 @@ Partial Public Class Form_f_KLSRYO_JOKEN
 
     End Sub
     Friend WithEvents ラベル485 As System.Windows.Forms.Label
-    Friend WithEvents chk_SHIME As System.Windows.Forms.RadioButton
-    Friend WithEvents オプション483 As System.Windows.Forms.RadioButton
-    Friend WithEvents オプション504 As System.Windows.Forms.RadioButton
-    Friend WithEvents オプション506 As System.Windows.Forms.RadioButton
-    Friend WithEvents オプション508 As System.Windows.Forms.RadioButton
-    Friend WithEvents オプション487 As System.Windows.Forms.RadioButton
-    Friend WithEvents オプション489 As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_SIME As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_SHRI As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_LSRYO As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_HOSHU As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_ZENBU As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_BUKN As System.Windows.Forms.RadioButton
+    Friend WithEvents radio_HAIF As System.Windows.Forms.RadioButton
     Friend WithEvents Label10 As Label
     Friend WithEvents Label3 As Label
     Friend WithEvents Label2 As Label

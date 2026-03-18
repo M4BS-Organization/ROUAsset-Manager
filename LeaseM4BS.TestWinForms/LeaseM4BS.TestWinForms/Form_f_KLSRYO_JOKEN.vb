@@ -37,9 +37,10 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         Dim frm As New Form_f_flx_KLSRYO
         frm.DtFrom = CDate(txt_DATE_FROM.Value)
         frm.DtTo = CDate(txt_DATE_TO.Value)
-        frm.Taisho = 3                                         ' 全部 (Access版 opg_TAISHO 相当)
-        frm.Ktmg = LeaseM4BS.DataAccess.ShriKtmg.SimeDtBase   ' 締日ベース (Access版 opg_KTMG 相当)
-        frm.Meisai = LeaseM4BS.DataAccess.ShriMeisai.Haif      ' 配賦単位 (Access版 opg_MEISAI 相当)
+        frm.Taisho = GetTaisho()
+        frm.Ktmg = GetKtmg()
+        frm.Meisai = GetMeisai()
+        frm.LabelText = BuildLabelText(frm.DtFrom, frm.DtTo, frm.Taisho, frm.Ktmg, frm.Meisai)
         frm.ShowDialog()
 
         _prevForm = frm
@@ -68,4 +69,23 @@ Partial Public Class Form_f_KLSRYO_JOKEN
         ' エンターキーが押されたら次のコントロールへ移動
         HandleEnterKeyNavigation(Me, e)
     End Sub
+
+    Friend Function GetTaisho() As Integer
+        Return If(radio_LSRYO.Checked, 1, If(radio_HOSHU.Checked, 2, 3))
+    End Function
+
+    Friend Function GetKtmg() As LeaseM4BS.DataAccess.ShriKtmg
+        Return If(radio_SIME.Checked, LeaseM4BS.DataAccess.ShriKtmg.SimeDtBase, LeaseM4BS.DataAccess.ShriKtmg.ShriDtBase)
+    End Function
+
+    Friend Function GetMeisai() As LeaseM4BS.DataAccess.ShriMeisai
+        Return If(radio_BUKN.Checked, LeaseM4BS.DataAccess.ShriMeisai.Kykm, LeaseM4BS.DataAccess.ShriMeisai.Haif)
+    End Function
+
+    Private Function BuildLabelText(dtFrom As Date, dtTo As Date, taisho As Integer, ktmg As LeaseM4BS.DataAccess.ShriKtmg, meisai As LeaseM4BS.DataAccess.ShriMeisai) As String
+        Dim taishoStr = If(taisho = 1, "リース料", If(taisho = 2, "保守料", "全部"))
+        Dim ktmgStr = If(ktmg = LeaseM4BS.DataAccess.ShriKtmg.SimeDtBase, "締日ベース", "支払日ベース")
+        Dim meisaiStr = If(meisai = LeaseM4BS.DataAccess.ShriMeisai.Kykm, "物件単位", "配賦単位")
+        Return $"集計期間: {dtFrom:yyyy/MM} ～ {dtTo:yyyy/MM} / 対象: {taishoStr} / タイミング: {ktmgStr} / 明細: {meisaiStr}"
+    End Function
 End Class
