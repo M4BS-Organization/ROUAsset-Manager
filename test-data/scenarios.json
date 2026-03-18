@@ -1,0 +1,245 @@
+{
+  "version": "1.0",
+  "description": "Access版との計算結果等価性検証テストシナリオ定義 (Issue #29)",
+  "tolerance": {
+    "amount_yen": 1,
+    "rate": 0.0001,
+    "description": "金額は±1円、率は±0.0001を許容"
+  },
+  "scenarios": [
+    {
+      "id": "EQ-001",
+      "name": "定額法償却（標準12ヶ月・減損なし）",
+      "target": "AmortizationScheduleBuilder",
+      "category": "amortization",
+      "input": {
+        "skyakHo": 1,
+        "skyakRitu": null,
+        "startDt": "2024/04/01",
+        "lkikan": 12,
+        "rendDt": "2025/03/31",
+        "syutok": 1200000,
+        "zanryo": 0,
+        "gsonSchedule": []
+      },
+      "expected_summary": {
+        "monthly_skyak": 100000,
+        "total_skyak": 1200000,
+        "final_zan": 0,
+        "description": "GInt(1200000/12)=100000 * 12ヶ月 = 1200000"
+      }
+    },
+    {
+      "id": "EQ-002",
+      "name": "定額法償却（24ヶ月・残価保証あり）",
+      "target": "AmortizationScheduleBuilder",
+      "category": "amortization",
+      "input": {
+        "skyakHo": 1,
+        "skyakRitu": null,
+        "startDt": "2024/04/01",
+        "lkikan": 24,
+        "rendDt": "2026/03/31",
+        "syutok": 2400000,
+        "zanryo": 240000,
+        "gsonSchedule": []
+      },
+      "expected_summary": {
+        "monthly_skyak": 90000,
+        "total_skyak": 2160000,
+        "final_zan": 240000,
+        "description": "GInt((2400000-240000)/24)=90000, 期末残高=240000(残価)"
+      }
+    },
+    {
+      "id": "EQ-003",
+      "name": "定率法償却率計算",
+      "target": "AmortizationScheduleBuilder.CalcShokyakuRitu",
+      "category": "amortization_rate",
+      "test_cases": [
+        { "taiyoKikan": 12, "description": "1年" },
+        { "taiyoKikan": 24, "description": "2年" },
+        { "taiyoKikan": 36, "description": "3年" },
+        { "taiyoKikan": 60, "description": "5年" },
+        { "taiyoKikan": 84, "description": "7年" },
+        { "taiyoKikan": 120, "description": "10年" }
+      ]
+    },
+    {
+      "id": "EQ-004",
+      "name": "定額法償却（減損あり）",
+      "target": "AmortizationScheduleBuilder",
+      "category": "amortization",
+      "input": {
+        "skyakHo": 1,
+        "skyakRitu": null,
+        "startDt": "2024/04/01",
+        "lkikan": 12,
+        "rendDt": "2025/03/31",
+        "syutok": 1200000,
+        "zanryo": 0,
+        "gsonSchedule": [
+          { "nen": 2024, "getu": 7, "gsonTmg": 0, "gsonRyo": 200000 }
+        ]
+      },
+      "expected_summary": {
+        "description": "月7(減損前): skyak=100000, 月7(減損後): gsonRyo=200000反映→残高減→月額再計算"
+      }
+    },
+    {
+      "id": "EQ-005",
+      "name": "返済スケジュール（後払・12ヶ月・利子抜法）",
+      "target": "RepaymentScheduleBuilder",
+      "category": "repayment",
+      "input": {
+        "startDt": "2024/04/01",
+        "lkikan": 12,
+        "rendDt": "2025/03/31",
+        "syutok": 1000000,
+        "slsryo": 1050000,
+        "ijiknr": 0,
+        "zanryo": 0,
+        "lbSoneki": null,
+        "ckaiykF": false,
+        "ksanRitu": 0.025,
+        "rsokTmg": 1,
+        "hensaiKind": 1,
+        "gsonSchedule": []
+      },
+      "expected_summary": {
+        "risoku_total": 50000,
+        "description": "利息総額=1050000-0+0-1000000=50000, 月次利息=GInt(元本残*0.025/12)"
+      }
+    },
+    {
+      "id": "EQ-006",
+      "name": "返済スケジュール（先払・24ヶ月）",
+      "target": "RepaymentScheduleBuilder",
+      "category": "repayment",
+      "input": {
+        "startDt": "2024/04/01",
+        "lkikan": 24,
+        "rendDt": "2026/03/31",
+        "syutok": 2000000,
+        "slsryo": 2200000,
+        "ijiknr": 50000,
+        "zanryo": 100000,
+        "lbSoneki": null,
+        "ckaiykF": false,
+        "ksanRitu": 0.03,
+        "rsokTmg": 2,
+        "hensaiKind": 1,
+        "gsonSchedule": []
+      },
+      "expected_summary": {
+        "risoku_total_formula": "2200000-50000+100000-2000000=250000",
+        "description": "先払パターン: 初回支払で元本即減、利息は翌月から発生"
+      }
+    },
+    {
+      "id": "EQ-007",
+      "name": "返済スケジュール（リースバック損益あり）",
+      "target": "RepaymentScheduleBuilder",
+      "category": "repayment",
+      "input": {
+        "startDt": "2024/04/01",
+        "lkikan": 12,
+        "rendDt": "2025/03/31",
+        "syutok": 1000000,
+        "slsryo": 1100000,
+        "ijiknr": 0,
+        "zanryo": 0,
+        "lbSoneki": 120000,
+        "ckaiykF": false,
+        "ksanRitu": 0.02,
+        "rsokTmg": 1,
+        "hensaiKind": 1,
+        "gsonSchedule": []
+      },
+      "expected_summary": {
+        "description": "LbSoneki=120000を12ヶ月で按分配分"
+      }
+    },
+    {
+      "id": "EQ-008",
+      "name": "注記計算（移転FAリース・定額法・利子抜法）",
+      "target": "ChukiCalcEngine",
+      "category": "chuki",
+      "input": {
+        "kishuDt": "2024/04/01",
+        "kimatDt": "2025/03/31",
+        "startDt": "2024/04/01",
+        "lkikan": 60,
+        "brendDt": "2029/03/31",
+        "bckaiykF": false,
+        "rcalcId": 1,
+        "skyakHoId": 1,
+        "leakbnId": 1,
+        "hensaiKind": 1,
+        "rsokTmg": 1,
+        "skyuKjF": false,
+        "bSlsryo": 6000000,
+        "bIjiknr": 0,
+        "bZanryo": 0,
+        "bSyutok": 5000000,
+        "ksanRitu": 0.025,
+        "bLbSoneki": null,
+        "lbChukiF": false,
+        "kessanBi": 31
+      },
+      "expected_summary": {
+        "syutok_zan": 5000000,
+        "gruikei_zou_formula": "GInt(5000000/60)*12",
+        "lgnpn_formula": "返済スケジュールの元本残高から計算",
+        "description": "5年リース移転FA、初年度の注記計算"
+      }
+    },
+    {
+      "id": "EQ-009",
+      "name": "注記計算（中途解約）",
+      "target": "ChukiCalcEngine",
+      "category": "chuki",
+      "input": {
+        "kishuDt": "2024/04/01",
+        "kimatDt": "2025/03/31",
+        "startDt": "2023/04/01",
+        "lkikan": 36,
+        "brendDt": "2024/09/30",
+        "bckaiykF": true,
+        "rcalcId": 1,
+        "skyakHoId": 1,
+        "leakbnId": 1,
+        "hensaiKind": 1,
+        "rsokTmg": 1,
+        "skyuKjF": false,
+        "bSlsryo": 3600000,
+        "bIjiknr": 0,
+        "bZanryo": 0,
+        "bSyutok": 3000000,
+        "ksanRitu": 0.025,
+        "bLbSoneki": null,
+        "lbChukiF": false,
+        "kessanBi": 31
+      },
+      "expected_summary": {
+        "description": "2年目途中(2024/09)で解約。解約消去額(LgnpnKaiyakGen等)が発生"
+      }
+    },
+    {
+      "id": "EQ-010",
+      "name": "GInt精度検証（浮動小数点境界値）",
+      "target": "ScheduleHelper.GInt",
+      "category": "helper",
+      "test_cases": [
+        { "input": 0.0, "expected": 0 },
+        { "input": 1.0, "expected": 1 },
+        { "input": 99.9, "expected": 99 },
+        { "input": 100.0, "expected": 100 },
+        { "input": -1.5, "expected": -2 },
+        { "input": 3744.9999999999996, "expected": 3745, "note": "G15丸めで3745.0→Floor=3745" },
+        { "input": 1000000.0000000001, "expected": 1000000, "note": "G15で1000000→Floor=1000000" },
+        { "input": 0.9999999999999998, "expected": 1, "note": "G15丸めで1.0→Floor=1" }
+      ]
+    }
+  ]
+}
