@@ -357,12 +357,14 @@ Public Class KlsryoCalculationEngine
                     " WHERE d_kykm.b_henf_f = true" &
                     " ORDER BY d_haif.kykm_id, d_haif.line_id"
                 haifDt = _crud.GetDataTable(haifSql)
-            Catch
+            Catch ex As Exception
+                DbConnectionManager.WriteError("配賦情報取得失敗", ex)
             End Try
         End If
 
         For Each henfRow As DataRow In henfDt.Rows
             ' 事前フィルタ: 集計期間外の付随費用をスキップ (Access版 mKLSRYO_Sub_HENF 準拠)
+            If IsDBNull(henfRow("shri_dt1")) Then Continue For
             Dim henfShriDt1 As Date = CDate(henfRow("shri_dt1"))
             Dim henfShriKn As Integer = CInt(henfRow("shri_kn"))
             Dim henfShriCnt As Integer = CInt(henfRow("shri_cnt"))
@@ -990,7 +992,9 @@ Public Class KlsryoCalculationEngine
         Try
             Dim dt = _crud.GetDataTable("SELECT val_datetime FROM t_settei WHERE settei_nm = 'SEKOU_DT'")
             If dt.Rows.Count > 0 Then Return CDate(dt.Rows(0)("val_datetime"))
-        Catch
+        Catch ex As Exception
+            ' デフォルト値を返すが、エラーはログに記録する
+            DbConnectionManager.WriteError("設定値取得失敗(GetSekouDt)", ex)
         End Try
         Return New Date(2008, 4, 1) ' デフォルト施行日
     End Function
@@ -1002,7 +1006,9 @@ Public Class KlsryoCalculationEngine
             prms.Add(New NpgsqlParameter("@id", id))
             Dim dt = _crud.GetDataTable(sql, prms)
             If dt.Rows.Count > 0 Then Return dt.Rows(0)(0)
-        Catch
+        Catch ex As Exception
+            ' デフォルト値を返すが、エラーはログに記録する
+            DbConnectionManager.WriteError("マスタ名称取得失敗(GetNameFromMaster)", ex)
         End Try
         Return DBNull.Value
     End Function

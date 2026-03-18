@@ -2,7 +2,7 @@
     Private Const FMT_CURRENCY As String = "#,##0"
 
     ' オブジェクトを安全にIntegerに変換する
-    Public Function NzInt(value As Object, Optional defaultValue As Object = 0) As Object
+    Public Function NzInt(value As Object, Optional defaultValue As Integer = 0) As Integer
         If value Is Nothing OrElse IsDBNull(value) OrElse String.IsNullOrEmpty(value.ToString()) Then
             Return defaultValue
         End If
@@ -12,6 +12,21 @@
             Return result
         Else
             Return defaultValue
+        End If
+    End Function
+
+    ' 空文字列/Nothing/DBNull の場合は DBNull.Value を返し、それ以外は Integer を返す
+    ' DB登録用: NULLableカラムに Integer or DBNull を格納するケース
+    Public Function NzIntOrNull(value As Object) As Object
+        If value Is Nothing OrElse IsDBNull(value) OrElse String.IsNullOrEmpty(value.ToString()) Then
+            Return DBNull.Value
+        End If
+
+        Dim result As Integer
+        If Integer.TryParse(value.ToString(), result) Then
+            Return result
+        Else
+            Return DBNull.Value
         End If
     End Function
 
