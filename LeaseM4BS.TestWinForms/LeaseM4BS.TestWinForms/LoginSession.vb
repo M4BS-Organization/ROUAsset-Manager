@@ -4,6 +4,7 @@
 ' ログイン成功時にセットし、アプリ全体で参照する
 ' =========================================================
 Imports System.Data
+Imports System.Linq
 Imports LeaseM4BS.DataAccess
 Imports Npgsql
 
@@ -78,11 +79,77 @@ Public Module LoginSession
         Public AccessKind As Integer  ' 1=更新, 2=参照
     End Structure
 
-    ' --- 操作ログ種別定数 (Access版 engOP_KBN に相当) ---
-    Public Const OP_LOGIN As String = "LOGIN"            ' ログイン成功
-    Public Const OP_LOGIN_ERR As String = "LOGIN_ERR"    ' ログイン失敗
-    Public Const OP_LOGOUT As String = "LOGOUT"          ' ログアウト
-    Public Const OP_PWD_CHANGE As String = "PWD_CHANGE"  ' パスワード変更
+    ' --- 操作ログ種別定数 (Access版 p_Com_Const.txt engOP_KBN 準拠) ---
+    ' Access版は3桁ゼロパディング数値（Format(value, "000")）
+    ' --- 契約・データ操作系 ---
+    Public Const OP_KBN_KYKH As String = "001"              ' リース契約
+    Public Const OP_KBN_KYKM As String = "002"              ' リース期間
+    Public Const OP_KBN_KYKM_HAIF As String = "003"         ' リース期間(配分案1)
+    Public Const OP_KBN_HENF As String = "004"              ' 変更計画情報
+    Public Const OP_KBN_GSON As String = "005"              ' 月額
+    Public Const OP_KBN_KYKH_ADD As String = "006"          ' リース契約新規完成
+    Public Const OP_KBN_KYKM_BKN As String = "007"          ' リース期間(事業部管理用)
+    ' --- 計算・処理系 ---
+    Public Const OP_KBN_TOUGETSU As String = "011"          ' 元利均等計算
+    Public Const OP_KBN_KEIJO As String = "012"             ' 計上/決定
+    ' --- 帳票・参照系 ---
+    Public Const OP_KBN_TANA As String = "021"              ' 棚卸資産表示
+    Public Const OP_KBN_KLSRYO As String = "022"            ' 賃借料収入内訳表
+    Public Const OP_KBN_IDOLST As String = "023"            ' 異動リスト表示
+    Public Const OP_KBN_KHIYO As String = "024"             ' 当期利用料費用明細表
+    Public Const OP_KBN_YOSAN As String = "025"             ' 予算シミュレーション
+    Public Const OP_KBN_KEIHIM As String = "028"            ' 費用内訳表
+    Public Const OP_KBN_CHUKI As String = "031"             ' 長期継続事業リース判定一覧
+    Public Const OP_KBN_ZANDAKA As String = "032"           ' リース料残高リスト表示
+    Public Const OP_KBN_SAIMU As String = "033"             ' リース債務内訳リスト表
+    Public Const OP_KBN_BEPPYO As String = "034"            ' 別表16(4)2
+    Public Const OP_KBN_BEPPYO_FLX As String = "035"        ' 別表16(4)2(フレックス)
+    ' --- マスタメンテナンス系 ---
+    Public Const OP_KBN_HOLIDAY As String = "251"           ' 祝日設定
+    Public Const OP_KBN_KARI_RITU As String = "252"         ' 追加利率情報管理
+    Public Const OP_KBN_ZEI_KAISEI As String = "253"        ' 税制改正情報
+    Public Const OP_KBN_HREL As String = "254"              ' 割引率設定
+    Public Const OP_KBN_KYKBNJ_SEQ As String = "255"        ' 契約種類管理番号
+    Public Const OP_KBN_TC_SWK_DEF_COM As String = "256"    ' 割当配賦値設定
+    ' --- バッチ・一括処理系 ---
+    Public Const OP_KBN_CHUKI_RECALC As String = "301"      ' 長期継続再計算
+    Public Const OP_KBN_IDO As String = "302"               ' リース異動
+    Public Const OP_KBN_LEASE_TORIKOMI As String = "303"    ' レース取込
+    Public Const OP_KBN_KEIYAKU_IDO_TORIKOMI As String = "304" ' 契約異動取込
+    ' --- バックアップ・復元系 ---
+    Public Const OP_KBN_BACKUP As String = "401"            ' 操作バックアップ
+    Public Const OP_KBN_RESTORE As String = "402"           ' バックアップ復元
+    Public Const OP_KBN_EXCELIMP_ADD As String = "403"      ' EXCEL追加取込
+    Public Const OP_KBN_EXCELIMP_NEW As String = "404"      ' EXCEL取込(新規作成)
+    Public Const OP_KBN_FLEX_RESTOR As String = "407"       ' フレックスリスト登録データ復元
+    Public Const OP_KBN_USERPASSWORD As String = "408"      ' システム利用者パスワード変更
+    Public Const OP_KBN_GASSAN As String = "411"            ' 統計データ合算
+    Public Const OP_KBN_ZENSAKUJO As String = "412"         ' 全リース契約削除
+    Public Const OP_KBN_DATACONVERT As String = "421"       ' データ移行時点データ変換
+    Public Const OP_KBN_DATAPASSWORD As String = "422"      ' データパスワード設定
+    ' --- 設定系 ---
+    Public Const OP_KBN_SETTEI As String = "601"            ' 利用設定
+    Public Const OP_KBN_TOUSEIOPT As String = "602"         ' 統制オプション設定
+    Public Const OP_KBN_SWK_DEF_COM As String = "611"       ' 割当配賦値設定
+    ' --- ログ参照系 ---
+    Public Const OP_KBN_SLOG As String = "621"              ' 操作ログ
+    Public Const OP_KBN_ULOG As String = "622"              ' 更新ログ
+    Public Const OP_KBN_BKLOG As String = "623"             ' 保存/復元ログ
+    Public Const OP_KBN_LOGDEL As String = "624"            ' 操作/更新ログ削除
+    ' --- グループ参照系 ---
+    Public Const OP_KBN_KYKH_G As String = "801"            ' リース契約一覧
+    Public Const OP_KBN_KYKM_G As String = "802"            ' リース期間一覧
+    Public Const OP_KBN_KYKM_CHUKI As String = "803"        ' 中期判断リース
+    Public Const OP_KBN_CHUKI_SCH As String = "804"         ' 計数スクリーン
+    Public Const OP_KBN_ZANDAKA_SCH As String = "805"       ' 計数スクリーン
+    Public Const OP_KBN_SAIMU_SCH As String = "806"         ' 計数スクリーン
+    ' --- システム系 ---
+    Public Const OP_KBN_SYSSTART As String = "901"          ' システム開始
+    Public Const OP_KBN_SYSEND As String = "902"            ' システム終了
+    Public Const OP_KBN_LOGIN As String = "911"             ' ログイン
+    Public Const OP_KBN_LOGOFF As String = "912"            ' ログオフ
+    Public Const OP_KBN_LOGINERR As String = "913"          ' ログインエラー
+    Public Const OP_KBN_SONOTA As String = "999"            ' その他
 
     ''' <summary>
     ''' ログイン成功時に sec_kngn から権限情報を取得してセットする
@@ -302,33 +369,81 @@ Public Module LoginSession
     End Sub
 
     ''' <summary>
-    ''' 操作ログをDBに記録する（Access版 olSLOG.OutputSLOG 相当）
+    ''' 操作ログをDBに記録する（Access版 olSLOG.OutputSLOG 完全準拠）
+    ''' fgNT_SECF(IsSessionActive) および fgNT_SLOGOUT(EnableSystemLog) チェック付き
     ''' </summary>
-    ''' <param name="operationType">操作種別（OP_LOGIN, OP_LOGIN_ERR, OP_LOGOUT, OP_PWD_CHANGE）</param>
-    ''' <param name="detail">操作詳細</param>
-    Public Sub WriteAuditLog(operationType As String, detail As String)
+    ''' <param name="opKbn">操作種別コード（3桁ゼロパディング: OP_KBN_* 定数）</param>
+    ''' <param name="detail">操作詳細（op_detail1 に記録、最大255バイト）</param>
+    ''' <param name="opNm">操作名（op_nm に記録）。省略時は空文字</param>
+    ''' <param name="opS">操作内容（op_s に記録: "新規","更新","削除" 等）。省略時は空文字</param>
+    ''' <param name="detail2">操作詳細2（op_detail2 に記録、長文対応）。省略時は空文字</param>
+    ''' <param name="updSbt">更新小計（upd_sbt に記録）。省略時は空文字</param>
+    ''' <returns>採番された slog_no。失敗時は -1</returns>
+    Public Function WriteAuditLog(opKbn As String,
+                                  detail As String,
+                                  Optional opNm As String = "",
+                                  Optional opS As String = "",
+                                  Optional detail2 As String = "",
+                                  Optional updSbt As String = "") As Integer
         Try
+            ' Access版 OutputSLOG 準拠: fgNT_SLOGOUT チェック
+            ' ただしシステム開始/終了・ログイン/ログオフはフラグに関係なく記録
+            Dim isSystemOp As Boolean = (opKbn = OP_KBN_SYSSTART OrElse opKbn = OP_KBN_SYSEND OrElse
+                                         opKbn = OP_KBN_LOGIN OrElse opKbn = OP_KBN_LOGOFF OrElse
+                                         opKbn = OP_KBN_LOGINERR)
+            If Not isSystemOp AndAlso Not EnableSystemLog Then
+                Return -1
+            End If
+
+            Dim now As DateTime = DateTime.Now
             Dim crud As New CrudHelper()
-            ' l_slog テーブル（DDL定義済み）に操作ログを記録
-            ' Access版 olSLOG.OutputSLOG に準拠
-            Dim sql As String = "INSERT INTO l_slog (op_st_dt, op_en_dt, op_kbn, op_user_cd, op_user_nm, " &
-                                "op_detail1, pc_name) " &
-                                "VALUES (@op_st_dt, @op_en_dt, @op_kbn, @op_user_cd, @op_user_nm, " &
-                                "@op_detail1, @pc_name)"
+            Dim sql As String = "INSERT INTO l_slog (op_st_dt, op_en_dt, op_kbn, op_nm, op_s, " &
+                                "op_user_cd, op_user_nm, pc_name, ip_adr, win_user, " &
+                                "op_detail1, op_detail2, upd_sbt) " &
+                                "VALUES (@op_st_dt, @op_en_dt, @op_kbn, @op_nm, @op_s, " &
+                                "@op_user_cd, @op_user_nm, @pc_name, @ip_adr, @win_user, " &
+                                "@op_detail1, @op_detail2, @upd_sbt) " &
+                                "RETURNING slog_no"
             Dim prms As New List(Of NpgsqlParameter) From {
-                New NpgsqlParameter("@op_st_dt", DateTime.Now),
-                New NpgsqlParameter("@op_en_dt", DateTime.Now),
-                New NpgsqlParameter("@op_kbn", operationType),
+                New NpgsqlParameter("@op_st_dt", now),
+                New NpgsqlParameter("@op_en_dt", now),
+                New NpgsqlParameter("@op_kbn", opKbn),
+                New NpgsqlParameter("@op_nm", If(opNm, "")),
+                New NpgsqlParameter("@op_s", If(opS, "")),
                 New NpgsqlParameter("@op_user_cd", If(LoggedInUserCd, "")),
                 New NpgsqlParameter("@op_user_nm", If(LoggedInUserNm, "")),
-                New NpgsqlParameter("@op_detail1", detail),
-                New NpgsqlParameter("@pc_name", Environment.MachineName)
+                New NpgsqlParameter("@pc_name", Environment.MachineName),
+                New NpgsqlParameter("@ip_adr", GetLocalIpAddress()),
+                New NpgsqlParameter("@win_user", Environment.UserName),
+                New NpgsqlParameter("@op_detail1", If(detail, "")),
+                New NpgsqlParameter("@op_detail2", If(detail2, "")),
+                New NpgsqlParameter("@upd_sbt", If(updSbt, ""))
             }
-            crud.ExecuteNonQuery(sql, prms)
+            Dim slogNo As Integer = crud.ExecuteScalar(Of Integer)(sql, prms)
+            Return slogNo
         Catch ex As Exception
             ' ログ記録失敗は握りつぶす（業務処理に影響させない）
             Console.WriteLine($"[WriteAuditLog] ログ記録失敗: {ex.Message}")
+            Return -1
         End Try
-    End Sub
+    End Function
+
+    ''' <summary>
+    ''' ローカルIPアドレスを取得する（Access版 vmIP_ADR 相当、複数の場合カンマ区切り）
+    ''' </summary>
+    Public Function GetLocalIpAddress() As String
+        Try
+            Dim host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName())
+            Dim ips = host.AddressList.
+                Where(Function(a) a.AddressFamily = System.Net.Sockets.AddressFamily.InterNetwork).
+                Select(Function(a) a.ToString())
+            Dim result = String.Join(",", ips)
+            ' Access版: 100バイト制限
+            If result.Length > 100 Then result = result.Substring(0, 100)
+            Return result
+        Catch
+            Return ""
+        End Try
+    End Function
 
 End Module

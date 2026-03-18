@@ -328,24 +328,10 @@ Public Class Form_MAIN
     ' =========================================================
     ' ログアウト時のログ記録
     ' Access版 gLOGOFF (p_StartUp.txt:539-544) の再現
-    ' sec_slog テーブルに LOGOUT 操作を記録する
-    ' テーブルが存在しない場合は Try-Catch でスキップ
+    ' l_slog テーブルに LOGOFF 操作を記録する（sec_slog は廃止、l_slog に統一）
     ' =========================================================
     Private Sub RecordLogoutLog()
-        Try
-            Dim crud As New CrudHelper()
-            Dim columnValues As New Dictionary(Of String, Object) From {
-                {"user_id", LoginSession.LoggedInUserId},
-                {"op_kbn", "LOGOUT"},
-                {"op_st_dt", DateTime.Now},
-                {"op_detail1", Me.Text},
-                {"upd_sbt", "その他"}
-            }
-            crud.Insert("sec_slog", columnValues)
-        Catch ex As Exception
-            ' テーブルが存在しない場合やDB接続エラーはスキップ
-            ' 本体処理（ログアウト）に影響させない
-        End Try
+        LoginSession.WriteAuditLog(LoginSession.OP_KBN_LOGOFF, Me.Text)
     End Sub
 
     ' =========================================================

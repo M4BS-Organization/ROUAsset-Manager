@@ -125,7 +125,7 @@ Partial Public Class Form_f_LOGIN_JET
         If Not VerifyPassword(pwd, storedPwd) Then
             ' 監査ログ: ログイン失敗 (Access版 cngOP_KBN_LOGINERR 相当)
             LoginSession.LoggedInUserCd = userCd  ' ログ記録用に一時セット
-            LoginSession.WriteAuditLog(LoginSession.OP_LOGIN_ERR, "パスワード不正 ユーザー:" & userCd)
+            LoginSession.WriteAuditLog(LoginSession.OP_KBN_LOGINERR, "パスワード不正 ユーザー:" & userCd)
             LoginSession.LoggedInUserCd = ""       ' クリア
 
             ' 失敗: err_ct をインクリメント + last_err_dt を更新
@@ -236,7 +236,7 @@ Partial Public Class Form_f_LOGIN_JET
         LoginSession.IsSessionActive = True
 
         ' 監査ログ: ログイン成功 (Access版 olSLOG.OutputSLOG 相当)
-        LoginSession.WriteAuditLog(LoginSession.OP_LOGIN, "ログイン成功")
+        LoginSession.WriteAuditLog(LoginSession.OP_KBN_LOGIN, "ログイン成功")
 
         ' 次回用にユーザーコードを保存
         txt_USER_CD_SAVE.Text = userCd

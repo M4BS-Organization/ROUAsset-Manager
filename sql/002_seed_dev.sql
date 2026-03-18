@@ -59,6 +59,14 @@ VALUES
      NOW(), NULL, 0, NULL)
 ON CONFLICT (user_id) DO NOTHING;
 
+-- ==========================================================
+-- 統制オプション (t_opt) — ログ出力フラグ初期値
+-- Access版 fgNT_SLOGOUT / fgNT_ULOGOUT / fgNT_RECOUT / fgNT_DTCNVLOG に相当
+-- ==========================================================
+INSERT INTO t_opt (slog, ulog, recopt, cnvlog)
+SELECT true, true, true, false
+WHERE NOT EXISTS (SELECT 1 FROM t_opt LIMIT 1);
+
 COMMIT;
 
 -- ============================================================

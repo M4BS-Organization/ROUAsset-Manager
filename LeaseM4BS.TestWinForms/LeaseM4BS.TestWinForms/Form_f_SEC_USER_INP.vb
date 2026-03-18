@@ -212,10 +212,32 @@ Partial Public Class Form_f_SEC_USER_INP
 
         ' --- DB登録 ---
         Try
+            ' --- 更新前データ取得 (ULOG用: rec1) ---
+            Dim rec1Csv As String = ""
+            If EditMode = "EDIT" Then
+                Dim beforeDt = _crud.GetDataTable(
+                    "SELECT * FROM sec_user WHERE user_id = @uid",
+                    New List(Of NpgsqlParameter) From {New NpgsqlParameter("@uid", TargetUserId)})
+                If beforeDt.Rows.Count > 0 Then
+                    rec1Csv = AuditLogger.SerializeRecord(beforeDt.Rows(0))
+                End If
+            End If
+
             If EditMode = "NEW" Then
                 InsertUser(hasNewPassword)
             Else
                 UpdateUser(hasNewPassword)
+            End If
+
+            ' --- 操作ログ + 更新ログ記録 ---
+            Dim opS As String = If(EditMode = "NEW", "新規", "更新")
+            Dim slogNo = LoginSession.WriteAuditLog(
+                LoginSession.OP_KBN_USERPASSWORD, "利用者:" & txt_CD.Text.Trim(),
+                opNm:="システム利用者管理", opS:=opS, updSbt:="更新")
+            If slogNo >= 0 Then
+                AuditLogger.WriteUpdateLog(slogNo, "SEC_USER", If(EditMode = "NEW", "追加", "更新"),
+                    "利用者コード", txt_CD.Text.Trim(),
+                    rec1:=rec1Csv)
             End If
 
             MessageBox.Show("登録しました。", "完了",
@@ -323,12 +345,31 @@ Partial Public Class Form_f_SEC_USER_INP
         If result <> DialogResult.Yes Then Return
 
         Try
+            ' --- 削除前データ取得 (ULOG用: rec1) ---
+            Dim beforeDt = _crud.GetDataTable(
+                "SELECT * FROM sec_user WHERE user_id = @uid",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@uid", TargetUserId)})
+            Dim rec1Csv As String = ""
+            If beforeDt.Rows.Count > 0 Then
+                rec1Csv = AuditLogger.SerializeRecord(beforeDt.Rows(0))
+            End If
+
             Dim sql As String = "UPDATE sec_user SET history_f = TRUE, update_dt = @now WHERE user_id = @user_id"
             Dim prms As New List(Of NpgsqlParameter) From {
                 New NpgsqlParameter("@now", DateTime.Now),
                 New NpgsqlParameter("@user_id", TargetUserId)
             }
             _crud.ExecuteNonQuery(sql, prms)
+
+            ' --- 操作ログ + 更新ログ記録 ---
+            Dim slogNo = LoginSession.WriteAuditLog(
+                LoginSession.OP_KBN_USERPASSWORD, "利用者:" & txt_CD.Text.Trim(),
+                opNm:="システム利用者管理", opS:="削除", updSbt:="更新")
+            If slogNo >= 0 Then
+                AuditLogger.WriteUpdateLog(slogNo, "SEC_USER", "削除",
+                    "利用者コード", txt_CD.Text.Trim(),
+                    rec1:=rec1Csv)
+            End If
 
             MessageBox.Show("使用不可に設定しました。", "完了",
                             MessageBoxButtons.OK, MessageBoxIcon.Information)

@@ -134,8 +134,25 @@ Partial Public Class Form_f_M_BCAT_CHANGE
             {New NpgsqlParameter("@id", Integer.Parse(txt_BCAT_ID.Text))}
         }
 
+        ' --- 更新前データ取得 (ULOG用: rec1) ---
+        Dim beforeDt = _crud.GetDataTable("SELECT * FROM m_bcat WHERE bcat_id = @id", prms)
+        Dim rec1Csv As String = ""
+        If beforeDt.Rows.Count > 0 Then
+            rec1Csv = AuditLogger.SerializeRecord(beforeDt.Rows(0))
+        End If
+
         ' 行を更新
         _crud.Update("m_bcat", bcat, "bcat_id = @id", prms)
+
+        ' --- 操作ログ + 更新ログ記録 (Access版 p_LOG準拠) ---
+        Dim slogNo = LoginSession.WriteAuditLog(
+            LoginSession.OP_KBN_KYKH, "契約分類:" & txt_BCAT1_CD.Text,
+            opNm:="管理部署マスタ", opS:="更新", updSbt:="更新")
+        If slogNo >= 0 Then
+            AuditLogger.WriteUpdateLog(slogNo, "M_BCAT", "更新",
+                "管理部署コード", txt_BCAT1_CD.Text,
+                rec1:=rec1Csv, rec2:=AuditLogger.SerializeRecord(bcat))
+        End If
 
         Me.Close()
     End Sub
@@ -156,8 +173,25 @@ Partial Public Class Form_f_M_BCAT_CHANGE
             {New NpgsqlParameter("@id", Integer.Parse(txt_BCAT_ID.Text))}
         }
 
+        ' --- 削除前データ取得 (ULOG用: rec1) ---
+        Dim beforeDt = _crud.GetDataTable("SELECT * FROM m_bcat WHERE bcat_id = @id", prms)
+        Dim rec1Csv As String = ""
+        If beforeDt.Rows.Count > 0 Then
+            rec1Csv = AuditLogger.SerializeRecord(beforeDt.Rows(0))
+        End If
+
         ' 行を削除
         _crud.Delete("m_bcat", "bcat_id = @id", prms)
+
+        ' --- 操作ログ + 更新ログ記録 (Access版 p_LOG準拠) ---
+        Dim slogNo = LoginSession.WriteAuditLog(
+            LoginSession.OP_KBN_KYKH, "契約分類:" & txt_BCAT1_CD.Text,
+            opNm:="管理部署マスタ", opS:="削除", updSbt:="更新")
+        If slogNo >= 0 Then
+            AuditLogger.WriteUpdateLog(slogNo, "M_BCAT", "削除",
+                "管理部署コード", txt_BCAT1_CD.Text,
+                rec1:=rec1Csv)
+        End If
 
         Me.Close()
     End Sub
