@@ -39,25 +39,25 @@ Partial Public Class Form_f_M_LCPT_INP
         lcpt("lcpt2_nm") = txt_LCPT2_NM.Text
 
         ' 1行目
-        lcpt("shime_day_1") = NzInt(txt_SHIME_DAY_1.Text, DBNull.Value)
-        lcpt("sshri_kn1_1") = NzInt(txt_SSHRI_KN1_1.Text, DBNull.Value)
-        lcpt("shri_day1_1") = NzInt(txt_SHRI_DAY1_1.Text, DBNull.Value)
-        lcpt("sshri_kn2_1") = NzInt(txt_SSHRI_KN2_1.Text, DBNull.Value)
-        lcpt("shri_day2_1") = NzInt(txt_SHRI_DAY2_1.Text, DBNull.Value)
+        lcpt("shime_day_1") = NzIntOrNull(txt_SHIME_DAY_1.Text)
+        lcpt("sshri_kn1_1") = NzIntOrNull(txt_SSHRI_KN1_1.Text)
+        lcpt("shri_day1_1") = NzIntOrNull(txt_SHRI_DAY1_1.Text)
+        lcpt("sshri_kn2_1") = NzIntOrNull(txt_SSHRI_KN2_1.Text)
+        lcpt("shri_day2_1") = NzIntOrNull(txt_SHRI_DAY2_1.Text)
 
         ' 2行目
-        lcpt("shime_day_2") = NzInt(txt_SHIME_DAY_2.Text, DBNull.Value)
-        lcpt("sshri_kn1_2") = NzInt(txt_SSHRI_KN1_2.Text, DBNull.Value)
-        lcpt("shri_day1_2") = NzInt(txt_SHRI_DAY1_2.Text, DBNull.Value)
-        lcpt("sshri_kn2_2") = NzInt(txt_SSHRI_KN2_2.Text, DBNull.Value)
-        lcpt("shri_day2_2") = NzInt(txt_SHRI_DAY2_2.Text, DBNull.Value)
+        lcpt("shime_day_2") = NzIntOrNull(txt_SHIME_DAY_2.Text)
+        lcpt("sshri_kn1_2") = NzIntOrNull(txt_SSHRI_KN1_2.Text)
+        lcpt("shri_day1_2") = NzIntOrNull(txt_SHRI_DAY1_2.Text)
+        lcpt("sshri_kn2_2") = NzIntOrNull(txt_SSHRI_KN2_2.Text)
+        lcpt("shri_day2_2") = NzIntOrNull(txt_SHRI_DAY2_2.Text)
 
         ' 3行目
-        lcpt("shime_day_3") = NzInt(txt_SHIME_DAY_3.Text, DBNull.Value)
-        lcpt("sshri_kn1_3") = NzInt(txt_SSHRI_KN1_3.Text, DBNull.Value)
-        lcpt("shri_day1_3") = NzInt(txt_SHRI_DAY1_3.Text, DBNull.Value)
-        lcpt("sshri_kn2_3") = NzInt(txt_SSHRI_KN2_3.Text, DBNull.Value)
-        lcpt("shri_day2_3") = NzInt(txt_SHRI_DAY2_3.Text, DBNull.Value)
+        lcpt("shime_day_3") = NzIntOrNull(txt_SHIME_DAY_3.Text)
+        lcpt("sshri_kn1_3") = NzIntOrNull(txt_SSHRI_KN1_3.Text)
+        lcpt("shri_day1_3") = NzIntOrNull(txt_SHRI_DAY1_3.Text)
+        lcpt("sshri_kn2_3") = NzIntOrNull(txt_SSHRI_KN2_3.Text)
+        lcpt("shri_day2_3") = NzIntOrNull(txt_SHRI_DAY2_3.Text)
 
         lcpt("create_id") = 0
         lcpt("create_dt") = DateTime.Now

@@ -15,6 +15,21 @@
         End If
     End Function
 
+    ' 空文字列/Nothing/DBNull の場合は DBNull.Value を返し、それ以外は Integer を返す
+    ' DB登録用: NULLableカラムに Integer or DBNull を格納するケース
+    Public Function NzIntOrNull(value As Object) As Object
+        If value Is Nothing OrElse IsDBNull(value) OrElse String.IsNullOrEmpty(value.ToString()) Then
+            Return DBNull.Value
+        End If
+
+        Dim result As Integer
+        If Integer.TryParse(value.ToString(), result) Then
+            Return result
+        Else
+            Return DBNull.Value
+        End If
+    End Function
+
     Public Function NzDate(value As Object) As DateTime
         If value Is Nothing OrElse IsDBNull(value) Then
             Return DateTime.Today

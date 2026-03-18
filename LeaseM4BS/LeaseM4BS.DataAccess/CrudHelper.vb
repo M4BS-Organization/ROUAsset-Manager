@@ -49,10 +49,10 @@ Public Class CrudHelper
         End If
 
         Dim dataTable As New DataTable()
+        Dim conn As NpgsqlConnection = Nothing
+        Dim useInternalConnection As Boolean = False
 
         Try
-            Dim conn As NpgsqlConnection
-            Dim useInternalConnection As Boolean = False
 
             ' トランザクション中の場合は既存の接続を使用
             If _activeConnection IsNot Nothing AndAlso _activeTransaction IsNot Nothing Then
@@ -100,10 +100,10 @@ Public Class CrudHelper
         End If
 
         Dim rowsAffected As Integer = 0
+        Dim conn As NpgsqlConnection = Nothing
+        Dim useInternalConnection As Boolean = False
 
         Try
-            Dim conn As NpgsqlConnection
-            Dim useInternalConnection As Boolean = False
 
             ' トランザクション中の場合は既存の接続を使用
             If _activeConnection IsNot Nothing AndAlso _activeTransaction IsNot Nothing Then
@@ -150,10 +150,10 @@ Public Class CrudHelper
         End If
 
         Dim result As Object = Nothing
+        Dim conn As NpgsqlConnection = Nothing
+        Dim useInternalConnection As Boolean = False
 
         Try
-            Dim conn As NpgsqlConnection
-            Dim useInternalConnection As Boolean = False
 
             ' トランザクション中の場合は既存の接続を使用
             If _activeConnection IsNot Nothing AndAlso _activeTransaction IsNot Nothing Then
@@ -433,7 +433,7 @@ Public Class CrudHelper
                     Try
                         _activeTransaction.Rollback()
                     Catch rollbackEx As Exception
-                        _connectionManager.WriteError($"Rollback失敗: {rollbackEx.Message}")
+                        DbConnectionManager.WriteError($"Rollback失敗: {rollbackEx.Message}", rollbackEx)
                     End Try
                 End If
 
