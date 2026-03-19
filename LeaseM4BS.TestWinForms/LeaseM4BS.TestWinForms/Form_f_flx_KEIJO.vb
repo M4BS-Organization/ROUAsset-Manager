@@ -61,9 +61,16 @@ Public Class Form_f_flx_KEIJO
         End Try
     End Sub
 
-    ''' <summary>従来のSQL一覧表示（条件パラメータなしの場合の互換動作）</summary>
+    ''' <summary>従来のSQL一覧表示（条件パラメータなしの場合：ワークテーブルに前回計算結果があれば表示）</summary>
     Private Sub SearchDataLegacy()
         Try
+            ' ワークテーブルにデータがあるか確認
+            Dim mgr As New KeijoWorkTableManager(_crud)
+            If mgr.GetChukiKeijoCount() = 0 Then
+                MessageBox.Show("計上データがありません。再計算ボタンから計上条件を指定して実行してください。")
+                Return
+            End If
+
             Dim prms As New List(Of NpgsqlParameter)
             Dim sql = BuildWorkTableSql(txt_SEARCH.Text.Trim(), prms)
 
@@ -254,6 +261,11 @@ Public Class Form_f_flx_KEIJO
         dgv_LIST.FormatColumn("計上日", FMT_DATE)
         dgv_LIST.FormatColumn("中途解約日", FMT_DATE)
         dgv_LIST.FormatColumn("支払日", FMT_DATE)
+    End Sub
+
+    ' [検索]ボタン
+    Private Sub cmd_SEARCH_Click(sender As Object, e As EventArgs) Handles cmd_SEARCH.Click
+        SearchData()
     End Sub
 
     ' [閉じる]ボタン
