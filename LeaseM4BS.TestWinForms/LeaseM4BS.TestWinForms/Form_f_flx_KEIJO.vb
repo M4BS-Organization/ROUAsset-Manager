@@ -273,10 +273,22 @@ Public Class Form_f_flx_KEIJO
         Me.Close()
     End Sub
 
-    ' [再計算]ボタン
+    ' [再計算]ボタン — Access版 cmd_設定 相当: f_KEIJO_JOKEN を開いて条件を受け取り再計算
     Private Sub cmd_RECALCULATE_Click(sender As Object, e As EventArgs) Handles cmd_RECALCULATE.Click
-        Dim frm As New Form_f_KEIJO_JOKEN
-        frm.ShowDialog()
+        Using frm As New Form_f_KEIJO_JOKEN()
+            frm.CallerType = Form_f_KEIJO_JOKEN.JokenCallerType.KEIJO
+
+            If frm.ShowDialog() = DialogResult.OK Then
+                ' 条件画面から設定値を受け取り
+                Joken = frm.ResultJoken
+                DtFrom = frm.ResultDtFrom
+                DtTo = frm.ResultDtTo
+                LabelText = frm.ResultLabelText
+
+                ' 一覧を再計算・再表示
+                SearchData()
+            End If
+        End Using
     End Sub
 
     ' [照会]ボタン
