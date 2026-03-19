@@ -23,9 +23,6 @@ Partial Public Class Form_f_IDO
         Public IsChecked As Boolean
     End Structure
 
-    ' DataGridView で表示するための DataTable
-    Private _dgvItems As DataGridView
-
     Public Sub New()
         InitializeComponent()
     End Sub
@@ -114,9 +111,10 @@ Partial Public Class Form_f_IDO
 
     ' [実行] ボタン — トランザクション内バルク UPDATE（NFR-002）
     Private Sub cmd_実行_Click(sender As Object, e As EventArgs) Handles cmd_実行.Click
-        ' バリデーション: 異動日が空欄の場合はエラー
-        If String.IsNullOrWhiteSpace(txt_IDO_DT.Text) Then
-            MessageBox.Show("移動日を入力してください。", "エラー",
+        ' バリデーション: 異動日が空欄または不正な場合はエラー
+        Dim idoDt As Date
+        If String.IsNullOrWhiteSpace(txt_IDO_DT.Text) OrElse Not Date.TryParse(txt_IDO_DT.Text, idoDt) Then
+            MessageBox.Show("有効な移動日を入力してください。", "エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Error)
             txt_IDO_DT.Focus()
             Return
@@ -151,7 +149,7 @@ Partial Public Class Form_f_IDO
                 prms.Add(New NpgsqlParameter("@to3", GetBcatToValue(3)))
                 prms.Add(New NpgsqlParameter("@to4", GetBcatToValue(4)))
                 prms.Add(New NpgsqlParameter("@to5", GetBcatToValue(5)))
-                prms.Add(New NpgsqlParameter("@ido_dt", CDate(txt_IDO_DT.Text)))
+                prms.Add(New NpgsqlParameter("@ido_dt", idoDt))
                 prms.Add(New NpgsqlParameter("@kykm_id", item.KykmId))
 
                 _crud.ExecuteNonQuery(sql, prms)

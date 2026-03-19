@@ -83,7 +83,8 @@ Partial Public Class Form_f_HENF
                     CBool(row("hszei_kjkbn_id_ms_f")))
             End If
         Catch ex As Exception
-            ' ヘッダ情報取得失敗は警告のみ
+            ' ヘッダ情報取得失敗は警告のみ（データ表示に致命的でないため続行）
+            Debug.WriteLine("LoadHeaderInfo エラー: " & ex.Message)
         End Try
     End Sub
 
