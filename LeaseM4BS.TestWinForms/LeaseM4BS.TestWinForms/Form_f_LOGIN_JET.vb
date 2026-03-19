@@ -83,19 +83,21 @@ Partial Public Class Form_f_LOGIN_JET
             Return
         End If
 
-        ' --- ユーザー検索 ---
+        ' --- ユーザー検索 (history_f を含めて取得し、ロック状態も判定する) ---
         Dim sql As String = "SELECT user_id, user_cd, user_nm, pwd, kngn_id, " &
-                            "err_ct, login_attempts, d_first_login, history_f " &
+                            "err_ct, login_attempts, d_first_login, history_f, pwd_upd_dt " &
                             "FROM sec_user " &
-                            "WHERE user_cd = @user_cd AND history_f = FALSE"
+                            "WHERE user_cd = @user_cd"
         Dim prms As New List(Of NpgsqlParameter) From {
             New NpgsqlParameter("@user_cd", userCd)
         }
 
         Dim dt = _crud.GetDataTable(sql, prms)
 
+        ' ユーザーが見つからない場合も「コードまたはパスワードが正しくありません」と表示
+        ' （ユーザー存在有無の情報漏洩を防止）
         If dt.Rows.Count = 0 Then
-            MessageBox.Show("利用者コードが見つかりません。", "認証エラー",
+            MessageBox.Show("利用者コードまたはパスワードが正しくありません。", "認証エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Error)
             txt_USER_CD.Focus()
             Return
@@ -109,8 +111,17 @@ Partial Public Class Form_f_LOGIN_JET
         Dim errCt As Integer = If(row("err_ct") IsNot DBNull.Value, CInt(row("err_ct")), 0)
         Dim loginAttempts As Integer = If(row("login_attempts") IsNot DBNull.Value,
                                           CInt(row("login_attempts")), DEFAULT_LOGIN_ATTEMPTS)
+        Dim historyF As Boolean = If(row("history_f") IsNot DBNull.Value, CBool(row("history_f")), False)
 
         ' --- アカウントロック判定 ---
+        ' history_f = TRUE の場合はアカウントが無効化されている
+        ' ユーザー存在有無の情報漏洩を防ぐため、未存在時と同じメッセージを表示
+        If historyF Then
+            MessageBox.Show("利用者コードまたはパスワードが正しくありません。", "認証エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+
         ' Access版と同じ動作: ERR_CT > LOGIN_ATTEMPTS でロック（最後の1回は試行を許可し、
         ' パスワード不正時にHISTORY_F=TRUEを設定する）
         If loginAttempts > 0 AndAlso errCt > loginAttempts Then
@@ -124,9 +135,7 @@ Partial Public Class Form_f_LOGIN_JET
         ' --- パスワード照合 (Gap 11: SHA256ハッシュ比較 + 平文フォールバック) ---
         If Not VerifyPassword(pwd, storedPwd) Then
             ' 監査ログ: ログイン失敗 (Access版 cngOP_KBN_LOGINERR 相当)
-            LoginSession.LoggedInUserCd = userCd  ' ログ記録用に一時セット
-            LoginSession.WriteAuditLog(LoginSession.OP_KBN_LOGINERR, "パスワード不正 ユーザー:" & userCd)
-            LoginSession.LoggedInUserCd = ""       ' クリア
+            LoginSession.WriteAuditLogAs(LoginSession.OP_KBN_LOGINERR, "パスワード不正 ユーザー:" & userCd, userCd, "")
 
             ' 失敗: err_ct をインクリメント + last_err_dt を更新
             errCt += 1
@@ -162,18 +171,26 @@ Partial Public Class Form_f_LOGIN_JET
             }
             _crud.ExecuteNonQuery(updateSql, updatePrms)
 
-            Dim remaining As Integer = loginAttempts - errCt
-            If remaining > 0 Then
-                MessageBox.Show("パスワードが正しくありません。" & vbCrLf &
-                                $"残り試行回数: {remaining} 回",
+            ' ユーザー存在有無の情報漏洩を防ぐため、すべてのケースで同一メッセージを表示
+            If loginAttempts > 0 Then
+                Dim remaining As Integer = loginAttempts - errCt
+                If remaining > 0 Then
+                    MessageBox.Show("利用者コードまたはパスワードが正しくありません。" & vbCrLf &
+                                    $"残り試行回数: {remaining} 回",
+                                    "認証エラー",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Else
+                    MessageBox.Show("利用者コードまたはパスワードが正しくありません。" & vbCrLf &
+                                    "ログイン試行回数の上限に達しました。" & vbCrLf &
+                                    "システム管理者に連絡してください。",
+                                    "アカウントロック",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End If
+            Else
+                ' loginAttempts = 0 は試行回数無制限
+                MessageBox.Show("利用者コードまたはパスワードが正しくありません。",
                                 "認証エラー",
                                 MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Else
-                MessageBox.Show("パスワードが正しくありません。" & vbCrLf &
-                                "ログイン試行回数の上限に達しました。" & vbCrLf &
-                                "システム管理者に連絡してください。",
-                                "アカウントロック",
-                                MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
 
             txt_PWD.Clear()
@@ -202,37 +219,52 @@ Partial Public Class Form_f_LOGIN_JET
         LoginSession.LoggedInUserCd = userCd
         LoginSession.LoggedInUserNm = userNm
 
-        ' 権限情報をロード
-        LoginSession.LoadPermissions(kngnId)
+        ' --- 認証後の初期化処理 ---
+        ' 各ステップで例外が発生してもセッションが中途半端にならないよう保護
+        Try
+            ' 権限情報をロード
+            LoginSession.LoadPermissions(kngnId)
 
-        ' パスワードポリシーをロード
-        LoginSession.LoadPasswordPolicy(userId)
+            ' パスワードポリシーをロード
+            LoginSession.LoadPasswordPolicy(userId)
 
-        ' --- Gap 4: DBバージョン＆整合性チェック ---
-        If Not CheckDatabaseVersion() Then
-            ' バージョン不一致でアプリ終了
-            Application.Exit()
-            Return
-        End If
+            ' --- Gap 4: DBバージョン＆整合性チェック ---
+            If Not CheckDatabaseVersion() Then
+                ' バージョン不一致でアプリ終了
+                LoginSession.Clear()
+                Application.Exit()
+                Return
+            End If
 
-        ' --- Gap 5: ユーザーセット初期化 (Access版 gInitUserSet に相当) ---
-        LoginSession.InitUserSet()
-        If Not LoginSession.CurrentUserSetLoaded Then
-            MessageBox.Show("ユーザーセットの初期化に失敗しました。" & vbCrLf &
+            ' --- Gap 5: ユーザーセット初期化 (Access版 gInitUserSet に相当) ---
+            LoginSession.InitUserSet()
+            If Not LoginSession.CurrentUserSetLoaded Then
+                MessageBox.Show("ユーザーセットの初期化に失敗しました。" & vbCrLf &
+                                "システム管理者に連絡してください。",
+                                "初期化エラー",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                ' 警告のみ表示して続行（致命的エラーではない場合）
+            End If
+
+            ' --- Gap 6: 月次オプション読込 (Access版 GetTousei_OPT に相当) ---
+            LoginSession.LoadTouseiOptions()
+            LoginSession.LoadCustomerType()
+
+            ' --- Gap 11: パスワード有効期限チェック (Access版 gPWD_KIGEN に相当) ---
+            CheckPasswordExpiry(row)
+
+        Catch ex As Exception
+            ' 初期化処理の失敗時はセッションをクリアしてログイン不可とする
+            LoginSession.Clear()
+            MessageBox.Show("ログイン後の初期化処理でエラーが発生しました。" & vbCrLf &
+                            ex.Message & vbCrLf &
                             "システム管理者に連絡してください。",
                             "初期化エラー",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            ' 警告のみ表示して続行（致命的エラーではない場合）
-        End If
+                            MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End Try
 
-        ' --- Gap 6: 月次オプション読込 (Access版 GetTousei_OPT に相当) ---
-        LoginSession.LoadTouseiOptions()
-        LoginSession.LoadCustomerType()
-
-        ' --- Gap 11: パスワード有効期限チェック (Access版 gPWD_KIGEN に相当) ---
-        CheckPasswordExpiry(row)
-
-        ' セッション状態を有効化
+        ' セッション状態を有効化（初期化がすべて成功した後）
         LoginSession.LoginDateTime = DateTime.Now
         LoginSession.IsSessionActive = True
 
@@ -360,11 +392,31 @@ Partial Public Class Form_f_LOGIN_JET
     Private Shared Function DecryptAccessPassword(encryptedStr As String) As String
         Const ENCRYPT_KEY As String = "ILTEX KUBOKI&TANI"
 
-        If String.IsNullOrEmpty(encryptedStr) OrElse encryptedStr.Length < 5 Then
+        If String.IsNullOrEmpty(encryptedStr) OrElse encryptedStr.Length < 8 Then
             Return Nothing
         End If
 
-        ' 先頭4文字がシード値（数値）でなければAccess暗号化形式ではない
+        ' 全体が4文字ごとの16進数であるか確認（seed prefix なしのパターン）
+        ' Access版 pc_Encrypt の形式: 先頭4文字がシード値、以降が暗号データ
+        ' ただしシード値が16進数のみで構成される場合もあるため、両パターンを試行する
+
+        ' --- パターン1: 先頭4文字がseed（10進数）、残りがデータ ---
+        Dim result As String = TryDecryptWithSeed(encryptedStr, ENCRYPT_KEY)
+        If result IsNot Nothing Then Return result
+
+        ' --- パターン2: seed = 0 として全体をデータとして復号 ---
+        If encryptedStr.Length Mod 4 = 0 Then
+            result = TryDecryptData(encryptedStr, ENCRYPT_KEY, 0)
+            If result IsNot Nothing Then Return result
+        End If
+
+        Return Nothing
+    End Function
+
+    ''' <summary>
+    ''' 先頭4文字をseed、残りをデータとして復号を試みる
+    ''' </summary>
+    Private Shared Function TryDecryptWithSeed(encryptedStr As String, encryptKey As String) As String
         Dim seedStr As String = encryptedStr.Substring(0, 4)
         Dim seed As Long
         If Not Long.TryParse(seedStr, seed) Then
@@ -372,32 +424,42 @@ Partial Public Class Form_f_LOGIN_JET
         End If
 
         Dim dataStr As String = encryptedStr.Substring(4)
-
-        ' データ部分は4文字ごとの16進数
-        If dataStr.Length Mod 4 <> 0 Then
+        If dataStr.Length = 0 OrElse dataStr.Length Mod 4 <> 0 Then
             Return Nothing
         End If
 
+        Return TryDecryptData(dataStr, encryptKey, seed)
+    End Function
+
+    ''' <summary>
+    ''' 指定されたseed値でデータ文字列を復号する。
+    ''' 復号結果が印字可能文字のみで構成される場合に成功と判定する。
+    ''' </summary>
+    Private Shared Function TryDecryptData(dataStr As String, encryptKey As String, seed As Long) As String
+        If dataStr.Length Mod 4 <> 0 Then Return Nothing
+
         Dim inLen As Integer = dataStr.Length \ 4
-        Dim keyLen As Integer = ENCRYPT_KEY.Length
-        Dim maxLen As Integer = Math.Max(inLen, keyLen)
+        Dim keyLen As Integer = encryptKey.Length
         Dim result As New StringBuilder()
 
-        For i As Integer = 1 To maxLen
-            Dim wk1 As Long = 0
-            If i <= inLen Then
-                Dim hexStr As String = dataStr.Substring((i - 1) * 4, 4)
+        For i As Integer = 1 To inLen
+            Dim hexStr As String = dataStr.Substring((i - 1) * 4, 4)
+            Dim wk1 As Long
+            Try
                 wk1 = Convert.ToInt64(hexStr, 16)
-            End If
+            Catch
+                Return Nothing
+            End Try
 
             Dim wk2 As Long = 0
             If i <= keyLen Then
-                wk2 = AscW(ENCRYPT_KEY(i - 1))
+                wk2 = AscW(encryptKey(i - 1))
             End If
 
             Dim wk3 As Long = wk1 - wk2 - seed
-            If wk3 = 0 Then
-                Exit For
+            ' 復号結果が印字可能ASCII範囲外なら失敗
+            If wk3 < 32 OrElse wk3 > 126 Then
+                Return Nothing
             End If
 
             result.Append(ChrW(CInt(wk3)))
@@ -422,15 +484,21 @@ Partial Public Class Form_f_LOGIN_JET
     Private Sub CheckPasswordExpiry(userRow As DataRow)
         Try
             ' パスワード有効期限の取得
+            ' 優先順位: pwd_upd_dt（パスワード更新日）> d_first_login（初回ログイン日）
             Dim expireDate As DateTime? = Nothing
 
-            ' pwd_expire_dt カラムがあれば使用
-            If userRow.Table.Columns.Contains("pwd_expire_dt") AndAlso userRow("pwd_expire_dt") IsNot DBNull.Value Then
+            ' pwd_upd_dt カラムがあれば最優先で使用（パスワード変更日 + 有効期限日数）
+            ' PwdLifeTime が設定済みならそれを使用、未設定ならデフォルト値
+            Dim expireDays As Integer = If(LoginSession.PwdLifeTime > 0, LoginSession.PwdLifeTime, DEFAULT_PWD_EXPIRE_DAYS)
+            If userRow.Table.Columns.Contains("pwd_upd_dt") AndAlso userRow("pwd_upd_dt") IsNot DBNull.Value Then
+                Dim pwdUpdDt As DateTime = CDate(userRow("pwd_upd_dt"))
+                expireDate = pwdUpdDt.AddDays(expireDays)
+            ElseIf userRow.Table.Columns.Contains("pwd_expire_dt") AndAlso userRow("pwd_expire_dt") IsNot DBNull.Value Then
                 expireDate = CDate(userRow("pwd_expire_dt"))
             ElseIf userRow("d_first_login") IsNot DBNull.Value Then
                 ' d_first_login からの経過日数で判定（デフォルト90日）
                 Dim firstLogin As DateTime = CDate(userRow("d_first_login"))
-                expireDate = firstLogin.AddDays(DEFAULT_PWD_EXPIRE_DAYS)
+                expireDate = firstLogin.AddDays(expireDays)
             Else
                 ' 初回ログイン: パスワード設定を推奨
                 Dim result As DialogResult = MessageBox.Show(
