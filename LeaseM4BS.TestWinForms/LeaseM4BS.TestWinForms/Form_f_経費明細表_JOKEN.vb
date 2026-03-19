@@ -72,7 +72,7 @@ Partial Public Class Form_f_経費明細表_JOKEN
 
     ' [前回集計結果]ボタン
     Private Sub cmd_ZEN_Click(sender As Object, e As EventArgs) Handles cmd_ZEN.Click
-        If _prevForm IsNot Nothing Then
+        If _prevForm IsNot Nothing AndAlso Not _prevForm.IsDisposed Then
             _prevForm.ShowDialog()
         End If
     End Sub

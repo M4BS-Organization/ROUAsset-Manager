@@ -43,9 +43,10 @@ Partial Public Class Form_f_flx_経費明細表
         prms.Add(New NpgsqlParameter("@dtFrom", GetMonthStart(DtFrom)))
         prms.Add(New NpgsqlParameter("@dtTo", GetMonthEnd(DtTo)))
 
-        ' 集計期間の月数
+        ' 集計期間の月数（パラメータ化）
         Dim months As Integer = GetDuration(DtFrom, DtTo)
         If months < 1 Then months = 1
+        prms.Add(New NpgsqlParameter("@months", months))
 
         Dim sb As New StringBuilder()
 
@@ -83,24 +84,24 @@ Partial Public Class Form_f_flx_経費明細表
 
         ' 当期経費額
         sb.AppendLine("  CASE WHEN COALESCE(kykh.lkikan, 0) > 0 THEN ")
-        sb.AppendLine("    ROUND(CAST(COALESCE(haif.h_klsryo, 0) / kykh.lkikan * " & months & " AS NUMERIC), 0) ")
+        sb.AppendLine("    ROUND(CAST(COALESCE(haif.h_klsryo, 0) / kykh.lkikan * @months AS NUMERIC), 0) ")
         sb.AppendLine("  ELSE 0 END AS KEIHI_TOKI, ")
 
         ' 当期リース料
         sb.AppendLine("  CASE WHEN COALESCE(kykh.lkikan, 0) > 0 THEN ")
-        sb.AppendLine("    ROUND(CAST(COALESCE(haif.h_klsryo, 0) / kykh.lkikan * " & months & " AS NUMERIC), 0) ")
+        sb.AppendLine("    ROUND(CAST(COALESCE(haif.h_klsryo, 0) / kykh.lkikan * @months AS NUMERIC), 0) ")
         sb.AppendLine("  ELSE 0 END AS LSRYO_TOKI, ")
 
         ' 前払費用残高
         sb.AppendLine("  CASE WHEN COALESCE(kykh.lkikan, 0) > 0 THEN ")
         sb.AppendLine("    ROUND(CAST(COALESCE(haif.h_klsryo, 0) - (COALESCE(haif.h_klsryo, 0) / kykh.lkikan) * ")
-        sb.AppendLine("      LEAST(kykh.lkikan, GREATEST(0, EXTRACT(YEAR FROM AGE(@dtFrom, kykh.start_dt)) * 12 + EXTRACT(MONTH FROM AGE(@dtFrom, kykh.start_dt))) + " & months & ") AS NUMERIC), 0) ")
+        sb.AppendLine("      LEAST(kykh.lkikan, GREATEST(0, EXTRACT(YEAR FROM AGE(@dtFrom, kykh.start_dt)) * 12 + EXTRACT(MONTH FROM AGE(@dtFrom, kykh.start_dt))) + @months) AS NUMERIC), 0) ")
         sb.AppendLine("  ELSE 0 END AS MAE_ZAN, ")
 
         ' リース料残高
         sb.AppendLine("  CASE WHEN COALESCE(kykh.lkikan, 0) > 0 THEN ")
         sb.AppendLine("    ROUND(CAST(COALESCE(haif.h_klsryo, 0) - (COALESCE(haif.h_klsryo, 0) / kykh.lkikan) * ")
-        sb.AppendLine("      LEAST(kykh.lkikan, GREATEST(0, EXTRACT(YEAR FROM AGE(@dtFrom, kykh.start_dt)) * 12 + EXTRACT(MONTH FROM AGE(@dtFrom, kykh.start_dt))) + " & months & ") AS NUMERIC), 0) ")
+        sb.AppendLine("      LEAST(kykh.lkikan, GREATEST(0, EXTRACT(YEAR FROM AGE(@dtFrom, kykh.start_dt)) * 12 + EXTRACT(MONTH FROM AGE(@dtFrom, kykh.start_dt))) + @months) AS NUMERIC), 0) ")
         sb.AppendLine("  ELSE 0 END AS LSRYO_ZAN, ")
 
         ' 解約前残高
@@ -112,7 +113,7 @@ Partial Public Class Form_f_flx_経費明細表
         For m As Integer = 1 To 12
             Dim monthOffset = m - 1
             Dim colName = $"KEIHI_TOKIG{m:00}"
-            sb.AppendLine($"  CASE WHEN COALESCE(kykh.lkikan, 0) > 0 AND {monthOffset} < {months} THEN ")
+            sb.AppendLine($"  CASE WHEN COALESCE(kykh.lkikan, 0) > 0 AND {monthOffset} < @months THEN ")
             sb.AppendLine($"    ROUND(CAST(COALESCE(haif.h_klsryo, 0) / kykh.lkikan AS NUMERIC), 0) ")
             sb.AppendLine($"  ELSE 0 END AS {colName}, ")
         Next
