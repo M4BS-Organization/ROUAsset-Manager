@@ -161,6 +161,39 @@ Public Class Form_MAIN
             menu_BEPPYO2_JOKEN.Enabled = False       ' 別表16（4）(f_BEPPYO2_JOKEN:934)
             menu_IDOLST_JOKEN.Enabled = False        ' 移動物件一覧表 (f_IDOLST_JOKEN:518)
         End If
+        ' ---------------------------------------------------------
+        ' 8. igCUSTM_TYPE による顧客タイプ別制御
+        '    Access版 p_Customize.txt の engCUSTM_TYPE に相当
+        ' ---------------------------------------------------------
+        Select Case LoginSession.CustomerType
+            Case igCUSTM_TYPE.MYCOM
+                ' Access版 p_StartUp.mMENUBAR_ENABLE_CTL: 制御なし（空Case）
+                ' フォーム切替（f_YOSAN_JOKEN_MYCOM 等）は各Clickハンドラ側で対応
+            Case igCUSTM_TYPE.DKO
+                ' Access版: マスタ＞重要コード単品 Visible=True
+                ' 対応メニュー項目未実装のため Issue #30 で対応
+            Case igCUSTM_TYPE.DNS
+                ' Access版 p_StartUp.mMENUBAR_ENABLE_CTL: 制御なし（空Case）
+            Case igCUSTM_TYPE.VTC
+                ' Access版: システム＞重要定値 Visible=True
+                ' 対応メニュー項目未実装のため Issue #30 で対応
+            Case igCUSTM_TYPE.NIFS, igCUSTM_TYPE.NKSOL
+                ' Access版: 帳票＞番号 Visible=True
+                ' 対応メニュー項目未実装のため Issue #30 で対応
+            Case igCUSTM_TYPE.SNKO
+                ' Access版: マスタ＞商品 Visible=True
+                ' 対応メニュー項目未実装のため Issue #30 で対応
+            Case igCUSTM_TYPE.RISO
+                ' Access版: マスタ＞ローカー/設置場所ナビ Visible=False
+                '           マスタ＞受付/設置場所 Visible=True
+                ' 対応メニュー項目未実装のため Issue #30 で対応
+            Case igCUSTM_TYPE.SANKO_AIR, igCUSTM_TYPE.KINTETSU_IS
+                ' Access版: マスタ＞販売 Visible=True
+                ' 対応メニュー項目未実装のため Issue #30 で対応
+            Case Else
+                ' STD / STD_SWK 等: 標準メニューをそのまま使用
+        End Select
+
     End Sub
 
     ' =========================================================
@@ -885,22 +918,22 @@ Public Class Form_MAIN
 
     ' [ログ管理 - 参照ログ] Access版 Case 621
     Private Sub menu_LOG_REF_Click(sender As Object, e As EventArgs) Handles menu_LOG_REF.Click
-        MessageBox.Show("参照ログ機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Dim frmSlog As New Form_f_00SLOG_JOKEN() : frmSlog.ShowDialog()
     End Sub
 
     ' [ログ管理 - 更新ログ] Access版 Case 622
     Private Sub menu_LOG_UPD_Click(sender As Object, e As EventArgs) Handles menu_LOG_UPD.Click
-        MessageBox.Show("更新ログ機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Dim frmUlog As New Form_f_00ULOG_JOKEN() : frmUlog.ShowDialog()
     End Sub
 
     ' [ログ管理 - 保存復元ログ] Access版 Case 623
     Private Sub menu_LOG_SAVE_RESTORE_Click(sender As Object, e As EventArgs) Handles menu_LOG_SAVE_RESTORE.Click
-        MessageBox.Show("保存復元ログ機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Dim frmBklog As New Form_f_00BKLOG() : frmBklog.ShowDialog()
     End Sub
 
     ' [ログ管理 - ログ削除] Access版 Case 624
     Private Sub menu_LOG_DELETE_Click(sender As Object, e As EventArgs) Handles menu_LOG_DELETE.Click
-        MessageBox.Show("ログ削除機能は未実装です。", "未実装", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Dim frmLogDel As New Form_f_00LOGDEL() : frmLogDel.ShowDialog()
     End Sub
 
     ' [仕訳固定値設定] Access版 Case 611

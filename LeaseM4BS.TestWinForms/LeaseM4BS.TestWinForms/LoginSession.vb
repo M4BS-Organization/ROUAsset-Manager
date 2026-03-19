@@ -8,6 +8,40 @@ Imports System.Linq
 Imports LeaseM4BS.DataAccess
 Imports Npgsql
 
+
+''' <summary>
+''' 顧客タイプ識別子 (Access版 engCUSTM_TYPE Enum に相当)
+''' p_Customize.txt 定義準拠。26種類の顧客固有カスタマイズを識別する。
+''' </summary>
+Public Enum igCUSTM_TYPE As Integer
+    STD = 0             ' 標準
+    DKO = 1             ' DKO
+    DNS = 2             ' DNS
+    VTC = 3             ' VTC
+    MYCOM = 4           ' マイコム
+    NIFS = 5            ' NIFS
+    SNKO = 6            ' 三光
+    RISO = 7            ' リソ
+    ' 8 は欠番
+    SANKO_AIR = 9       ' 三光エアー
+    SAKURA_IS = 10      ' 桜インターナショナル
+    YAMASHIN_F = 11     ' 山信F
+    KITOKU = 12         ' 木徳
+    FUJISASH = 13       ' 富士佐
+    TCCB = 14           ' TCCB
+    NIDEC_SHIBA = 15    ' 日電柴
+    JOT = 16            ' JOT
+    KYOTO = 17          ' 京都
+    MARUZEN = 18        ' 丸善
+    NKSOL = 19          ' NK-SOL
+    TSYSCOM = 20        ' TSYSCOM
+    KINTETSU_IS = 21    ' 近鉄IS
+    VALQUA = 22         ' VALQUA
+    NIPPAN_R = 23       ' 日版R
+    CACMARUHA = 24      ' キャッチ丸葉
+    KINTETSU_RE = 25    ' 近鉄RE
+    STD_SWK = 26        ' 標準_仕訳
+End Enum
 Public Module LoginSession
 
     ' --- ユーザー基本情報 ---
@@ -41,6 +75,9 @@ Public Module LoginSession
 
     ' --- DBバージョン情報 (Gap 4) ---
     Public DbVersion As String = ""
+
+    ' --- 顧客タイプ (Access版 igCUSTM_TYPE に相当) ---
+    Public CustomerType As igCUSTM_TYPE = igCUSTM_TYPE.STD
 
     ' --- DB環境情報 (Access版 sgDB_NAME に相当) ---
     Public DatabaseName As String = ""
@@ -297,6 +334,7 @@ Public Module LoginSession
         ' 管理単位別権限
         KknriList = New List(Of KknriAccessEntry)()
         BknriList = New List(Of BknriAccessEntry)()
+        CustomerType = igCUSTM_TYPE.STD
         ' パスワードポリシー
         PasswordMinLength = 0
         PwdMojiChk = False
@@ -368,6 +406,27 @@ Public Module LoginSession
         End Try
     End Sub
 
+
+    Public Sub LoadCustomerType()
+        Try
+            Dim crud As New CrudHelper()
+            Dim sql As String = "SELECT custm_type FROM t_customize LIMIT 1"
+            Dim dt = crud.GetDataTable(sql)
+            If dt.Rows.Count = 0 Then
+                CustomerType = igCUSTM_TYPE.STD
+            Else
+                Dim row = dt.Rows(0)
+                Dim rawValue As Integer = If(row("custm_type") IsNot DBNull.Value, CInt(row("custm_type")), 0)
+                If [Enum].IsDefined(GetType(igCUSTM_TYPE), rawValue) Then
+                    CustomerType = CType(rawValue, igCUSTM_TYPE)
+                Else
+                    CustomerType = igCUSTM_TYPE.STD
+                End If
+            End If
+        Catch ex As Exception
+            CustomerType = igCUSTM_TYPE.STD
+        End Try
+    End Sub
     ''' <summary>
     ''' 操作ログをDBに記録する（Access版 olSLOG.OutputSLOG 完全準拠）
     ''' fgNT_SECF(IsSessionActive) および fgNT_SLOGOUT(EnableSystemLog) チェック付き
@@ -379,6 +438,7 @@ Public Module LoginSession
     ''' <param name="detail2">操作詳細2（op_detail2 に記録、長文対応）。省略時は空文字</param>
     ''' <param name="updSbt">更新小計（upd_sbt に記録）。省略時は空文字</param>
     ''' <returns>採番された slog_no。失敗時は -1</returns>
+
     Public Function WriteAuditLog(opKbn As String,
                                   detail As String,
                                   Optional opNm As String = "",

@@ -361,6 +361,54 @@
     <Compile Include="Form_f_CHANGE_PASSWORD.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Form_f_00SLOG.Designer.vb">
+      <DependentUpon>Form_f_00SLOG.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00SLOG.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00SLOG_JOKEN.Designer.vb">
+      <DependentUpon>Form_f_00SLOG_JOKEN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00SLOG_JOKEN.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00SLOG_M.Designer.vb">
+      <DependentUpon>Form_f_00SLOG_M.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00SLOG_M.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00ULOG.Designer.vb">
+      <DependentUpon>Form_f_00ULOG.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00ULOG.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00ULOG_JOKEN.Designer.vb">
+      <DependentUpon>Form_f_00ULOG_JOKEN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00ULOG_JOKEN.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00ULOG_M.Designer.vb">
+      <DependentUpon>Form_f_00ULOG_M.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00ULOG_M.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00BKLOG.Designer.vb">
+      <DependentUpon>Form_f_00BKLOG.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00BKLOG.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_00LOGDEL.Designer.vb">
+      <DependentUpon>Form_f_00LOGDEL.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_00LOGDEL.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Form_f_00DataPass.Designer.vb">
       <DependentUpon>Form_f_00DataPass.vb</DependentUpon>
     </Compile>

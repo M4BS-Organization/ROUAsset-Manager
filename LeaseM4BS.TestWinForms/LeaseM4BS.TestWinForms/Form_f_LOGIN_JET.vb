@@ -1,4 +1,4 @@
-Imports System.Windows.Forms
+﻿Imports System.Windows.Forms
 Imports System.Security.Cryptography
 Imports System.Text
 Imports LeaseM4BS.DataAccess
@@ -227,6 +227,7 @@ Partial Public Class Form_f_LOGIN_JET
 
         ' --- Gap 6: 月次オプション読込 (Access版 GetTousei_OPT に相当) ---
         LoginSession.LoadTouseiOptions()
+        LoginSession.LoadCustomerType()
 
         ' --- Gap 11: パスワード有効期限チェック (Access版 gPWD_KIGEN に相当) ---
         CheckPasswordExpiry(row)
