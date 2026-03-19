@@ -1,11 +1,9 @@
 Imports System.Collections.Generic
 
-Namespace LeaseM4BS.DataAccess
-
-    ''' <summary>
-    ''' 固定長フィールド定義
-    ''' </summary>
-    Public Class FixedLengthFieldDef
+''' <summary>
+''' 固定長フィールド定義
+''' </summary>
+Public Class FixedLengthFieldDef
         ''' <summary>DB列名（DataTableのカラム名と一致）</summary>
         Public Property Name As String
         ''' <summary>Shift-JISバイト幅</summary>
@@ -297,6 +295,4 @@ Namespace LeaseM4BS.DataAccess
             }
         End Function
 
-    End Module
-
-End Namespace
+End Module

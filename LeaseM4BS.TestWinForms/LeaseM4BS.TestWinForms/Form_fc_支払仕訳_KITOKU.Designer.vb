@@ -47,6 +47,7 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
         Me.txt_KAMOKU = New System.Windows.Forms.Label()
         Me.lbl_BSHO_CD = New System.Windows.Forms.Label()
         Me.ラベル25 = New System.Windows.Forms.Label()
+        Me.cmd_消費税設定 = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         ' cmd_実行
@@ -290,11 +291,21 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
         Me.ラベル25.TabIndex = 30
         Me.ラベル25.Text = "＜税処理ｺｰﾄﾞ＞"
         '
+        ' cmd_消費税設定
+        '
+        Me.cmd_消費税設定.Location = New System.Drawing.Point(170, 226)
+        Me.cmd_消費税設定.Name = "cmd_消費税設定"
+        Me.cmd_消費税設定.Size = New System.Drawing.Size(95, 23)
+        Me.cmd_消費税設定.TabIndex = 31
+        Me.cmd_消費税設定.Text = "消費税率設定(&T)"
+        Me.cmd_消費税設定.UseVisualStyleBackColor = True
+        '
         ' Form_fc_支払仕訳_KITOKU
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(555, 563)
+        Me.Controls.Add(Me.cmd_消費税設定)
         Me.Controls.Add(Me.lbl_EXPLANATION2)
         Me.Controls.Add(Me.lbl_SLIP_DT)
         Me.Controls.Add(Me.lbl_EXPLANATION1)
@@ -365,5 +376,6 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
     Friend WithEvents txt_KAMOKU As System.Windows.Forms.Label
     Friend WithEvents lbl_BSHO_CD As System.Windows.Forms.Label
     Friend WithEvents ラベル25 As System.Windows.Forms.Label
+    Friend WithEvents cmd_消費税設定 As System.Windows.Forms.Button
 
 End Class

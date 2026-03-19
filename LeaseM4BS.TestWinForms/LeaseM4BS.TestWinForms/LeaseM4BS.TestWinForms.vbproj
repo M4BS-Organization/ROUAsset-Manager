@@ -152,6 +152,25 @@
       <DependentUpon>Form1.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="FcJournalOutputBase.vb" />
+    <Compile Include="Form_fc_計上仕訳_KITOKU.Designer.vb">
+      <DependentUpon>Form_fc_計上仕訳_KITOKU.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_fc_計上仕訳_KITOKU.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU.Designer.vb">
+      <DependentUpon>Form_fc_支払仕訳_KITOKU.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU_SUB.Designer.vb">
+      <DependentUpon>Form_fc_支払仕訳_KITOKU_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Form_fc_TC_HREL.Designer.vb">
       <DependentUpon>Form_fc_TC_HREL.vb</DependentUpon>
     </Compile>
@@ -921,6 +940,84 @@
     <Compile Include="UtilControl.vb" />
     <Compile Include="UtilDate.vb" />
     <Compile Include="Utils.vb" />
+    <Compile Include="Form_f_KYKH.Designer.vb">
+      <DependentUpon>Form_f_KYKH.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKH.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKH_SUB.Designer.vb">
+      <DependentUpon>Form_f_KYKH_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKH_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM.Designer.vb">
+      <DependentUpon>Form_f_KYKM.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_SUB.Designer.vb">
+      <DependentUpon>Form_f_KYKM_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_BKN.Designer.vb">
+      <DependentUpon>Form_f_KYKM_BKN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_BKN.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_BUNKATSU.Designer.vb">
+      <DependentUpon>Form_f_KYKM_BUNKATSU.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_BUNKATSU.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_CHUUKI.Designer.vb">
+      <DependentUpon>Form_f_KYKM_CHUUKI.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_CHUUKI.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_CHUUKI_SUB_GSON.Designer.vb">
+      <DependentUpon>Form_f_KYKM_CHUUKI_SUB_GSON.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_CHUUKI_SUB_GSON.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_CHUUKI_拡張設定.Designer.vb">
+      <DependentUpon>Form_f_KYKM_CHUUKI_拡張設定.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_CHUUKI_拡張設定.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KYKM_SUB_BKN.Designer.vb">
+      <DependentUpon>Form_f_KYKM_SUB_BKN.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KYKM_SUB_BKN.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KAIYAK.Designer.vb">
+      <DependentUpon>Form_f_KAIYAK.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KAIYAK.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KAIYAK_SUB.Designer.vb">
+      <DependentUpon>Form_f_KAIYAK_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KAIYAK_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_f_KAIYAK_ALL.Designer.vb">
+      <DependentUpon>Form_f_KAIYAK_ALL.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_f_KAIYAK_ALL.vb">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
