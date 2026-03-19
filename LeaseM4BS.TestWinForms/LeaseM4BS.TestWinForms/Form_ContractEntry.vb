@@ -121,6 +121,48 @@ Partial Public Class Form_ContractEntry
         cmb_ZRITU.Items.Clear()
         cmb_ZRITU.Items.AddRange(New String() {"0.10", "0.08", "0.05"})
         cmb_ZRITU.Text = "0.10"
+
+        ' -----------------------------------------------------
+        ' 3. 口座 (KOZA)
+        ' -----------------------------------------------------
+        Dim dtKoza = _crud.GetDataTable("SELECT koza_id, koza_cd, koza_nm FROM m_koza ORDER BY koza_cd")
+        cmb_KOZA_ID.DataSource = dtKoza
+        cmb_KOZA_ID.DisplayMember = "koza_nm"
+        cmb_KOZA_ID.ValueMember = "koza_id"
+        cmb_KOZA_ID.SelectedIndex = -1
+
+        ' -----------------------------------------------------
+        ' 4. 契約予備1 (RSRVK1)
+        ' -----------------------------------------------------
+        Dim dtRsrv = _crud.GetDataTable("SELECT rsrvk1_id, rsrvk1_cd, rsrvk1_nm FROM m_rsrvk1 ORDER BY rsrvk1_cd")
+        cmb_RSRVK1_ID.DataSource = dtRsrv
+        cmb_RSRVK1_ID.DisplayMember = "rsrvk1_nm"
+        cmb_RSRVK1_ID.ValueMember = "rsrvk1_id"
+        cmb_RSRVK1_ID.SelectedIndex = -1
+
+        ' -----------------------------------------------------
+        ' 5. 支払方法 (SHHO) — M/1/2/3 共通マスタ
+        ' -----------------------------------------------------
+        Dim dtShho = _crud.GetDataTable("SELECT shho_id, shho_cd, shho_nm FROM m_shho ORDER BY shho_cd")
+        cmb_SHHO_M_ID.DataSource = dtShho
+        cmb_SHHO_M_ID.DisplayMember = "shho_nm"
+        cmb_SHHO_M_ID.ValueMember = "shho_id"
+        cmb_SHHO_M_ID.SelectedIndex = -1
+
+        cmb_SHHO_1_ID.DataSource = dtShho.Copy()
+        cmb_SHHO_1_ID.DisplayMember = "shho_nm"
+        cmb_SHHO_1_ID.ValueMember = "shho_id"
+        cmb_SHHO_1_ID.SelectedIndex = -1
+
+        cmb_SHHO_2_ID.DataSource = dtShho.Copy()
+        cmb_SHHO_2_ID.DisplayMember = "shho_nm"
+        cmb_SHHO_2_ID.ValueMember = "shho_id"
+        cmb_SHHO_2_ID.SelectedIndex = -1
+
+        cmb_SHHO_3_ID.DataSource = dtShho.Copy()
+        cmb_SHHO_3_ID.DisplayMember = "shho_nm"
+        cmb_SHHO_3_ID.ValueMember = "shho_id"
+        cmb_SHHO_3_ID.SelectedIndex = -1
     End Sub
 
     ' =========================================================
@@ -426,11 +468,11 @@ Partial Public Class Form_ContractEntry
                     ' ★修正: Dictionary ではなく List(Of NpgsqlParameter) を使う
                     Dim pList As New List(Of Npgsql.NpgsqlParameter)
                     pList.Add(New Npgsql.NpgsqlParameter("@no", detailNo))
-                    pList.Add(New Npgsql.NpgsqlParameter("@nm", If(row.Cells(0).Value, "")))
-                    pList.Add(New Npgsql.NpgsqlParameter("@su", NzDec(row.Cells(1).Value)))
-                    pList.Add(New Npgsql.NpgsqlParameter("@kn", NzDec(row.Cells(3).Value)))
-                    pList.Add(New Npgsql.NpgsqlParameter("@kl", NzDec(row.Cells(4).Value)))
-                    pList.Add(New Npgsql.NpgsqlParameter("@gl", NzDec(row.Cells(5).Value)))
+                    pList.Add(New Npgsql.NpgsqlParameter("@nm", If(row.Cells("bukn_nm").Value, "")))
+                    pList.Add(New Npgsql.NpgsqlParameter("@su", NzDec(row.Cells("b_suuryo").Value)))
+                    pList.Add(New Npgsql.NpgsqlParameter("@kn", NzDec(row.Cells("b_knyukn").Value)))
+                    pList.Add(New Npgsql.NpgsqlParameter("@kl", NzDec(row.Cells("b_klsryo").Value)))
+                    pList.Add(New Npgsql.NpgsqlParameter("@gl", NzDec(row.Cells("b_glsryo").Value)))
                     pList.Add(New Npgsql.NpgsqlParameter("@upd", DateTime.Now))
                     pList.Add(New Npgsql.NpgsqlParameter("@id", rowKykmId))
 
@@ -453,9 +495,6 @@ Partial Public Class Form_ContractEntry
     ' 契約番号のテキストボックスで [Enter] キーを押したら実行
     Private Sub txt_KYAK_NO_KeyDown(sender As Object, e As KeyEventArgs) Handles txt_KYAK_NO.KeyDown
         If e.KeyCode = Keys.Enter Then
-            ' ★追加：動いているか確認するメッセージ
-            MessageBox.Show("検索を開始します: " & txt_KYAK_NO.Text)
-
             ' 入力が空でなければ検索実行
             If txt_KYAK_NO.Text <> "" Then
                 LoadContractData(txt_KYAK_NO.Text)
@@ -583,6 +622,8 @@ Partial Public Class Form_ContractEntry
         Dim _crud As New CrudHelper()
 
         Try
+            _crud.BeginTransaction()
+
             ' -----------------------------------------------------
             ' 2. ヘッダ (d_kykh) の更新 (UPDATE)
             ' -----------------------------------------------------
@@ -617,7 +658,10 @@ Partial Public Class Form_ContractEntry
             valKykh.Add("k_update_dt", DateTime.Now)
 
             ' ★UPDATE実行
-            _crud.Update("d_kykh", valKykh, "kykh_id = " & targetId)
+            Dim whereParams As New List(Of Npgsql.NpgsqlParameter) From {
+                New Npgsql.NpgsqlParameter("@kykh_id", targetId)
+            }
+            _crud.Update("d_kykh", valKykh, "kykh_id = @kykh_id", whereParams)
 
 
             ' -----------------------------------------------------
@@ -650,11 +694,11 @@ Partial Public Class Form_ContractEntry
                 valKykm.Add("saikaisu", 0)
 
                 ' --- 画面入力値 ---
-                valKykm.Add("bukn_nm", If(row.Cells(0).Value, ""))
-                valKykm.Add("b_suuryo", NzDec(row.Cells(1).Value))
-                valKykm.Add("b_knyukn", NzDec(row.Cells(3).Value))
-                valKykm.Add("b_klsryo", NzDec(row.Cells(4).Value))
-                valKykm.Add("b_glsryo", NzDec(row.Cells(5).Value))
+                valKykm.Add("bukn_nm", If(row.Cells("bukn_nm").Value, ""))
+                valKykm.Add("b_suuryo", NzDec(row.Cells("b_suuryo").Value))
+                valKykm.Add("b_knyukn", NzDec(row.Cells("b_knyukn").Value))
+                valKykm.Add("b_klsryo", NzDec(row.Cells("b_klsryo").Value))
+                valKykm.Add("b_glsryo", NzDec(row.Cells("b_glsryo").Value))
 
                 ' --- 必須項目の初期値埋め (省略不可！) ---
                 valKykm.Add("b_create_id", 0)
@@ -718,9 +762,11 @@ Partial Public Class Form_ContractEntry
                 detailNo += 1
             Next
 
+            _crud.Commit()
             MessageBox.Show("修正しました！", "更新完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
         Catch ex As Exception
+            _crud.Rollback()
             MessageBox.Show("修正エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -956,6 +1002,11 @@ Partial Public Class Form_ContractEntry
                 ' フラグ
                 chk_KYAK_END_F.Checked = Convert.ToBoolean(row("kyak_end_f"))
                 chk_SKYU_KJ_F.Checked = (Convert.ToInt32(row("skyu_kj_f")) = 1)
+                chk_JENCHO_F.Checked = Convert.ToBoolean(row("jencho_f"))
+                chk_K_HENL_F.Checked = Convert.ToBoolean(row("k_henl_f"))
+                chk_K_HENF_F.Checked = Convert.ToBoolean(row("k_henf_f"))
+                chk_K_SEIGOU_F.Checked = Convert.ToBoolean(row("k_seigou_f"))
+                chk_CKAIYK_F.Checked = Convert.ToBoolean(row("k_ckaiyk_f"))
 
                 ' --- 明細取得 (ID指定) ---
                 Dim sqlDetail As String = "SELECT * FROM d_kykm WHERE kykh_id = @kykhId ORDER BY kykm_no"
