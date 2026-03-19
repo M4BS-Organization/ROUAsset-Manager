@@ -31,6 +31,11 @@ Partial Public Class Form_f_HENF
         Public KlsryoZkomiGokei As Double
     End Structure
 
+    ' 動的生成ナビゲーションボタン (Access版レコードナビゲーション相当)
+    Private WithEvents cmd_前 As Button
+    Private WithEvents cmd_次 As Button
+    Private lbl_RowPos As Label
+
     Public Sub New()
         InitializeComponent()
     End Sub
@@ -50,9 +55,31 @@ Partial Public Class Form_f_HENF
         txt_KLSRYO_ZKOMI_GOKEI_SUM.ReadOnly = True
         txt_SHRI_CNT_SUM.ReadOnly = True
 
+        ' ナビゲーションボタンを動的生成 (Designer.vb に存在しないため)
+        CreateNavigationButtons()
+
         ' ヘッダ情報読み込み
         LoadHeaderInfo()
         LoadHenfData()
+    End Sub
+
+    Private Sub CreateNavigationButtons()
+        cmd_前 = New Button()
+        cmd_前.Text = "前(&P)"
+        cmd_前.Size = New Drawing.Size(60, 26)
+        cmd_前.Location = New Drawing.Point(260, 3)
+        Me.Controls.Add(cmd_前)
+
+        cmd_次 = New Button()
+        cmd_次.Text = "次(&N)"
+        cmd_次.Size = New Drawing.Size(60, 26)
+        cmd_次.Location = New Drawing.Point(325, 3)
+        Me.Controls.Add(cmd_次)
+
+        lbl_RowPos = New Label()
+        lbl_RowPos.AutoSize = True
+        lbl_RowPos.Location = New Drawing.Point(395, 8)
+        Me.Controls.Add(lbl_RowPos)
     End Sub
 
     Private Sub LoadHeaderInfo()
@@ -113,12 +140,14 @@ Partial Public Class Form_f_HENF
             Next
 
             If _rows.Count > 0 Then
-                _currentRowIndex = 0
+                If _currentRowIndex >= _rows.Count Then _currentRowIndex = _rows.Count - 1
+                If _currentRowIndex < 0 Then _currentRowIndex = 0
                 RenderCurrentRow()
             Else
                 ClearFields()
             End If
             UpdateSumFields()
+            UpdateRowPosition()
         Catch ex As Exception
             MessageBox.Show("一覧取得エラー: " & ex.Message, "エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -197,6 +226,7 @@ Partial Public Class Form_f_HENF
                 updated.KzeiGokei = updated.Kzei * updated.ShriCnt
                 updated.KlsryoZkomiGokei = (updated.Klsryo + updated.Kzei) * updated.ShriCnt
                 _rows(_currentRowIndex) = updated
+                PersistHenfRow(updated)
                 RenderCurrentRow()
                 UpdateSumFields()
             End If
@@ -224,6 +254,64 @@ Partial Public Class Form_f_HENF
             MessageBox.Show("削除しました。")
         Catch ex As Exception
             MessageBox.Show("削除エラー: " & ex.Message, "エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    ' [前] ボタン — Access版レコードナビゲーション相当
+    Private Sub cmd_前_Click(sender As Object, e As EventArgs) Handles cmd_前.Click
+        If _currentRowIndex > 0 Then
+            _currentRowIndex -= 1
+            RenderCurrentRow()
+            UpdateRowPosition()
+        End If
+    End Sub
+
+    ' [次] ボタン
+    Private Sub cmd_次_Click(sender As Object, e As EventArgs) Handles cmd_次.Click
+        If _currentRowIndex < _rows.Count - 1 Then
+            _currentRowIndex += 1
+            RenderCurrentRow()
+            UpdateRowPosition()
+        End If
+    End Sub
+
+    Private Sub UpdateRowPosition()
+        If lbl_RowPos IsNot Nothing Then
+            If _rows.Count = 0 Then
+                lbl_RowPos.Text = "0 / 0"
+            Else
+                lbl_RowPos.Text = (_currentRowIndex + 1).ToString() & " / " & _rows.Count.ToString()
+            End If
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' スケジュール展開後の編集結果をDBに永続化する (Access版の動作を再現)
+    ''' </summary>
+    Private Sub PersistHenfRow(r As HenfRow)
+        Try
+            Dim prms As New List(Of NpgsqlParameter)
+            prms.Add(New NpgsqlParameter("@kykm_id", KykmId))
+            prms.Add(New NpgsqlParameter("@line_id", r.LineId))
+            prms.Add(New NpgsqlParameter("@klsryo", r.Klsryo))
+            prms.Add(New NpgsqlParameter("@kzei", r.Kzei))
+            prms.Add(New NpgsqlParameter("@zritu", r.Zritu))
+            prms.Add(New NpgsqlParameter("@sshri_kn", r.SshriKn))
+
+            Dim shriDt As Object = DBNull.Value
+            If Not String.IsNullOrEmpty(r.ShriDt1) Then
+                Dim dt As Date
+                If Date.TryParse(r.ShriDt1, dt) Then shriDt = dt
+            End If
+            prms.Add(New NpgsqlParameter("@shri_dt1", shriDt))
+
+            _crud.ExecuteNonQuery(
+                "UPDATE d_henf SET klsryo = @klsryo, kzei = @kzei, zritu = @zritu, " &
+                "sshri_kn = @sshri_kn, shri_dt1 = @shri_dt1 " &
+                "WHERE kykm_id = @kykm_id AND line_id = @line_id", prms)
+        Catch ex As Exception
+            MessageBox.Show("保存エラー: " & ex.Message, "エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub

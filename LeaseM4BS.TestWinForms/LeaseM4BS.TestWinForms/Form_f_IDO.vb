@@ -11,6 +11,9 @@ Partial Public Class Form_f_IDO
     Private _crud As New CrudHelper()
     Private _items As New List(Of IdoItem)
 
+    ' 動的生成DataGridView (Access版サブフォーム/連続フォーム相当)
+    Private dgv As DataGridView
+
     Private Structure IdoItem
         Public KykmId As Double
         Public KykmNo As String
@@ -36,6 +39,75 @@ Partial Public Class Form_f_IDO
         txt_BCAT3_NM_From.ReadOnly = True
         txt_BCAT4_NM_From.ReadOnly = True
         txt_BCAT5_NM_From.ReadOnly = True
+
+        ' 物件一覧DataGridViewを動的生成 (Designer.vb に存在しないため)
+        CreatePropertyGrid()
+    End Sub
+
+    Private Sub CreatePropertyGrid()
+        dgv = New DataGridView()
+        dgv.Location = New Drawing.Point(7, 155)
+        dgv.Size = New Drawing.Size(Me.ClientSize.Width - 14, Me.ClientSize.Height - 162)
+        dgv.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        dgv.AllowUserToAddRows = False
+        dgv.AllowUserToDeleteRows = False
+        dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect
+        dgv.MultiSelect = False
+        dgv.ReadOnly = False
+        dgv.RowHeadersVisible = False
+        dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+        AddHandler dgv.CellValueChanged, AddressOf Dgv_CellValueChanged
+        AddHandler dgv.CurrentCellDirtyStateChanged, AddressOf Dgv_CurrentCellDirtyStateChanged
+
+        ' チェックボックス列
+        Dim colChk As New DataGridViewCheckBoxColumn()
+        colChk.Name = "col_chk"
+        colChk.HeaderText = "選択"
+        colChk.Width = 40
+        colChk.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+        dgv.Columns.Add(colChk)
+
+        ' データ列 (読み取り専用)
+        Dim cols() As String = {"契約番号", "再改数", "物件番号", "物件名", "開始日", "中途解約日", "リース料"}
+        For Each c In cols
+            Dim col As New DataGridViewTextBoxColumn()
+            col.Name = "col_" & c
+            col.HeaderText = c
+            col.ReadOnly = True
+            dgv.Columns.Add(col)
+        Next
+
+        Me.Controls.Add(dgv)
+    End Sub
+
+    Private Sub RefreshGrid()
+        If dgv Is Nothing Then Return
+        dgv.Rows.Clear()
+        For Each item In _items
+            Dim idx = dgv.Rows.Add()
+            dgv.Rows(idx).Cells("col_chk").Value = item.IsChecked
+            dgv.Rows(idx).Cells("col_契約番号").Value = item.KykmNo
+            dgv.Rows(idx).Cells("col_再改数").Value = item.Saikaisu
+            dgv.Rows(idx).Cells("col_物件番号").Value = item.BuknBango1
+            dgv.Rows(idx).Cells("col_物件名").Value = item.BuknNm
+            dgv.Rows(idx).Cells("col_開始日").Value = item.StartDt
+            dgv.Rows(idx).Cells("col_中途解約日").Value = item.CkaiykDt
+            dgv.Rows(idx).Cells("col_リース料").Value = item.Klsryo
+        Next
+    End Sub
+
+    ' DataGridView のチェック変更を _items に同期
+    Private Sub Dgv_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs)
+        If dgv Is Nothing OrElse e.RowIndex < 0 OrElse e.ColumnIndex <> 0 Then Return
+        Dim item = _items(e.RowIndex)
+        item.IsChecked = CBool(dgv.Rows(e.RowIndex).Cells("col_chk").Value)
+        _items(e.RowIndex) = item
+    End Sub
+
+    Private Sub Dgv_CurrentCellDirtyStateChanged(sender As Object, e As EventArgs)
+        If dgv IsNot Nothing AndAlso dgv.IsCurrentCellDirty Then
+            dgv.CommitEdit(DataGridViewDataErrorContexts.Commit)
+        End If
     End Sub
 
     ' [移動元の照会] ボタン
@@ -79,6 +151,7 @@ Partial Public Class Form_f_IDO
                 _items.Add(item)
             Next
 
+            RefreshGrid()
             MessageBox.Show(_items.Count & " 件の物件が見つかりました。")
         Catch ex As Exception
             MessageBox.Show("照会エラー: " & ex.Message, "エラー",
@@ -93,6 +166,7 @@ Partial Public Class Form_f_IDO
             item.IsChecked = True
             _items(i) = item
         Next
+        RefreshGrid()
     End Sub
 
     ' [すべて選択しない] ボタン
@@ -102,6 +176,7 @@ Partial Public Class Form_f_IDO
             item.IsChecked = False
             _items(i) = item
         Next
+        RefreshGrid()
     End Sub
 
     ' [解除] ボタン
