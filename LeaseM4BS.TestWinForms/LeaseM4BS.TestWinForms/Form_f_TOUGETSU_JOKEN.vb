@@ -54,6 +54,8 @@ Partial Public Class Form_f_TOUGETSU_JOKEN
             labelText &= radio_SHIME_BASE.Text & "  "
         ElseIf radio_CONTRACT_BASE.Checked Then
             labelText &= radio_CONTRACT_BASE.Text & "  "
+        ElseIf radio_CONTRACT_BASE.Checked Then
+            labelText &= radio_CONTRACT_BASE.Text & "  "
         End If
 
         ' 集計対象
