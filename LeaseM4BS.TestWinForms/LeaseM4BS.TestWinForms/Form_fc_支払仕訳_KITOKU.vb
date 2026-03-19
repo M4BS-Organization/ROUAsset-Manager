@@ -39,8 +39,12 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
     Private Const KEY_OUTPUT_FILE2 As String = "OUTPUT_FILE2_NM"
     Private Const KEY_OUTPUT_FILE3 As String = "OUTPUT_FILE3_NM"
     Private Const KEY_OUTPUT_FILE4 As String = "OUTPUT_FILE4_NM"
+    Private Const KEY_ZRITU As String = "ZRITU"
+    Private Const KEY_ZEI_CD As String = "ZEI_CD"
 
     Private _settei As FcSetteiHelper
+    Private _zritu As Double = 0
+    Private _zeiCd As String = ""
 
     ' ================================================================
     '  コンストラクタ
@@ -82,6 +86,18 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
 
     Private Sub cmd_CANCEL_Click(sender As Object, e As EventArgs) Handles cmd_CANCEL.Click
         Me.Close()
+    End Sub
+
+    ''' <summary>消費税率・税処理コードをSUBフォームで設定する（Access版 SUBフォーム呼び出し相当）</summary>
+    Private Sub cmd_消費税設定_Click(sender As Object, e As EventArgs) Handles cmd_消費税設定.Click
+        Using frm As New Form_fc_支払仕訳_KITOKU_SUB()
+            frm.Zritu = _zritu
+            frm.ZeiCd = _zeiCd
+            If frm.ShowDialog(Me) = DialogResult.OK Then
+                _zritu = frm.Zritu
+                _zeiCd = frm.ZeiCd
+            End If
+        End Using
     End Sub
 
     Private Sub cmd_選択_Click(sender As Object, e As EventArgs) Handles cmd_選択.Click
@@ -130,102 +146,90 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
         '   shri_dt 翌月以降      → 未払金計上（貸方=入力未払金科目 kmkCd）
         '   zei = 0 かつ 賃貸     → 消費税一括無（消費税ゼロ扱い）
         '
+        Dim todayStr = Format(Now, "yyyy/MM/dd")
         Return $"
 INSERT INTO tw_kitoku_cmsw2wrk (
-    sw2_kai_code,
-    sw2_date,
-    sw2_den_no,
-    sw2_gyo_no,
-    sw2_dc_kbn,
-    sw2_kmk_code,
-    sw2_hkm_code,
-    sw2_bmn_code,
-    sw2_kin,
-    sw2_zei_code,
-    sw2_zei_kbn,
-    sw2_zei_kin,
-    sw2_cur_code,
-    sw2_rate_type,
-    sw2_tekiyo1,
-    sw2_tekiyo2,
-    sw2_grp_code,
-    sw2_sys_kbn,
-    sw2_den_kbn,
-    sw2_rec_level,
-    sw2_tori_kbn,
-    sw2_tori_code
+    sw2_kai_code, sw2_date, sw2_den_no, sw2_gyo_no, sw2_dc_kbn,
+    sw2_kmk_code, sw2_hkm_code, sw2_bmn_code,
+    sw2_code1, sw2_code2, sw2_code3, sw2_code4,
+    sw2_kin, sw2_zei_code, sw2_zei_kbn, sw2_zei_kin,
+    sw2_cur_code, sw2_rate_type, sw2_rate, sw2_cur_kin,
+    sw2_tekiyo1, sw2_tekiyo2, sw2_grp_code, sw2_sys_kbn,
+    sw2_sys_den_no, sw2_sys_sys_kbn, sw2_sys_grp_code,
+    sw2_ait_kmk_code, sw2_ait_hkm_code,
+    sw2_usr_id1, sw2_sts_no1, sw2_sys_date1,
+    sw2_usr_id2, sw2_sts_no2, sw2_sys_date2,
+    sw2_shonin_kbn, sw2_den_kbn, sw2_haifu_kbn, sw2_rec_level,
+    sw2_tori_kbn, sw2_tori_code,
+    sw2_yobi_char1, sw2_yobi_char2, sw2_yobi_char3, sw2_yobi_char4,
+    sw2_yobi_char5, sw2_yobi_char6, sw2_yobi_char7, sw2_yobi_char8,
+    sw2_yobi_num1, sw2_yobi_num2, sw2_yobi_num3
 )
 -- 借方行: リース費用（全6パターン共通）
 SELECT
     '' AS sw2_kai_code,
     '{slipDt}' AS sw2_date,
     LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0') AS sw2_den_no,
-    1 AS sw2_gyo_no,
-    '1' AS sw2_dc_kbn,
+    1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
     COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code,
     '{bshoCd}' AS sw2_bmn_code,
+    '' AS sw2_code1, '' AS sw2_code2, '' AS sw2_code3, '' AS sw2_code4,
     k.lsryo AS sw2_kin,
-    '' AS sw2_zei_code,
-    '0' AS sw2_zei_kbn,
-    -- 賃貸×消費税一括無（zei=0）は消費税ゼロ、その他は zei をそのまま計上
+    '{_zeiCd}' AS sw2_zei_code, '0' AS sw2_zei_kbn,
     CASE WHEN k.leakbn_id IN (3, 4) AND k.zei = 0 THEN 0 ELSE k.zei END AS sw2_zei_kin,
-    'JPY' AS sw2_cur_code,
-    '00' AS sw2_rate_type,
+    'JPY' AS sw2_cur_code, '00' AS sw2_rate_type, 1 AS sw2_rate, k.lsryo AS sw2_cur_kin,
     COALESCE(k.bukn_nm, '') AS sw2_tekiyo1,
     COALESCE(k.kykbnl_no, '') AS sw2_tekiyo2,
-    '00' AS sw2_grp_code,
-    '01' AS sw2_sys_kbn,
-    '1' AS sw2_den_kbn,
-    '0' AS sw2_rec_level,
-    '' AS sw2_tori_kbn,
-    '' AS sw2_tori_code
+    '00' AS sw2_grp_code, '01' AS sw2_sys_kbn,
+    '' AS sw2_sys_den_no, '' AS sw2_sys_sys_kbn, '' AS sw2_sys_grp_code,
+    '' AS sw2_ait_kmk_code, '' AS sw2_ait_hkm_code,
+    '' AS sw2_usr_id1, '' AS sw2_sts_no1, '{todayStr}' AS sw2_sys_date1,
+    '' AS sw2_usr_id2, '' AS sw2_sts_no2, '' AS sw2_sys_date2,
+    '0' AS sw2_shonin_kbn, '1' AS sw2_den_kbn, '0' AS sw2_haifu_kbn, '0' AS sw2_rec_level,
+    '' AS sw2_tori_kbn, '' AS sw2_tori_code,
+    '' AS sw2_yobi_char1, '' AS sw2_yobi_char2, '' AS sw2_yobi_char3, '' AS sw2_yobi_char4,
+    '' AS sw2_yobi_char5, '' AS sw2_yobi_char6, '' AS sw2_yobi_char7, '' AS sw2_yobi_char8,
+    0 AS sw2_yobi_num1, 0 AS sw2_yobi_num2, 0 AS sw2_yobi_num3
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
-WHERE k.kjkbn_id = 1
-  AND k.rec_kbn IN (1, 3)
-  AND k.keijo_f = TRUE
+WHERE k.kjkbn_id = 1 AND k.rec_kbn IN (1, 3) AND k.keijo_f = TRUE
 UNION ALL
 -- 貸方行: 現預金（shri_dt同月）または未払金（翌月以降）、消費税一括有無で金額分岐
 SELECT
     '' AS sw2_kai_code,
     '{slipDt}' AS sw2_date,
     LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0') AS sw2_den_no,
-    2 AS sw2_gyo_no,
-    '2' AS sw2_dc_kbn,
-    -- 現預金: shri_dt と kikanFrom が同月 → h.cr_kmk_cd
-    -- 未払金: shri_dt が翌月以降 → 入力値 kmkCd
+    2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
     CASE
         WHEN DATE_TRUNC('month', k.shri_dt) = DATE_TRUNC('month', '{kikanFromStr}'::date)
-        THEN COALESCE(h.cr_kmk_cd, '')
-        ELSE '{kmkCd}'
+        THEN COALESCE(h.cr_kmk_cd, '') ELSE '{kmkCd}'
     END AS sw2_kmk_code,
     CASE
         WHEN DATE_TRUNC('month', k.shri_dt) = DATE_TRUNC('month', '{kikanFromStr}'::date)
-        THEN COALESCE(h.cr_hkm_cd, '')
-        ELSE '{hkmCd}'
+        THEN COALESCE(h.cr_hkm_cd, '') ELSE '{hkmCd}'
     END AS sw2_hkm_code,
     '{bshoCd}' AS sw2_bmn_code,
-    -- 賃貸×消費税一括無は lsryo のみ、それ以外は税込（lsryo + zei）
+    '' AS sw2_code1, '' AS sw2_code2, '' AS sw2_code3, '' AS sw2_code4,
     CASE WHEN k.leakbn_id IN (3, 4) AND k.zei = 0 THEN k.lsryo ELSE k.lsryo + k.zei END AS sw2_kin,
-    '' AS sw2_zei_code,
-    '0' AS sw2_zei_kbn,
-    0 AS sw2_zei_kin,
-    'JPY' AS sw2_cur_code,
-    '00' AS sw2_rate_type,
+    '{_zeiCd}' AS sw2_zei_code, '0' AS sw2_zei_kbn, 0 AS sw2_zei_kin,
+    'JPY' AS sw2_cur_code, '00' AS sw2_rate_type, 1 AS sw2_rate,
+    CASE WHEN k.leakbn_id IN (3, 4) AND k.zei = 0 THEN k.lsryo ELSE k.lsryo + k.zei END AS sw2_cur_kin,
     COALESCE(k.bukn_nm, '') AS sw2_tekiyo1,
     COALESCE(k.kykbnl_no, '') AS sw2_tekiyo2,
-    '00' AS sw2_grp_code,
-    '01' AS sw2_sys_kbn,
-    '1' AS sw2_den_kbn,
-    '0' AS sw2_rec_level,
-    '' AS sw2_tori_kbn,
-    '' AS sw2_tori_code
+    '00' AS sw2_grp_code, '01' AS sw2_sys_kbn,
+    '' AS sw2_sys_den_no, '' AS sw2_sys_sys_kbn, '' AS sw2_sys_grp_code,
+    '' AS sw2_ait_kmk_code, '' AS sw2_ait_hkm_code,
+    '' AS sw2_usr_id1, '' AS sw2_sts_no1, '{todayStr}' AS sw2_sys_date1,
+    '' AS sw2_usr_id2, '' AS sw2_sts_no2, '' AS sw2_sys_date2,
+    '0' AS sw2_shonin_kbn, '1' AS sw2_den_kbn, '0' AS sw2_haifu_kbn, '0' AS sw2_rec_level,
+    '' AS sw2_tori_kbn, '' AS sw2_tori_code,
+    '' AS sw2_yobi_char1, '' AS sw2_yobi_char2, '' AS sw2_yobi_char3, '' AS sw2_yobi_char4,
+    '' AS sw2_yobi_char5, '' AS sw2_yobi_char6, '' AS sw2_yobi_char7, '' AS sw2_yobi_char8,
+    0 AS sw2_yobi_num1, 0 AS sw2_yobi_num2, 0 AS sw2_yobi_num3
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
-WHERE k.kjkbn_id = 1
-  AND k.rec_kbn IN (1, 3)
-  AND k.keijo_f = TRUE
+WHERE k.kjkbn_id = 1 AND k.rec_kbn IN (1, 3) AND k.keijo_f = TRUE
 ORDER BY sw2_den_no, sw2_gyo_no"
     End Function
 
@@ -351,6 +355,8 @@ ORDER BY sw2_den_no, sw2_gyo_no"
         txt_OUTPUT_FILE2_NM.Text = _settei.GetText(KEY_OUTPUT_FILE2, "APGDHWRK")
         txt_OUTPUT_FILE3_NM.Text = _settei.GetText(KEY_OUTPUT_FILE3, "APGDDWRK")
         txt_OUTPUT_FILE4_NM.Text = _settei.GetText(KEY_OUTPUT_FILE4, "APGDSWRK")
+        Double.TryParse(_settei.GetText(KEY_ZRITU, "0"), _zritu)
+        _zeiCd = _settei.GetText(KEY_ZEI_CD, "")
     End Sub
 
     Private Sub SaveSettings()
@@ -364,6 +370,8 @@ ORDER BY sw2_den_no, sw2_gyo_no"
         _settei.SetText(KEY_OUTPUT_FILE2, txt_OUTPUT_FILE2_NM.Text)
         _settei.SetText(KEY_OUTPUT_FILE3, txt_OUTPUT_FILE3_NM.Text)
         _settei.SetText(KEY_OUTPUT_FILE4, txt_OUTPUT_FILE4_NM.Text)
+        _settei.SetText(KEY_ZRITU, _zritu.ToString())
+        _settei.SetText(KEY_ZEI_CD, _zeiCd)
     End Sub
 
     Private Sub Form_fc_支払仕訳_KITOKU_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed

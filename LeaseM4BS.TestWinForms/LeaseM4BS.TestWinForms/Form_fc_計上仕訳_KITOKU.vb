@@ -85,14 +85,25 @@ Partial Public Class Form_fc_計上仕訳_KITOKU
                         Format(Now, "yyyy/MM/dd"), txt_SLIP_DT.Text)
         Dim slipNoStart = CInt(If(String.IsNullOrWhiteSpace(txt_SLIP_NO_START_VAL.Text),
                                   "1", txt_SLIP_NO_START_VAL.Text))
+        Dim todayStr = Format(Now, "yyyy/MM/dd")
 
         Return $"
 INSERT INTO tw_kitoku_cmsw2wrk (
-    sw2_kai_code, sw2_date, sw2_den_no, sw2_gyo_no,
-    sw2_dc_kbn, sw2_kmk_code, sw2_hkm_code, sw2_bmn_code,
+    sw2_kai_code, sw2_date, sw2_den_no, sw2_gyo_no, sw2_dc_kbn,
+    sw2_kmk_code, sw2_hkm_code, sw2_bmn_code,
+    sw2_code1, sw2_code2, sw2_code3, sw2_code4,
     sw2_kin, sw2_zei_code, sw2_zei_kbn, sw2_zei_kin,
-    sw2_cur_code, sw2_rate_type, sw2_tekiyo1, sw2_tekiyo2,
-    sw2_grp_code, sw2_sys_kbn, sw2_den_kbn, sw2_rec_level
+    sw2_cur_code, sw2_rate_type, sw2_rate, sw2_cur_kin,
+    sw2_tekiyo1, sw2_tekiyo2, sw2_grp_code, sw2_sys_kbn,
+    sw2_sys_den_no, sw2_sys_sys_kbn, sw2_sys_grp_code,
+    sw2_ait_kmk_code, sw2_ait_hkm_code,
+    sw2_usr_id1, sw2_sts_no1, sw2_sys_date1,
+    sw2_usr_id2, sw2_sts_no2, sw2_sys_date2,
+    sw2_shonin_kbn, sw2_den_kbn, sw2_haifu_kbn, sw2_rec_level,
+    sw2_tori_kbn, sw2_tori_code,
+    sw2_yobi_char1, sw2_yobi_char2, sw2_yobi_char3, sw2_yobi_char4,
+    sw2_yobi_char5, sw2_yobi_char6, sw2_yobi_char7, sw2_yobi_char8,
+    sw2_yobi_num1, sw2_yobi_num2, sw2_yobi_num3
 )
 -- パターン1: 開始計上 (rec_kbn=1) 借方: リース資産 / 貸方: リース債務 / 金額: lsryo
 SELECT '', '{slipDt}',
@@ -100,9 +111,17 @@ SELECT '', '{slipDt}',
     1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
     COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code, '',
-    k.lsryo, '', '0', 0, 'JPY', '00',
-    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
-    '00', '01', '1', '0'
+    '', '', '', '',
+    k.lsryo, '', '0', 0, 'JPY', '00', 1, k.lsryo,
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''), '00', '01',
+    '', '', '',
+    '', '',
+    '', '', '{todayStr}',
+    '', '', '',
+    '0', '1', '0', '0',
+    '', '',
+    '', '', '', '', '', '', '', '',
+    0, 0, 0
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 2 AND k.rec_kbn = 1 AND k.keijo_f = TRUE
@@ -112,9 +131,17 @@ SELECT '', '{slipDt}',
     2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
     COALESCE(h.cr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.cr_hkm_cd, '') AS sw2_hkm_code, '',
-    k.lsryo, '', '0', 0, 'JPY', '00',
-    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
-    '00', '01', '1', '0'
+    '', '', '', '',
+    k.lsryo, '', '0', 0, 'JPY', '00', 1, k.lsryo,
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''), '00', '01',
+    '', '', '',
+    '', '',
+    '', '', '{todayStr}',
+    '', '', '',
+    '0', '1', '0', '0',
+    '', '',
+    '', '', '', '', '', '', '', '',
+    0, 0, 0
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 2 AND k.rec_kbn = 1 AND k.keijo_f = TRUE
@@ -125,9 +152,17 @@ SELECT '', '{slipDt}',
     1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
     COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code, '',
-    k.zei, '', '0', 0, 'JPY', '00',
-    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
-    '00', '01', '1', '0'
+    '', '', '', '',
+    k.zei, '', '0', 0, 'JPY', '00', 1, k.zei,
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''), '00', '01',
+    '', '', '',
+    '', '',
+    '', '', '{todayStr}',
+    '', '', '',
+    '0', '1', '0', '0',
+    '', '',
+    '', '', '', '', '', '', '', '',
+    0, 0, 0
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 2 AND k.rec_kbn = 2 AND k.keijo_f = TRUE AND k.zei > 0
@@ -137,9 +172,17 @@ SELECT '', '{slipDt}',
     2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
     COALESCE(h.cr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.cr_hkm_cd, '') AS sw2_hkm_code, '',
-    k.zei, '', '0', 0, 'JPY', '00',
-    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
-    '00', '01', '1', '0'
+    '', '', '', '',
+    k.zei, '', '0', 0, 'JPY', '00', 1, k.zei,
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''), '00', '01',
+    '', '', '',
+    '', '',
+    '', '', '{todayStr}',
+    '', '', '',
+    '0', '1', '0', '0',
+    '', '',
+    '', '', '', '', '', '', '', '',
+    0, 0, 0
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 2 AND k.rec_kbn = 2 AND k.keijo_f = TRUE AND k.zei > 0
@@ -150,9 +193,17 @@ SELECT '', '{slipDt}',
     1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
     COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code, '',
-    k.lsryo, '', '0', 0, 'JPY', '00',
-    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
-    '00', '01', '1', '0'
+    '', '', '', '',
+    k.lsryo, '', '0', 0, 'JPY', '00', 1, k.lsryo,
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''), '00', '01',
+    '', '', '',
+    '', '',
+    '', '', '{todayStr}',
+    '', '', '',
+    '0', '1', '0', '0',
+    '', '',
+    '', '', '', '', '', '', '', '',
+    0, 0, 0
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 2 AND k.rec_kbn = 3 AND k.keijo_f = TRUE
@@ -162,9 +213,17 @@ SELECT '', '{slipDt}',
     2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
     COALESCE(h.cr_kmk_cd, '') AS sw2_kmk_code,
     COALESCE(h.cr_hkm_cd, '') AS sw2_hkm_code, '',
-    k.lsryo, '', '0', 0, 'JPY', '00',
-    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
-    '00', '01', '1', '0'
+    '', '', '', '',
+    k.lsryo, '', '0', 0, 'JPY', '00', 1, k.lsryo,
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''), '00', '01',
+    '', '', '',
+    '', '',
+    '', '', '{todayStr}',
+    '', '', '',
+    '0', '1', '0', '0',
+    '', '',
+    '', '', '', '', '', '', '', '',
+    0, 0, 0
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 2 AND k.rec_kbn = 3 AND k.keijo_f = TRUE
@@ -181,7 +240,12 @@ ORDER BY sw2_den_no, sw2_gyo_no"
         Dim kikanFrom As Date
         If Not ValidateJokenAndGetKikanFrom(kikanFrom) Then Return Nothing
 
+        ' ワークテーブルクリア（4テーブル）
         _crud.ExecuteNonQuery("DELETE FROM tw_kitoku_cmsw2wrk")
+        _crud.ExecuteNonQuery("DELETE FROM tw_kitoku_apgdhwrk")
+        _crud.ExecuteNonQuery("DELETE FROM tw_kitoku_apgddwrk")
+        _crud.ExecuteNonQuery("DELETE FROM tw_kitoku_apgdswrk")
+
         _crud.ExecuteNonQuery(BuildInsertToWrkSql(kikanFrom))
 
         Dim dtCount = _crud.GetDataTable("SELECT COUNT(*) FROM tw_kitoku_cmsw2wrk")
@@ -191,10 +255,61 @@ ORDER BY sw2_den_no, sw2_gyo_no"
             Return Nothing
         End If
 
-        Dim dt = _crud.GetDataTable(
+        ' APGD系ワークテーブル生成（Access版 gAPGDHWRK作成 / gAPGDDWRK作成 / gAPGDSWRK作成 相当）
+        BuildApgdhWrk()
+        BuildApgddWrk()
+        BuildApgdsWrk()
+
+        ' 各ワークテーブルデータ取得
+        Dim dtCmsw2 = _crud.GetDataTable(
             "SELECT * FROM tw_kitoku_cmsw2wrk ORDER BY sw2_den_no, sw2_dc_kbn, sw2_gyo_no")
-        Return WriteOutputFile(dt, outputFolder)
+        Dim dtApgdh = _crud.GetDataTable(
+            "SELECT * FROM tw_kitoku_apgdhwrk ORDER BY gdh_den_no")
+        Dim dtApgdd = _crud.GetDataTable(
+            "SELECT * FROM tw_kitoku_apgddwrk ORDER BY gdd_den_no, gdd_gyo_no")
+        Dim dtApgds = _crud.GetDataTable(
+            "SELECT * FROM tw_kitoku_apgdswrk ORDER BY gds_den_no, gds_gyo_no")
+
+        ' ファイル出力（4ファイル、ファイル名はベース名から自動派生）
+        Dim baseName = txt_OUTPUT_FILE_NM.Text
+        WriteOutputFile(dtCmsw2, outputFolder)
+        FixedLengthFileWriter.WriteFile(
+            Path.Combine(outputFolder, baseName & "_APGDH.txt"), dtApgdh,
+            KitokuFixedLengthFormats.GetAPGDHWRKFields())
+        FixedLengthFileWriter.WriteFile(
+            Path.Combine(outputFolder, baseName & "_APGDD.txt"), dtApgdd,
+            KitokuFixedLengthFormats.GetAPGDDWRKFields())
+        FixedLengthFileWriter.WriteFile(
+            Path.Combine(outputFolder, baseName & "_APGDS.txt"), dtApgds,
+            KitokuFixedLengthFormats.GetAPGDSWRKFields())
+
+        Return outputFolder
     End Function
+
+    ''' <summary>CMSW2WRK を集計して APGDHWRK（金額概要）を生成する。</summary>
+    Private Sub BuildApgdhWrk()
+        _crud.ExecuteNonQuery(
+            "INSERT INTO tw_kitoku_apgdhwrk (gdh_den_no, gdh_den_date, gdh_kei_kin) " &
+            "SELECT sw2_den_no, sw2_date, SUM(sw2_kin) " &
+            "FROM tw_kitoku_cmsw2wrk WHERE sw2_dc_kbn = '1' " &
+            "GROUP BY sw2_den_no, sw2_date")
+    End Sub
+
+    ''' <summary>CMSW2WRK 借方明細行から APGDDWRK（金額詳細）を生成する。</summary>
+    Private Sub BuildApgddWrk()
+        _crud.ExecuteNonQuery(
+            "INSERT INTO tw_kitoku_apgddwrk (gdd_den_no, gdd_den_date, gdd_gyo_no, gdd_kmk_code, gdd_nuki_kin, gdd_zei_kin) " &
+            "SELECT sw2_den_no, sw2_date, sw2_gyo_no, sw2_kmk_code, sw2_kin, sw2_zei_kin " &
+            "FROM tw_kitoku_cmsw2wrk WHERE sw2_dc_kbn = '1'")
+    End Sub
+
+    ''' <summary>CMSW2WRK 貸方行から APGDSWRK（支払ワーク）を生成する。</summary>
+    Private Sub BuildApgdsWrk()
+        _crud.ExecuteNonQuery(
+            "INSERT INTO tw_kitoku_apgdswrk (gds_den_no, gds_den_date, gds_gyo_no, gds_sh_kin) " &
+            "SELECT sw2_den_no, sw2_date, sw2_gyo_no, sw2_kin " &
+            "FROM tw_kitoku_cmsw2wrk WHERE sw2_dc_kbn = '2'")
+    End Sub
 
     Private Sub LoadSettings()
         txt_SLIP_DT.Text = _settei.GetText(KEY_SLIP_DT, Format(Now, "yyyy/MM/dd"))
