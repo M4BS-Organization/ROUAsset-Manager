@@ -76,8 +76,7 @@ Partial Public Class Form_f_IDO
                 item.BuknBango1 = If(IsDBNull(row("bukn_bango1")), "", row("bukn_bango1").ToString())
                 item.BuknNm = If(IsDBNull(row("bukn_nm")), "", row("bukn_nm").ToString())
                 item.StartDt = If(IsDBNull(row("start_dt")), "", CDate(row("start_dt")).ToString("yyyy/MM/dd"))
-                item.CkaiykDt = If(IsDBNull(row("ckaiyk_dt")), "",
-                    If(TypeOf row("ckaiyk_dt") Is DBNull, "", CDate(row("ckaiyk_dt")).ToString("yyyy/MM/dd")))
+                item.CkaiykDt = If(IsDBNull(row("ckaiyk_dt")), "", CDate(row("ckaiyk_dt")).ToString("yyyy/MM/dd"))
                 item.Klsryo = If(IsDBNull(row("klsryo")), 0, CDbl(row("klsryo")))
                 item.IsChecked = False
                 _items.Add(item)
