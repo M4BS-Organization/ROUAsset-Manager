@@ -152,6 +152,25 @@
       <DependentUpon>Form1.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="FcJournalOutputBase.vb" />
+    <Compile Include="Form_fc_計上仕訳_KITOKU.Designer.vb">
+      <DependentUpon>Form_fc_計上仕訳_KITOKU.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_fc_計上仕訳_KITOKU.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU.Designer.vb">
+      <DependentUpon>Form_fc_支払仕訳_KITOKU.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU_SUB.Designer.vb">
+      <DependentUpon>Form_fc_支払仕訳_KITOKU_SUB.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_fc_支払仕訳_KITOKU_SUB.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Form_fc_TC_HREL.Designer.vb">
       <DependentUpon>Form_fc_TC_HREL.vb</DependentUpon>
     </Compile>
