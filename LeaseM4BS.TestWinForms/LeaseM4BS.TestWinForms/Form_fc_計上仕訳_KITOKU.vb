@@ -73,8 +73,12 @@ Partial Public Class Form_fc_計上仕訳_KITOKU
 
     ''' <summary>
     ''' tw_s_chuki_keijo → tw_kitoku_cmsw2wrk への INSERT SQL（計上仕訳版）
-    ''' kjkbn_id=2(資産), rec_kbn IN(1,2,3), keijo_f=TRUE が対象。
-    ''' TODO: Access版 m仕訳データ作成（計上仕訳）と照合して正確な列マッピングに更新する
+    ''' Access版 m仕訳データ作成（計上仕訳）相当。
+    ''' 3種パターンを rec_kbn で分岐:
+    '''   rec_kbn=1: 開始計上（リース資産/リース債務）
+    '''   rec_kbn=2: 税一括（仮払消費税/リース未払金）
+    '''   rec_kbn=3: 減価償却（減価償却費/減価償却累計額）
+    ''' t_haifu_keijo の科目コードは kjkbn_id=2 の行から取得。
     ''' </summary>
     Protected Overrides Function BuildInsertToWrkSql(kikanFrom As Date) As String
         Dim slipDt = If(String.IsNullOrWhiteSpace(txt_SLIP_DT.Text),
@@ -90,27 +94,80 @@ INSERT INTO tw_kitoku_cmsw2wrk (
     sw2_cur_code, sw2_rate_type, sw2_tekiyo1, sw2_tekiyo2,
     sw2_grp_code, sw2_sys_kbn, sw2_den_kbn, sw2_rec_level
 )
+-- パターン1: 開始計上 (rec_kbn=1) 借方: リース資産 / 貸方: リース債務 / 金額: lsryo
 SELECT '', '{slipDt}',
     LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
-    1, '1',
-    COALESCE(h.dr_kmk_cd, ''), COALESCE(h.dr_hkm_cd, ''), '',
-    k.lsryo, '', '0', k.zei, 'JPY', '00',
+    1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
+    COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
+    COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code, '',
+    k.lsryo, '', '0', 0, 'JPY', '00',
     COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
     '00', '01', '1', '0'
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
-WHERE k.kjkbn_id = 2 AND k.rec_kbn IN (1, 2, 3) AND k.keijo_f = TRUE
+WHERE k.kjkbn_id = 2 AND k.rec_kbn = 1 AND k.keijo_f = TRUE
 UNION ALL
 SELECT '', '{slipDt}',
     LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
-    2, '2',
-    COALESCE(h.cr_kmk_cd, ''), COALESCE(h.cr_hkm_cd, ''), '',
-    k.lsryo + k.zei, '', '0', 0, 'JPY', '00',
+    2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
+    COALESCE(h.cr_kmk_cd, '') AS sw2_kmk_code,
+    COALESCE(h.cr_hkm_cd, '') AS sw2_hkm_code, '',
+    k.lsryo, '', '0', 0, 'JPY', '00',
     COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
     '00', '01', '1', '0'
 FROM tw_s_chuki_keijo k
 LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
-WHERE k.kjkbn_id = 2 AND k.rec_kbn IN (1, 2, 3) AND k.keijo_f = TRUE
+WHERE k.kjkbn_id = 2 AND k.rec_kbn = 1 AND k.keijo_f = TRUE
+UNION ALL
+-- パターン2: 税一括 (rec_kbn=2) 借方: 仮払消費税 / 貸方: リース未払金 / 金額: zei
+SELECT '', '{slipDt}',
+    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
+    1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
+    COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
+    COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code, '',
+    k.zei, '', '0', 0, 'JPY', '00',
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
+    '00', '01', '1', '0'
+FROM tw_s_chuki_keijo k
+LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
+WHERE k.kjkbn_id = 2 AND k.rec_kbn = 2 AND k.keijo_f = TRUE AND k.zei > 0
+UNION ALL
+SELECT '', '{slipDt}',
+    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
+    2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
+    COALESCE(h.cr_kmk_cd, '') AS sw2_kmk_code,
+    COALESCE(h.cr_hkm_cd, '') AS sw2_hkm_code, '',
+    k.zei, '', '0', 0, 'JPY', '00',
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
+    '00', '01', '1', '0'
+FROM tw_s_chuki_keijo k
+LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
+WHERE k.kjkbn_id = 2 AND k.rec_kbn = 2 AND k.keijo_f = TRUE AND k.zei > 0
+UNION ALL
+-- パターン3: 減価償却 (rec_kbn=3) 借方: 減価償却費 / 貸方: 減価償却累計額 / 金額: lsryo
+SELECT '', '{slipDt}',
+    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
+    1 AS sw2_gyo_no, '1' AS sw2_dc_kbn,
+    COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
+    COALESCE(h.dr_hkm_cd, '') AS sw2_hkm_code, '',
+    k.lsryo, '', '0', 0, 'JPY', '00',
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
+    '00', '01', '1', '0'
+FROM tw_s_chuki_keijo k
+LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
+WHERE k.kjkbn_id = 2 AND k.rec_kbn = 3 AND k.keijo_f = TRUE
+UNION ALL
+SELECT '', '{slipDt}',
+    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
+    2 AS sw2_gyo_no, '2' AS sw2_dc_kbn,
+    COALESCE(h.cr_kmk_cd, '') AS sw2_kmk_code,
+    COALESCE(h.cr_hkm_cd, '') AS sw2_hkm_code, '',
+    k.lsryo, '', '0', 0, 'JPY', '00',
+    COALESCE(k.bukn_nm, ''), COALESCE(k.kykbnl_no, ''),
+    '00', '01', '1', '0'
+FROM tw_s_chuki_keijo k
+LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
+WHERE k.kjkbn_id = 2 AND k.rec_kbn = 3 AND k.keijo_f = TRUE
 ORDER BY sw2_den_no, sw2_gyo_no"
     End Function
 

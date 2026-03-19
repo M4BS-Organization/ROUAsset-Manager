@@ -124,6 +124,7 @@
     <Compile Include="KlsryoTypes.vb" />
     <Compile Include="FixedLengthFileWriter.vb" />
     <Compile Include="KitokuFixedLengthFormats.vb" />
+    <Compile Include="KitokuJournalHelper.vb" />
     <Compile Include="AmortizationScheduleBuilder.vb" />
     <Compile Include="ChukiCalcEngine.vb" />
     <Compile Include="GsonScheduleBuilder.vb" />

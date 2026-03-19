@@ -104,6 +104,7 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
     ''' tw_s_chuki_keijo → tw_kitoku_cmsw2wrk への INSERT SQL を返す。
     ''' Access版 m仕訳データ作成（支払仕訳）相当。
     ''' kjkbn_id=1(費用), rec_kbn IN(1,3)(定額・付随費用), keijo_f=TRUE が対象。
+    ''' 6種仕訳パターン（売買/賃貸 × 現預金/未払金 × 消費税一括有無）を CASE WHEN で実装。
     ''' </summary>
     Protected Overrides Function BuildInsertToWrkSql(kikanFrom As Date) As String
         Dim slipDt = If(String.IsNullOrWhiteSpace(txt_SLIP_DT.Text),
@@ -111,11 +112,24 @@ Partial Public Class Form_fc_支払仕訳_KITOKU
                         txt_SLIP_DT.Text)
         Dim slipNoStart = CInt(If(String.IsNullOrWhiteSpace(txt_SLIP_NO_START_VAL.Text), "1",
                                   txt_SLIP_NO_START_VAL.Text))
-        Dim kamokuCd = txt_KAMOKU_CD.Text
         Dim bshoCd = txt_BSHO_CD.Text
 
-        ' TODO: Access版 m仕訳データ作成（支払仕訳）と照合して正確な列マッピングに更新する
-        ' 借方行（リース費用）と貸方行（未払金）を UNION ALL で生成
+        ' Access版 pc_仕訳出力.gDivKMK_CD 相当: "4160-001" → kmkCd="4160", hkmCd="001"
+        Dim kmkCd As String = ""
+        Dim hkmCd As String = ""
+        KitokuJournalHelper.DivKamokuCd(txt_KAMOKU_CD.Text, kmkCd, hkmCd)
+
+        ' 計上期間開始月（現預金 vs 未払金 判定に使用）
+        Dim kikanFromStr = Format(kikanFrom, "yyyy-MM-dd")
+
+        '
+        ' 6種仕訳パターン説明:
+        '   leakbn_id=1          → 売買（移転ファイナンスリース）
+        '   leakbn_id IN (3,4)   → 賃貸（移転外/オペレーティングリース）
+        '   shri_dt 同月          → 現預金支払い（貸方=現預金科目 h.cr_kmk_cd）
+        '   shri_dt 翌月以降      → 未払金計上（貸方=入力未払金科目 kmkCd）
+        '   zei = 0 かつ 賃貸     → 消費税一括無（消費税ゼロ扱い）
+        '
         Return $"
 INSERT INTO tw_kitoku_cmsw2wrk (
     sw2_kai_code,
@@ -141,10 +155,11 @@ INSERT INTO tw_kitoku_cmsw2wrk (
     sw2_tori_kbn,
     sw2_tori_code
 )
+-- 借方行: リース費用（全6パターン共通）
 SELECT
-    '',
-    '{slipDt}',
-    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
+    '' AS sw2_kai_code,
+    '{slipDt}' AS sw2_date,
+    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0') AS sw2_den_no,
     1 AS sw2_gyo_no,
     '1' AS sw2_dc_kbn,
     COALESCE(h.dr_kmk_cd, '') AS sw2_kmk_code,
@@ -153,7 +168,8 @@ SELECT
     k.lsryo AS sw2_kin,
     '' AS sw2_zei_code,
     '0' AS sw2_zei_kbn,
-    k.zei AS sw2_zei_kin,
+    -- 賃貸×消費税一括無（zei=0）は消費税ゼロ、その他は zei をそのまま計上
+    CASE WHEN k.leakbn_id IN (3, 4) AND k.zei = 0 THEN 0 ELSE k.zei END AS sw2_zei_kin,
     'JPY' AS sw2_cur_code,
     '00' AS sw2_rate_type,
     COALESCE(k.bukn_nm, '') AS sw2_tekiyo1,
@@ -170,16 +186,28 @@ WHERE k.kjkbn_id = 1
   AND k.rec_kbn IN (1, 3)
   AND k.keijo_f = TRUE
 UNION ALL
+-- 貸方行: 現預金（shri_dt同月）または未払金（翌月以降）、消費税一括有無で金額分岐
 SELECT
-    '',
-    '{slipDt}',
-    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0'),
+    '' AS sw2_kai_code,
+    '{slipDt}' AS sw2_date,
+    LPAD(({slipNoStart} + ROW_NUMBER() OVER (ORDER BY k.kykm_id) - 1)::TEXT, 8, '0') AS sw2_den_no,
     2 AS sw2_gyo_no,
     '2' AS sw2_dc_kbn,
-    '{kamokuCd}' AS sw2_kmk_code,
-    '' AS sw2_hkm_code,
+    -- 現預金: shri_dt と kikanFrom が同月 → h.cr_kmk_cd
+    -- 未払金: shri_dt が翌月以降 → 入力値 kmkCd
+    CASE
+        WHEN DATE_TRUNC('month', k.shri_dt) = DATE_TRUNC('month', '{kikanFromStr}'::date)
+        THEN COALESCE(h.cr_kmk_cd, '')
+        ELSE '{kmkCd}'
+    END AS sw2_kmk_code,
+    CASE
+        WHEN DATE_TRUNC('month', k.shri_dt) = DATE_TRUNC('month', '{kikanFromStr}'::date)
+        THEN COALESCE(h.cr_hkm_cd, '')
+        ELSE '{hkmCd}'
+    END AS sw2_hkm_code,
     '{bshoCd}' AS sw2_bmn_code,
-    k.lsryo + k.zei AS sw2_kin,
+    -- 賃貸×消費税一括無は lsryo のみ、それ以外は税込（lsryo + zei）
+    CASE WHEN k.leakbn_id IN (3, 4) AND k.zei = 0 THEN k.lsryo ELSE k.lsryo + k.zei END AS sw2_kin,
     '' AS sw2_zei_code,
     '0' AS sw2_zei_kbn,
     0 AS sw2_zei_kin,
@@ -194,6 +222,7 @@ SELECT
     '' AS sw2_tori_kbn,
     '' AS sw2_tori_code
 FROM tw_s_chuki_keijo k
+LEFT JOIN t_haifu_keijo h ON h.lcpt_id = k.lcpt_id AND h.kjkbn_id = k.kjkbn_id
 WHERE k.kjkbn_id = 1
   AND k.rec_kbn IN (1, 3)
   AND k.keijo_f = TRUE
