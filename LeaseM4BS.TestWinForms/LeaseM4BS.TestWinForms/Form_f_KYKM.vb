@@ -436,9 +436,77 @@ Partial Public Class Form_f_KYKM
 
     Private Sub cmd_HAIF_ADD_Click(sender As Object, e As EventArgs) Handles cmd_HAIF_ADD.Click
         If _currentIndex < 0 OrElse _currentIndex >= _records.Count Then Return
-        Dim frm As New Form_f_KYKM_SUB()
-        frm.SetParams(Convert.ToDouble(txt_KYKM_ID.Text))
-        frm.ShowDialog(Me)
+        Dim kykmId As Integer = 0
+        Integer.TryParse(txt_KYKM_ID.Text, kykmId)
+        If kykmId = 0 Then Return
+
+        Try
+            ' 親物件の kykh_id, kykh_no, saikaisu, kykm_no, 金額を取得
+            Dim parentDt = _crud.GetDataTable(
+                "SELECT kykh_id, kykh_no, saikaisu, kykm_no, " &
+                "       COALESCE(b_klsryo,0) AS b_klsryo, COALESCE(b_kzei,0) AS b_kzei, " &
+                "       COALESCE(b_mlsryo,0) AS b_mlsryo, COALESCE(b_mzei,0) AS b_mzei " &
+                "FROM d_kykm WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", kykmId)})
+            If parentDt Is Nothing OrElse parentDt.Rows.Count = 0 Then Return
+            Dim pr = parentDt.Rows(0)
+
+            ' 次の line_id を採番
+            Dim maxLineObj = _crud.ExecuteScalar(Of Object)(
+                "SELECT COALESCE(MAX(line_id), 0) FROM d_haif WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", kykmId)})
+            Dim newLineId As Integer = Convert.ToInt32(maxLineObj) + 1
+
+            ' 既存の配賦率合計を取得 → 残り配賦率を算出
+            Dim sumObj = _crud.ExecuteScalar(Of Object)(
+                "SELECT COALESCE(SUM(haifritu), 0) FROM d_haif WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", kykmId)})
+            Dim sumHaifritu As Double = Convert.ToDouble(sumObj)
+            Dim newHaifritu As Double = Math.Max(100.0 - sumHaifritu, 0.0)
+
+            ' 金額 = 親物件金額 × 配賦率 / 100
+            Dim bKlsryo As Double = Convert.ToDouble(pr("b_klsryo"))
+            Dim bKzei As Double = Convert.ToDouble(pr("b_kzei"))
+            Dim bMlsryo As Double = Convert.ToDouble(pr("b_mlsryo"))
+            Dim bMzei As Double = Convert.ToDouble(pr("b_mzei"))
+
+            Dim hKlsryo As Double = Math.Floor(bKlsryo * newHaifritu / 100.0)
+            Dim hKzei As Double = Math.Floor(bKzei * newHaifritu / 100.0)
+            Dim hMlsryo As Double = Math.Floor(bMlsryo * newHaifritu / 100.0)
+            Dim hMzei As Double = Math.Floor(bMzei * newHaifritu / 100.0)
+
+            Dim sql As String =
+                "INSERT INTO d_haif (kykm_id, line_id, kykh_id, kykh_no, saikaisu, kykm_no, " &
+                "  haifritu, h_klsryo, h_kzei, h_klsryo_zkomi, " &
+                "  h_mlsryo, h_mzei, h_mlsryo_zkomi, " &
+                "  h_create_id, h_create_dt, h_update_id, h_update_dt) " &
+                "VALUES (@kykm_id, @line_id, @kykh_id, @kykh_no, @saikaisu, @kykm_no, " &
+                "  @haifritu, @h_klsryo, @h_kzei, @h_klsryo_zkomi, " &
+                "  @h_mlsryo, @h_mzei, @h_mlsryo_zkomi, " &
+                "  0, NOW(), 0, NOW())"
+            Dim prm As New List(Of NpgsqlParameter)
+            prm.Add(New NpgsqlParameter("@kykm_id", kykmId))
+            prm.Add(New NpgsqlParameter("@line_id", CShort(newLineId)))
+            prm.Add(New NpgsqlParameter("@kykh_id", If(IsDBNull(pr("kykh_id")), CObj(DBNull.Value), pr("kykh_id"))))
+            prm.Add(New NpgsqlParameter("@kykh_no", If(IsDBNull(pr("kykh_no")), CObj(DBNull.Value), pr("kykh_no"))))
+            prm.Add(New NpgsqlParameter("@saikaisu", If(IsDBNull(pr("saikaisu")), CObj(DBNull.Value), pr("saikaisu"))))
+            prm.Add(New NpgsqlParameter("@kykm_no", If(IsDBNull(pr("kykm_no")), CObj(DBNull.Value), pr("kykm_no"))))
+            prm.Add(New NpgsqlParameter("@haifritu", newHaifritu))
+            prm.Add(New NpgsqlParameter("@h_klsryo", hKlsryo))
+            prm.Add(New NpgsqlParameter("@h_kzei", hKzei))
+            prm.Add(New NpgsqlParameter("@h_klsryo_zkomi", hKlsryo + hKzei))
+            prm.Add(New NpgsqlParameter("@h_mlsryo", hMlsryo))
+            prm.Add(New NpgsqlParameter("@h_mzei", hMzei))
+            prm.Add(New NpgsqlParameter("@h_mlsryo_zkomi", hMlsryo + hMzei))
+            _crud.ExecuteNonQuery(sql, prm)
+
+            ' 追加後、配賦一覧を表示
+            Dim frm As New Form_f_KYKM_SUB()
+            frm.SetParams(kykmId)
+            frm.ShowDialog(Me)
+        Catch ex As Exception
+            MessageBox.Show("配賦行追加エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_HAIF_DEL_Click(sender As Object, e As EventArgs) Handles cmd_HAIF_DEL.Click
