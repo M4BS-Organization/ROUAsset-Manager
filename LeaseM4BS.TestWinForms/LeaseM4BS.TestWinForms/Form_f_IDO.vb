@@ -117,24 +117,37 @@ Partial Public Class Form_f_IDO
 
     Private Sub LoadIdobjects()
         Try
+            ' ホワイトリスト検証: RadioButton由来だが安全のためチェック
             Dim bcatCol As String
             If オプション416.Checked Then
                 bcatCol = "bcat1_id"
             Else
                 bcatCol = "hkbcat1_id"
             End If
+            If bcatCol <> "bcat1_id" AndAlso bcatCol <> "hkbcat1_id" Then
+                Throw New ArgumentException("不正なカラム名: " & bcatCol)
+            End If
 
-            ' 移動元の部署名を取得するため、テキストボックスから部署IDを読み取る
-            ' ここではFrom TextBoxにセットされた値をベースに検索
+            ' 移動元の部署IDでフィルタ（テキストボックスの値を使用）
+            Dim prms As New List(Of NpgsqlParameter)
+            Dim filterClause As String = ""
+            Dim bcat1Val As Double
+            If Not String.IsNullOrWhiteSpace(txt_BCAT1_NM_From.Text) AndAlso
+               Double.TryParse(txt_BCAT1_NM_From.Text, bcat1Val) Then
+                filterClause = " AND dk." & bcatCol & " = @bcat_val"
+                prms.Add(New NpgsqlParameter("@bcat_val", bcat1Val))
+            End If
+
             Dim sql = "SELECT dk.kykm_id, dk.kykm_no, dk.saikaisu, " &
                       "dk.bukn_bango1, dk.bukn_nm, " &
                       "dkh.kishu_dt AS start_dt, dk.ckaiyk_dt, dkh.klsryo " &
                       "FROM d_kykm dk " &
                       "INNER JOIN d_kykh dkh ON dk.kykm_id = dkh.kykm_id " &
-                      "WHERE dk." & bcatCol & " IS NOT NULL " &
-                      "ORDER BY dk.kykm_no"
+                      "WHERE dk." & bcatCol & " IS NOT NULL" &
+                      filterClause &
+                      " ORDER BY dk.kykm_no"
 
-            Dim dt = _crud.GetDataTable(sql)
+            Dim dt = _crud.GetDataTable(sql, prms)
 
             _items.Clear()
             For Each row As DataRow In dt.Rows
@@ -144,8 +157,8 @@ Partial Public Class Form_f_IDO
                 item.Saikaisu = If(IsDBNull(row("saikaisu")), 0, CInt(row("saikaisu")))
                 item.BuknBango1 = If(IsDBNull(row("bukn_bango1")), "", row("bukn_bango1").ToString())
                 item.BuknNm = If(IsDBNull(row("bukn_nm")), "", row("bukn_nm").ToString())
-                item.StartDt = If(IsDBNull(row("start_dt")), "", CDate(row("start_dt")).ToString("yyyy/MM/dd"))
-                item.CkaiykDt = If(IsDBNull(row("ckaiyk_dt")), "", CDate(row("ckaiyk_dt")).ToString("yyyy/MM/dd"))
+                item.StartDt = ToDateStr(row("start_dt"))
+                item.CkaiykDt = ToDateStr(row("ckaiyk_dt"))
                 item.Klsryo = If(IsDBNull(row("klsryo")), 0, CDbl(row("klsryo")))
                 item.IsChecked = False
                 _items.Add(item)

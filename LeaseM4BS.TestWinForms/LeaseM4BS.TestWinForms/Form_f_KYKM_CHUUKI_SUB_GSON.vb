@@ -48,7 +48,7 @@ Partial Public Class Form_f_KYKM_CHUUKI_SUB_GSON
             For Each row As DataRow In dt.Rows
                 Dim r As New GsonRow()
                 r.LineId = CInt(row("line_id"))
-                r.GsonDt = If(IsDBNull(row("gson_dt")), "", CDate(row("gson_dt")).ToString("yyyy/MM"))
+                r.GsonDt = ToDateStr(row("gson_dt"), "yyyy/MM")
                 r.GsonTmg = If(IsDBNull(row("gson_tmg")), 0, CInt(row("gson_tmg")))
                 r.GsonRyo = If(IsDBNull(row("gson_ryo")), 0, CDbl(row("gson_ryo")))
                 r.GsonRkei = If(IsDBNull(row("gson_rkei")), 0, CDbl(row("gson_rkei")))

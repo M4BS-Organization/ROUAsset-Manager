@@ -40,7 +40,7 @@ Partial Public Class Form_f_REF_D_KYKM_CHUUKI_SUB_GSON
             If dt.Rows.Count > 0 Then
                 Dim row = dt.Rows(0)
                 txt_LINE_ID.Text = If(IsDBNull(row("line_id")), "", row("line_id").ToString())
-                txt_GSON_DT.Text = If(IsDBNull(row("gson_dt")), "", CDate(row("gson_dt")).ToString("yyyy/MM"))
+                txt_GSON_DT.Text = ToDateStr(row("gson_dt"), "yyyy/MM")
                 txt_GSON_RYO.Text = If(IsDBNull(row("gson_ryo")), "", row("gson_ryo").ToString())
                 txt_GSON_RKEI.Text = If(IsDBNull(row("gson_rkei")), "", row("gson_rkei").ToString())
             End If

@@ -91,14 +91,21 @@ Partial Public Class Form_f_HENL
             For Each row As DataRow In dt.Rows
                 Dim r As New HenlRow()
                 r.LineId = CInt(row("line_id"))
-                r.ShriDt1 = If(IsDBNull(row("shri_dt1")), "", CDate(row("shri_dt1")).ToString("yyyy/MM/dd"))
+                r.ShriDt1 = ToDateStr(row("shri_dt1"))
                 r.Klsryo = If(IsDBNull(row("klsryo")), 0, CDbl(row("klsryo")))
                 r.Kzei = If(IsDBNull(row("kzei")), 0, CDbl(row("kzei")))
                 r.Zritu = If(IsDBNull(row("zritu")), 0, CDbl(row("zritu")))
                 r.ShriKn = If(IsDBNull(row("shri_kn")), 0, CInt(row("shri_kn")))
                 r.SshriKn = If(IsDBNull(row("sshri_kn")), 0, CInt(row("sshri_kn")))
                 r.ShriCnt = If(IsDBNull(row("shri_cnt")), 0, CInt(row("shri_cnt")))
-                ' 最終支払日・合計は計算
+                ' 最終支払日を計算 (開始日 + 支払間隔 × 支払回数)
+                If Not String.IsNullOrEmpty(r.ShriDt1) AndAlso r.ShriKn > 0 AndAlso r.ShriCnt > 0 Then
+                    Dim startDt As Date
+                    If Date.TryParse(r.ShriDt1, startDt) Then
+                        r.ShriEnDt = startDt.AddMonths(r.ShriKn * (r.ShriCnt - 1)).ToString("yyyy/MM/dd")
+                    End If
+                End If
+                ' 合計は計算
                 r.KlsryoGokei = r.Klsryo * r.ShriCnt
                 r.KzeiGokei = r.Kzei * r.ShriCnt
                 r.KlsryoZkomiGokei = (r.Klsryo + r.Kzei) * r.ShriCnt
@@ -278,6 +285,7 @@ Partial Public Class Form_f_HENL
             prms.Add(New NpgsqlParameter("@kzei", r.Kzei))
             prms.Add(New NpgsqlParameter("@zritu", r.Zritu))
             prms.Add(New NpgsqlParameter("@sshri_kn", r.SshriKn))
+            prms.Add(New NpgsqlParameter("@shri_kn", r.ShriKn))
 
             Dim shriDt As Object = DBNull.Value
             If Not String.IsNullOrEmpty(r.ShriDt1) Then
@@ -288,7 +296,7 @@ Partial Public Class Form_f_HENL
 
             _crud.ExecuteNonQuery(
                 "UPDATE d_henl SET klsryo = @klsryo, kzei = @kzei, zritu = @zritu, " &
-                "sshri_kn = @sshri_kn, shri_dt1 = @shri_dt1 " &
+                "sshri_kn = @sshri_kn, shri_kn = @shri_kn, shri_dt1 = @shri_dt1 " &
                 "WHERE kykm_id = @kykm_id AND line_id = @line_id", prms)
         Catch ex As Exception
             MessageBox.Show("保存エラー: " & ex.Message, "エラー",

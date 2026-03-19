@@ -10,8 +10,6 @@ Partial Public Class Form_f_HENF
 
     ' 呼び出し元がセットするプロパティ
     Public Property KykmId As Double
-    Public Property HenfLineId As Integer
-
     Private _crud As New CrudHelper()
     Private _rows As New List(Of HenfRow)
     Private _currentRowIndex As Integer = 0
@@ -103,7 +101,7 @@ Partial Public Class Form_f_HENF
                 txt_F_GSHA_NM.Text = If(IsDBNull(row("f_gsha_nm")), "", row("f_gsha_nm").ToString())
                 txt_KYKBNF.Text = If(IsDBNull(row("kykbnf")), "", row("kykbnf").ToString())
                 txt_KOZA_NM.Text = If(IsDBNull(row("koza_nm")), "", row("koza_nm").ToString())
-                txt_START_DT.Text = If(IsDBNull(row("start_dt")), "", CDate(row("start_dt")).ToString("yyyy/MM/dd"))
+                txt_START_DT.Text = ToDateStr(row("start_dt"))
                 txt_LKIKAN.Text = If(IsDBNull(row("lkikan")), "", row("lkikan").ToString())
                 txt_SAIKAISU.Text = If(IsDBNull(row("saikaisu")), "", row("saikaisu").ToString())
                 chk_HSZEI_KJKBN_ID_MS_F.Checked = If(IsDBNull(row("hszei_kjkbn_id_ms_f")), False,
@@ -126,13 +124,20 @@ Partial Public Class Form_f_HENF
             For Each row As DataRow In dt.Rows
                 Dim r As New HenfRow()
                 r.LineId = CInt(row("line_id"))
-                r.ShriDt1 = If(IsDBNull(row("shri_dt1")), "", CDate(row("shri_dt1")).ToString("yyyy/MM/dd"))
+                r.ShriDt1 = ToDateStr(row("shri_dt1"))
                 r.Klsryo = If(IsDBNull(row("klsryo")), 0, CDbl(row("klsryo")))
                 r.Kzei = If(IsDBNull(row("kzei")), 0, CDbl(row("kzei")))
                 r.Zritu = If(IsDBNull(row("zritu")), 0, CDbl(row("zritu")))
                 r.ShriKn = If(IsDBNull(row("shri_kn")), 0, CInt(row("shri_kn")))
                 r.SshriKn = If(IsDBNull(row("sshri_kn")), 0, CInt(row("sshri_kn")))
                 r.ShriCnt = If(IsDBNull(row("shri_cnt")), 0, CInt(row("shri_cnt")))
+                ' 最終支払日を計算 (開始日 + 支払間隔 × 支払回数)
+                If Not String.IsNullOrEmpty(r.ShriDt1) AndAlso r.ShriKn > 0 AndAlso r.ShriCnt > 0 Then
+                    Dim startDt As Date
+                    If Date.TryParse(r.ShriDt1, startDt) Then
+                        r.ShriEnDt = startDt.AddMonths(r.ShriKn * (r.ShriCnt - 1)).ToString("yyyy/MM/dd")
+                    End If
+                End If
                 r.KlsryoGokei = r.Klsryo * r.ShriCnt
                 r.KzeiGokei = r.Kzei * r.ShriCnt
                 r.KlsryoZkomiGokei = (r.Klsryo + r.Kzei) * r.ShriCnt
@@ -298,6 +303,7 @@ Partial Public Class Form_f_HENF
             prms.Add(New NpgsqlParameter("@kzei", r.Kzei))
             prms.Add(New NpgsqlParameter("@zritu", r.Zritu))
             prms.Add(New NpgsqlParameter("@sshri_kn", r.SshriKn))
+            prms.Add(New NpgsqlParameter("@shri_kn", r.ShriKn))
 
             Dim shriDt As Object = DBNull.Value
             If Not String.IsNullOrEmpty(r.ShriDt1) Then
@@ -308,7 +314,7 @@ Partial Public Class Form_f_HENF
 
             _crud.ExecuteNonQuery(
                 "UPDATE d_henf SET klsryo = @klsryo, kzei = @kzei, zritu = @zritu, " &
-                "sshri_kn = @sshri_kn, shri_dt1 = @shri_dt1 " &
+                "sshri_kn = @sshri_kn, shri_kn = @shri_kn, shri_dt1 = @shri_dt1 " &
                 "WHERE kykm_id = @kykm_id AND line_id = @line_id", prms)
         Catch ex As Exception
             MessageBox.Show("保存エラー: " & ex.Message, "エラー",
