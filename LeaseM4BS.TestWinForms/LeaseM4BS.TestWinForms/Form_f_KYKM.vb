@@ -415,7 +415,13 @@ Partial Public Class Form_f_KYKM
     End Sub
 
     Private Sub cmd_CHUUKI_Click(sender As Object, e As EventArgs) Handles cmd_CHUUKI.Click
-        MessageBox.Show("注記機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _currentIndex < 0 OrElse _currentIndex >= _records.Count Then Return
+        Dim kykmId As Integer = 0
+        Integer.TryParse(txt_KYKM_ID.Text, kykmId)
+        If kykmId = 0 Then Return
+        Dim frm As New Form_f_KYKM_CHUUKI()
+        frm.SetParams(kykmId)
+        frm.ShowDialog(Me)
     End Sub
 
     Private Sub cmd_分割_Click(sender As Object, e As EventArgs) Handles cmd_分割.Click
