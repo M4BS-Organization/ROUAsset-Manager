@@ -67,12 +67,16 @@ Partial Public Class Form_f_経費明細表_JOKEN
 
     ' [キャンセル]ボタン
     Private Sub cmd_CANCEL_Click(sender As Object, e As EventArgs) Handles cmd_CANCEL.Click
+        If _prevForm IsNot Nothing Then
+            _prevForm.Dispose()
+            _prevForm = Nothing
+        End If
         Me.Close()
     End Sub
 
     ' [前回集計結果]ボタン
     Private Sub cmd_ZEN_Click(sender As Object, e As EventArgs) Handles cmd_ZEN.Click
-        If _prevForm IsNot Nothing AndAlso Not _prevForm.IsDisposed Then
+        If _prevForm IsNot Nothing Then
             _prevForm.ShowDialog()
         End If
     End Sub

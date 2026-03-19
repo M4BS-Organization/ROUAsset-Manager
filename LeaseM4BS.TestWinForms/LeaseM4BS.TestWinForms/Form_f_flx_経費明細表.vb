@@ -20,7 +20,6 @@ Partial Public Class Form_f_flx_経費明細表
     End Sub
 
     Private Sub Form_f_flx_経費明細表_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        If Not String.IsNullOrEmpty(LabelText) Then Me.Text = LabelText
         SearchData()
         SecurityChecker.ApplyListLimit(Me)
     End Sub
@@ -44,18 +43,14 @@ Partial Public Class Form_f_flx_経費明細表
         prms.Add(New NpgsqlParameter("@dtFrom", GetMonthStart(DtFrom)))
         prms.Add(New NpgsqlParameter("@dtTo", GetMonthEnd(DtTo)))
 
-        ' 集計期間の月数（パラメータ化）
+        ' 集計期間の月数
         Dim months As Integer = GetDuration(DtFrom, DtTo)
         If months < 1 Then months = 1
         prms.Add(New NpgsqlParameter("@months", months))
 
-        ' JOKEN列: 条件テキストをパラメータで全行に表示
-        prms.Add(New NpgsqlParameter("@joken", If(LabelText, "")))
-
         Dim sb As New StringBuilder()
 
         sb.AppendLine("SELECT ")
-        sb.AppendLine("  @joken AS JOKEN, ")
         sb.AppendLine("  COALESCE(kykm.kykm_no, 0) AS KYKM_NO, ")
         sb.AppendLine("  COALESCE(kykm.saikaisu, 0) AS SAIKAISU, ")
         sb.AppendLine("  COALESCE(haif.line_id, 0) AS LINE_ID, ")
