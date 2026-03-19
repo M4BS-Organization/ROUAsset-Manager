@@ -171,15 +171,16 @@ Partial Public Class Form_f_LOGIN_JET
             }
             _crud.ExecuteNonQuery(updateSql, updatePrms)
 
+            ' ユーザー存在有無の情報漏洩を防ぐため、すべてのケースで同一メッセージを表示
             If loginAttempts > 0 Then
                 Dim remaining As Integer = loginAttempts - errCt
                 If remaining > 0 Then
-                    MessageBox.Show("パスワードが正しくありません。" & vbCrLf &
+                    MessageBox.Show("利用者コードまたはパスワードが正しくありません。" & vbCrLf &
                                     $"残り試行回数: {remaining} 回",
                                     "認証エラー",
                                     MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Else
-                    MessageBox.Show("パスワードが正しくありません。" & vbCrLf &
+                    MessageBox.Show("利用者コードまたはパスワードが正しくありません。" & vbCrLf &
                                     "ログイン試行回数の上限に達しました。" & vbCrLf &
                                     "システム管理者に連絡してください。",
                                     "アカウントロック",
@@ -187,7 +188,7 @@ Partial Public Class Form_f_LOGIN_JET
                 End If
             Else
                 ' loginAttempts = 0 は試行回数無制限
-                MessageBox.Show("パスワードが正しくありません。",
+                MessageBox.Show("利用者コードまたはパスワードが正しくありません。",
                                 "認証エラー",
                                 MessageBoxButtons.OK, MessageBoxIcon.Warning)
             End If
