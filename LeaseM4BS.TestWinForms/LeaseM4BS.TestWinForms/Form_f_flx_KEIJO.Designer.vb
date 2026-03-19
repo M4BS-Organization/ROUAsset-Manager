@@ -53,6 +53,20 @@ Partial Class Form_f_flx_KEIJO
         Me.col_ZRITU = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.col_SHRI_DT = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.col_SHHO_NM = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_TRHK_KBN = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_KEIJO_DT = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_SYUTOK_ZOU = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_SYUTOK_GEN = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_ZEI_KHRI = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_ZEI_MHRI = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_LGNPN_TOKI = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_LGNPN_ZZAN = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_LGNPN_ZAN = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_LRSOK_TOKI = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_GRUIKEI_ZOU = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_GSON_RKEI_ZOU = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_GSON_TK_TOKI = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.col_BOKA_ZAN = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.pnlHeader = New System.Windows.Forms.Panel()
         Me.lblSearch = New System.Windows.Forms.Label()
         Me.txt_SEARCH = New System.Windows.Forms.TextBox()
@@ -73,7 +87,7 @@ Partial Class Form_f_flx_KEIJO
         Me.dgv_LIST.AllowUserToAddRows = False
         Me.dgv_LIST.AllowUserToDeleteRows = False
         Me.dgv_LIST.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgv_LIST.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.col_KYKM_NO, Me.col_SAIKAISU, Me.col_LINE_ID, Me.col_KKBN_NM, Me.col_REC_KBN_STR, Me.col_KJKBN_NM, Me.col_HOREI_KBN, Me.col_LEAKBN_NM, Me.col_KYKBNL, Me.col_LCPT1_NM, Me.col_BUKN_NM, Me.col_B_BCAT_NM, Me.col_H_BCAT_NM, Me.col_HKMK, Me.col_START_DT, Me.col_END_DT, Me.col_SEIKYU_MONTH, Me.col_CKAIYK_DT, Me.col_SUMIKAISU, Me.col_B_KNYUKN, Me.col_LSRYO_TOTAL, Me.col_LSRYO_ZZAN, Me.col_LSRYO_TOKI, Me.col_ZEI_TOKI, Me.col_ZKOMI_TOKI, Me.col_LSRYO_ZAN, Me.col_LSRYO_ZAN1NAI, Me.col_ZRITU, Me.col_SHRI_DT, Me.col_SHHO_NM})
+        Me.dgv_LIST.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.col_KYKM_NO, Me.col_SAIKAISU, Me.col_LINE_ID, Me.col_KKBN_NM, Me.col_REC_KBN_STR, Me.col_KJKBN_NM, Me.col_HOREI_KBN, Me.col_LEAKBN_NM, Me.col_TRHK_KBN, Me.col_KYKBNL, Me.col_LCPT1_NM, Me.col_BUKN_NM, Me.col_B_BCAT_NM, Me.col_H_BCAT_NM, Me.col_HKMK, Me.col_START_DT, Me.col_END_DT, Me.col_KEIJO_DT, Me.col_SEIKYU_MONTH, Me.col_CKAIYK_DT, Me.col_SUMIKAISU, Me.col_B_KNYUKN, Me.col_LSRYO_TOTAL, Me.col_LSRYO_ZZAN, Me.col_LSRYO_TOKI, Me.col_ZEI_TOKI, Me.col_ZKOMI_TOKI, Me.col_LSRYO_ZAN, Me.col_LSRYO_ZAN1NAI, Me.col_ZRITU, Me.col_SHRI_DT, Me.col_SHHO_NM, Me.col_SYUTOK_ZOU, Me.col_SYUTOK_GEN, Me.col_ZEI_KHRI, Me.col_ZEI_MHRI, Me.col_LGNPN_TOKI, Me.col_LGNPN_ZZAN, Me.col_LGNPN_ZAN, Me.col_LRSOK_TOKI, Me.col_GRUIKEI_ZOU, Me.col_GSON_RKEI_ZOU, Me.col_GSON_TK_TOKI, Me.col_BOKA_ZAN})
         Me.dgv_LIST.Dock = System.Windows.Forms.DockStyle.Fill
         Me.dgv_LIST.Location = New System.Drawing.Point(0, 124)
         Me.dgv_LIST.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
@@ -345,6 +359,118 @@ Partial Class Form_f_flx_KEIJO
         Me.col_SHHO_NM.ReadOnly = True
         Me.col_SHHO_NM.Width = 150
         '
+        'col_TRHK_KBN
+        '
+        Me.col_TRHK_KBN.HeaderText = "取引区分"
+        Me.col_TRHK_KBN.MinimumWidth = 8
+        Me.col_TRHK_KBN.Name = "col_TRHK_KBN"
+        Me.col_TRHK_KBN.ReadOnly = True
+        Me.col_TRHK_KBN.Width = 75
+        '
+        'col_KEIJO_DT
+        '
+        Me.col_KEIJO_DT.HeaderText = "計上日"
+        Me.col_KEIJO_DT.MinimumWidth = 8
+        Me.col_KEIJO_DT.Name = "col_KEIJO_DT"
+        Me.col_KEIJO_DT.ReadOnly = True
+        Me.col_KEIJO_DT.Width = 75
+        '
+        'col_SYUTOK_ZOU
+        '
+        Me.col_SYUTOK_ZOU.HeaderText = "取得増"
+        Me.col_SYUTOK_ZOU.MinimumWidth = 8
+        Me.col_SYUTOK_ZOU.Name = "col_SYUTOK_ZOU"
+        Me.col_SYUTOK_ZOU.ReadOnly = True
+        Me.col_SYUTOK_ZOU.Width = 94
+        '
+        'col_SYUTOK_GEN
+        '
+        Me.col_SYUTOK_GEN.HeaderText = "取得減"
+        Me.col_SYUTOK_GEN.MinimumWidth = 8
+        Me.col_SYUTOK_GEN.Name = "col_SYUTOK_GEN"
+        Me.col_SYUTOK_GEN.ReadOnly = True
+        Me.col_SYUTOK_GEN.Width = 94
+        '
+        'col_ZEI_KHRI
+        '
+        Me.col_ZEI_KHRI.HeaderText = "税仮払"
+        Me.col_ZEI_KHRI.MinimumWidth = 8
+        Me.col_ZEI_KHRI.Name = "col_ZEI_KHRI"
+        Me.col_ZEI_KHRI.ReadOnly = True
+        Me.col_ZEI_KHRI.Width = 94
+        '
+        'col_ZEI_MHRI
+        '
+        Me.col_ZEI_MHRI.HeaderText = "税未払"
+        Me.col_ZEI_MHRI.MinimumWidth = 8
+        Me.col_ZEI_MHRI.Name = "col_ZEI_MHRI"
+        Me.col_ZEI_MHRI.ReadOnly = True
+        Me.col_ZEI_MHRI.Width = 94
+        '
+        'col_LGNPN_TOKI
+        '
+        Me.col_LGNPN_TOKI.HeaderText = "利権当期"
+        Me.col_LGNPN_TOKI.MinimumWidth = 8
+        Me.col_LGNPN_TOKI.Name = "col_LGNPN_TOKI"
+        Me.col_LGNPN_TOKI.ReadOnly = True
+        Me.col_LGNPN_TOKI.Width = 94
+        '
+        'col_LGNPN_ZZAN
+        '
+        Me.col_LGNPN_ZZAN.HeaderText = "利権前残"
+        Me.col_LGNPN_ZZAN.MinimumWidth = 8
+        Me.col_LGNPN_ZZAN.Name = "col_LGNPN_ZZAN"
+        Me.col_LGNPN_ZZAN.ReadOnly = True
+        Me.col_LGNPN_ZZAN.Width = 94
+        '
+        'col_LGNPN_ZAN
+        '
+        Me.col_LGNPN_ZAN.HeaderText = "利権残"
+        Me.col_LGNPN_ZAN.MinimumWidth = 8
+        Me.col_LGNPN_ZAN.Name = "col_LGNPN_ZAN"
+        Me.col_LGNPN_ZAN.ReadOnly = True
+        Me.col_LGNPN_ZAN.Width = 94
+        '
+        'col_LRSOK_TOKI
+        '
+        Me.col_LRSOK_TOKI.HeaderText = "利息当期"
+        Me.col_LRSOK_TOKI.MinimumWidth = 8
+        Me.col_LRSOK_TOKI.Name = "col_LRSOK_TOKI"
+        Me.col_LRSOK_TOKI.ReadOnly = True
+        Me.col_LRSOK_TOKI.Width = 94
+        '
+        'col_GRUIKEI_ZOU
+        '
+        Me.col_GRUIKEI_ZOU.HeaderText = "G累計増"
+        Me.col_GRUIKEI_ZOU.MinimumWidth = 8
+        Me.col_GRUIKEI_ZOU.Name = "col_GRUIKEI_ZOU"
+        Me.col_GRUIKEI_ZOU.ReadOnly = True
+        Me.col_GRUIKEI_ZOU.Width = 94
+        '
+        'col_GSON_RKEI_ZOU
+        '
+        Me.col_GSON_RKEI_ZOU.HeaderText = "減損累計増"
+        Me.col_GSON_RKEI_ZOU.MinimumWidth = 8
+        Me.col_GSON_RKEI_ZOU.Name = "col_GSON_RKEI_ZOU"
+        Me.col_GSON_RKEI_ZOU.ReadOnly = True
+        Me.col_GSON_RKEI_ZOU.Width = 94
+        '
+        'col_GSON_TK_TOKI
+        '
+        Me.col_GSON_TK_TOKI.HeaderText = "減損特別当期"
+        Me.col_GSON_TK_TOKI.MinimumWidth = 8
+        Me.col_GSON_TK_TOKI.Name = "col_GSON_TK_TOKI"
+        Me.col_GSON_TK_TOKI.ReadOnly = True
+        Me.col_GSON_TK_TOKI.Width = 94
+        '
+        'col_BOKA_ZAN
+        '
+        Me.col_BOKA_ZAN.HeaderText = "簿価残高"
+        Me.col_BOKA_ZAN.MinimumWidth = 8
+        Me.col_BOKA_ZAN.Name = "col_BOKA_ZAN"
+        Me.col_BOKA_ZAN.ReadOnly = True
+        Me.col_BOKA_ZAN.Width = 94
+        '
         'pnlHeader
         '
         Me.pnlHeader.Controls.Add(Me.lblSearch)
@@ -530,4 +656,18 @@ Partial Class Form_f_flx_KEIJO
     Friend WithEvents col_ZRITU As DataGridViewTextBoxColumn
     Friend WithEvents col_SHRI_DT As DataGridViewTextBoxColumn
     Friend WithEvents col_SHHO_NM As DataGridViewTextBoxColumn
+    Friend WithEvents col_TRHK_KBN As DataGridViewTextBoxColumn
+    Friend WithEvents col_KEIJO_DT As DataGridViewTextBoxColumn
+    Friend WithEvents col_SYUTOK_ZOU As DataGridViewTextBoxColumn
+    Friend WithEvents col_SYUTOK_GEN As DataGridViewTextBoxColumn
+    Friend WithEvents col_ZEI_KHRI As DataGridViewTextBoxColumn
+    Friend WithEvents col_ZEI_MHRI As DataGridViewTextBoxColumn
+    Friend WithEvents col_LGNPN_TOKI As DataGridViewTextBoxColumn
+    Friend WithEvents col_LGNPN_ZZAN As DataGridViewTextBoxColumn
+    Friend WithEvents col_LGNPN_ZAN As DataGridViewTextBoxColumn
+    Friend WithEvents col_LRSOK_TOKI As DataGridViewTextBoxColumn
+    Friend WithEvents col_GRUIKEI_ZOU As DataGridViewTextBoxColumn
+    Friend WithEvents col_GSON_RKEI_ZOU As DataGridViewTextBoxColumn
+    Friend WithEvents col_GSON_TK_TOKI As DataGridViewTextBoxColumn
+    Friend WithEvents col_BOKA_ZAN As DataGridViewTextBoxColumn
 End Class

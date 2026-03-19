@@ -445,6 +445,21 @@ Public Module LoginSession
                                   Optional opS As String = "",
                                   Optional detail2 As String = "",
                                   Optional updSbt As String = "") As Integer
+        Return WriteAuditLogAs(opKbn, detail, If(LoggedInUserCd, ""), If(LoggedInUserNm, ""), opNm, opS, detail2, updSbt)
+    End Function
+
+    ''' <summary>
+    ''' 操作ログをDBに記録する（ユーザーコード明示指定版）
+    ''' ログイン前など LoginSession にユーザー情報がセットされていない状態で使用する
+    ''' </summary>
+    Public Function WriteAuditLogAs(opKbn As String,
+                                    detail As String,
+                                    overrideUserCd As String,
+                                    overrideUserNm As String,
+                                    Optional opNm As String = "",
+                                    Optional opS As String = "",
+                                    Optional detail2 As String = "",
+                                    Optional updSbt As String = "") As Integer
         Try
             ' Access版 OutputSLOG 準拠: fgNT_SLOGOUT チェック
             ' ただしシステム開始/終了・ログイン/ログオフはフラグに関係なく記録
@@ -470,8 +485,8 @@ Public Module LoginSession
                 New NpgsqlParameter("@op_kbn", opKbn),
                 New NpgsqlParameter("@op_nm", If(opNm, "")),
                 New NpgsqlParameter("@op_s", If(opS, "")),
-                New NpgsqlParameter("@op_user_cd", If(LoggedInUserCd, "")),
-                New NpgsqlParameter("@op_user_nm", If(LoggedInUserNm, "")),
+                New NpgsqlParameter("@op_user_cd", If(overrideUserCd, "")),
+                New NpgsqlParameter("@op_user_nm", If(overrideUserNm, "")),
                 New NpgsqlParameter("@pc_name", Environment.MachineName),
                 New NpgsqlParameter("@ip_adr", GetLocalIpAddress()),
                 New NpgsqlParameter("@win_user", Environment.UserName),

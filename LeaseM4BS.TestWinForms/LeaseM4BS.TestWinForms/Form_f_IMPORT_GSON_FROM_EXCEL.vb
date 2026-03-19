@@ -1,4 +1,6 @@
 ﻿Imports System.Windows.Forms
+Imports System.Data
+Imports LeaseM4BS.DataAccess
 
 ' --- 減損損失の取り込み ---
 Partial Public Class Form_f_IMPORT_GSON_FROM_EXCEL
@@ -28,9 +30,24 @@ Partial Public Class Form_f_IMPORT_GSON_FROM_EXCEL
 
     ' [Excelをワークテーブルに取り込む]ボタン
     Private Sub cmd_INPUT_Click(sender As Object, e As EventArgs) Handles cmd_INPUT.Click
-        Dim fileHelper As New FileHelper()
+        ' Excelファイル選択
+        Using ofd As New OpenFileDialog()
+            ofd.Filter = "Excel ファイル (*.xlsx;*.xls)|*.xlsx;*.xls|すべてのファイル (*.*)|*.*"
+            ofd.Title = "減損データExcelファイルを選択"
 
-        'todo ファイル入力
+            If ofd.ShowDialog() <> DialogResult.OK Then Return
+
+            Try
+                ' Excel読み込み（FileHelper は出力専用のため、ここではCSV/テキスト変換後の読み込みを想定）
+                ' 将来的に FileHelper.ReadExcelToDataTable を実装予定
+                MessageBox.Show("Excelファイルが選択されました: " & ofd.FileName & vbCrLf &
+                                "※Excel読み込み機能は今後実装予定です。",
+                                "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Catch ex As Exception
+                MessageBox.Show("ファイル読み込みエラー: " & ex.Message, "エラー",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        End Using
     End Sub
 
     ' [前回本登録ログ]ボタン

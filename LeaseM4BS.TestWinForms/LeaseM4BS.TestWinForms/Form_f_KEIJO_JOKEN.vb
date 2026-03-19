@@ -3,6 +3,21 @@
 ' --- 月次仕訳計上条件 ---
 Partial Public Class Form_f_KEIJO_JOKEN
 
+    ''' <summary>呼び出し元の種別。TOUGETSU=当月仕訳(従来動作), KEIJO=計上仕訳一覧</summary>
+    Public Enum JokenCallerType
+        TOUGETSU = 0
+        KEIJO = 1
+    End Enum
+
+    ''' <summary>呼び出し元種別（ShowDialog前に設定）</summary>
+    Public Property CallerType As JokenCallerType = JokenCallerType.TOUGETSU
+
+    ''' <summary>実行後の条件（CallerType=KEIJO時に呼び出し元が参照）</summary>
+    Public Property ResultJoken As KeijoJoken
+    Public Property ResultDtFrom As Date
+    Public Property ResultDtTo As Date
+    Public Property ResultLabelText As String
+
     Private _prevForm As Form_f_flx_TOUGETSU
 
     Private Sub Form_f_FlexMonthlyJornalEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -41,12 +56,6 @@ Partial Public Class Form_f_KEIJO_JOKEN
         ' 集計期間の指定を正しくする
         SwapIf(txt_DATE_FROM, txt_DATE_TO)
 
-        ' 前回フォーム解放
-        If _prevForm IsNot Nothing Then
-            _prevForm.Dispose()
-            _prevForm = Nothing
-        End If
-
         ' 計上条件構築
         Dim joken As New KeijoJoken() With {
             .Meisai = If(radio_BUKN.Checked, ShriMeisai.Kykm, ShriMeisai.Haif),
@@ -56,6 +65,24 @@ Partial Public Class Form_f_KEIJO_JOKEN
             .HensaiKindShinhoHiyo = GetSelectedHensaiKind(),
             .ShoriEndF = False
         }
+
+        If CallerType = JokenCallerType.KEIJO Then
+            ' 計上仕訳一覧から呼ばれた場合: 条件をプロパティに格納して閉じる
+            ResultJoken = joken
+            ResultDtFrom = CDate(txt_DATE_FROM.Value)
+            ResultDtTo = CDate(txt_DATE_TO.Value)
+            ResultLabelText = GetLabelText()
+            Me.DialogResult = DialogResult.OK
+            Me.Close()
+            Return
+        End If
+
+        ' 当月仕訳から呼ばれた場合: 従来動作（Form_f_flx_TOUGETSU を開く）
+        ' 前回フォーム解放
+        If _prevForm IsNot Nothing Then
+            _prevForm.Dispose()
+            _prevForm = Nothing
+        End If
 
         Dim frm As New Form_f_flx_TOUGETSU()
         frm.LabelText = GetLabelText()
