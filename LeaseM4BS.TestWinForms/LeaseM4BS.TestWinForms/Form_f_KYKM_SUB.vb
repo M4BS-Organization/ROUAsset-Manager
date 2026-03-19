@@ -13,6 +13,9 @@ Partial Public Class Form_f_KYKM_SUB
     Private _rows As New List(Of System.Data.DataRow)
     Private _currentIndex As Integer = 0
 
+    ''' <summary>ダイアログ終了時に選択中の line_id を返す（-1 = 未選択）</summary>
+    Public Property SelectedLineId As Integer = -1
+
     Public Sub New()
         InitializeComponent()
     End Sub
@@ -72,6 +75,9 @@ Partial Public Class Form_f_KYKM_SUB
         End If
 
         Dim r = _rows(_currentIndex)
+        Dim lineIdVal As Integer = 0
+        Integer.TryParse(NzStr(r("line_id")), lineIdVal)
+        SelectedLineId = lineIdVal
         txt_W_KYKM_ID.Text = NzStr(r("kykm_id"))
         txt_LINE_ID.Text = NzStr(r("line_id"))
         txt_HAIFRITU.Text = NzStr(r("haifritu"))

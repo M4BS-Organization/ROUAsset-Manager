@@ -430,7 +430,34 @@ Partial Public Class Form_f_KYKM
     End Sub
 
     Private Sub cmd_HAIF_DEL_Click(sender As Object, e As EventArgs) Handles cmd_HAIF_DEL.Click
-        MessageBox.Show("配賦削除機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _currentIndex < 0 OrElse _currentIndex >= _records.Count Then Return
+        Dim kykmId As Integer = 0
+        Integer.TryParse(txt_KYKM_ID.Text, kykmId)
+        If kykmId = 0 Then Return
+
+        ' f_KYKM_SUB を開いて削除対象行を選択させる
+        Dim frm As New Form_f_KYKM_SUB()
+        frm.SetParams(kykmId)
+        frm.ShowDialog(Me)
+
+        Dim lineId = frm.SelectedLineId
+        If lineId <= 0 Then Return
+
+        If MessageBox.Show(
+            $"配賦行 (LINE_ID={lineId}) を削除しますか？",
+            "削除確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then Return
+
+        Try
+            Dim delPrms As New List(Of NpgsqlParameter)
+            delPrms.Add(New NpgsqlParameter("@kykm_id", kykmId))
+            delPrms.Add(New NpgsqlParameter("@line_id", lineId))
+            _crud.ExecuteNonQuery(
+                "DELETE FROM d_haif WHERE kykm_id = @kykm_id AND line_id = @line_id",
+                delPrms)
+            MessageBox.Show("配賦行を削除しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Catch ex As Exception
+            MessageBox.Show("削除エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_閉じる_Click(sender As Object, e As EventArgs) Handles cmd_閉じる.Click
