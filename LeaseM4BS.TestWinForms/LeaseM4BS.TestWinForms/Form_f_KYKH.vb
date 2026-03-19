@@ -253,7 +253,10 @@ Partial Public Class Form_f_KYKH
                 "SELECT COUNT(*) FROM d_kykm WHERE kykh_id = @id AND b_ckaiyk_f = FALSE",
                 New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
             If dtCheck IsNot Nothing AndAlso Convert.ToInt32(dtCheck.Rows(0)(0)) > 0 Then
-                MessageBox.Show("中途解約画面は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Dim frm As New Form_f_KAIYAK()
+                frm.SetParams(_kykhId)
+                frm.ShowDialog(Me)
+                LoadContract()
             Else
                 MessageBox.Show("解約対象の物件がありません。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             End If
