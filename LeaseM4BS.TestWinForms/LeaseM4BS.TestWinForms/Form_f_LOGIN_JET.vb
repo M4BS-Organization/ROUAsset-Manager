@@ -115,10 +115,9 @@ Partial Public Class Form_f_LOGIN_JET
 
         ' --- アカウントロック判定 ---
         ' history_f = TRUE の場合はアカウントが無効化されている
+        ' ユーザー存在有無の情報漏洩を防ぐため、未存在時と同じメッセージを表示
         If historyF Then
-            MessageBox.Show("このアカウントはロックされています。" & vbCrLf &
-                            "システム管理者に連絡してください。",
-                            "アカウントロック",
+            MessageBox.Show("利用者コードまたはパスワードが正しくありません。", "認証エラー",
                             MessageBoxButtons.OK, MessageBoxIcon.Error)
             Return
         End If
@@ -488,15 +487,17 @@ Partial Public Class Form_f_LOGIN_JET
             Dim expireDate As DateTime? = Nothing
 
             ' pwd_upd_dt カラムがあれば最優先で使用（パスワード変更日 + 有効期限日数）
+            ' PwdLifeTime が設定済みならそれを使用、未設定ならデフォルト値
+            Dim expireDays As Integer = If(LoginSession.PwdLifeTime > 0, LoginSession.PwdLifeTime, DEFAULT_PWD_EXPIRE_DAYS)
             If userRow.Table.Columns.Contains("pwd_upd_dt") AndAlso userRow("pwd_upd_dt") IsNot DBNull.Value Then
                 Dim pwdUpdDt As DateTime = CDate(userRow("pwd_upd_dt"))
-                expireDate = pwdUpdDt.AddDays(DEFAULT_PWD_EXPIRE_DAYS)
+                expireDate = pwdUpdDt.AddDays(expireDays)
             ElseIf userRow.Table.Columns.Contains("pwd_expire_dt") AndAlso userRow("pwd_expire_dt") IsNot DBNull.Value Then
                 expireDate = CDate(userRow("pwd_expire_dt"))
             ElseIf userRow("d_first_login") IsNot DBNull.Value Then
                 ' d_first_login からの経過日数で判定（デフォルト90日）
                 Dim firstLogin As DateTime = CDate(userRow("d_first_login"))
-                expireDate = firstLogin.AddDays(DEFAULT_PWD_EXPIRE_DAYS)
+                expireDate = firstLogin.AddDays(expireDays)
             Else
                 ' 初回ログイン: パスワード設定を推奨
                 Dim result As DialogResult = MessageBox.Show(
