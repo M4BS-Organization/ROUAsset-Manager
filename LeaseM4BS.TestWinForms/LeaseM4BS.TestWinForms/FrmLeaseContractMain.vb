@@ -1950,6 +1950,12 @@ Public Class FrmLeaseContractMain
             Integer.TryParse(monthsText, months)
             lblTermMonths.Text = months.ToString()
 
+            ' 金額連動: 月額支払グリッドの税抜合計 → 判定用月額リース料
+            RemoveHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
+            Dim totalExTax As Decimal = CalcMonthlyPaymentTotal()
+            numMonthlyRentJudge.Value = Math.Min(totalExTax, numMonthlyRentJudge.Maximum)
+            AddHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
+
             ' 同期後に判定を再計算
             RecalcJudge()
         Finally
@@ -1997,6 +2003,25 @@ Public Class FrmLeaseContractMain
         lblMonthlyTotalTax.Text = String.Format("税: {0:N0}", totalTax)
         lblMonthlyTotalIncTax.Text = String.Format("税込: {0:N0}", totalIncTax)
     End Sub
+
+    ''' <summary>
+    ''' 月額支払グリッド (dgvMonthlyPayments) の税抜合計を算出する。
+    ''' </summary>
+    Private Function CalcMonthlyPaymentTotal() As Decimal
+        Dim total As Decimal = 0
+        For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
+            If row.IsNewRow Then Continue For
+            Try
+                If row.Cells("MAmountExTax").Value IsNot Nothing Then
+                    Dim exTax As Decimal = 0
+                    Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString().Replace(",", ""), exTax)
+                    total += exTax
+                End If
+            Catch ex As Exception
+            End Try
+        Next
+        Return total
+    End Function
 
     Private Sub OnExtOptionChanged(sender As Object, e As EventArgs)
         If Not _isLoaded Then Return
@@ -2206,6 +2231,7 @@ Public Class FrmLeaseContractMain
         If e.RowIndex < 0 Then Return
         CalcMonthlyTotals()
         RecalcAll()
+        SyncTab1ToJudge()
     End Sub
 
     Private Sub OnMonthlyPaymentCellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
