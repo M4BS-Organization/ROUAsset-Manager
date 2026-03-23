@@ -1,0 +1,90 @@
+name: Sprint Burndown
+
+on:
+  schedule:
+    # 毎日 18:00 JST (09:00 UTC) に実行
+    - cron: '0 9 * * 1-5'
+  workflow_dispatch: # 手動実行も可能
+
+env:
+  PROJECT_NUMBER: 3
+  ORG: M4BS-Organization
+  BURNDOWN_ISSUE: 10
+  TOTAL_SP: 21
+
+jobs:
+  burndown:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      repository-projects: read
+    steps:
+      - name: Calculate burndown
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # プロジェクトアイテムを取得（Status と Story Points）
+          ITEMS=$(gh project item-list $PROJECT_NUMBER \
+            --owner "$ORG" \
+            --format json \
+            --jq '.items[] | {status: .status, sp: (.["Story Points"] // 0)}')
+
+          # Done の SP を合計
+          DONE_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Done") | .sp] | add // 0')
+
+          # 残 SP
+          REMAINING=$((TOTAL_SP - DONE_SP))
+
+          # 曜日を取得 (JST)
+          DAY=$(TZ=Asia/Tokyo date +%a)
+          DATE=$(TZ=Asia/Tokyo date +%m/%d)
+
+          # 理想残の計算 (月=16, 火=11, 水=6, 木=バッファ, 金=0)
+          case $DAY in
+            Mon) IDEAL=16 ;;
+            Tue) IDEAL=11 ;;
+            Wed) IDEAL=6 ;;
+            Thu) IDEAL="-" ;;
+            Fri) IDEAL=0 ;;
+            *)   IDEAL="-" ;;
+          esac
+
+          # 状態判定
+          if [ "$IDEAL" = "-" ]; then
+            STATUS="バッファ"
+          elif [ "$REMAINING" -le "$IDEAL" ]; then
+            STATUS="✅ 順調"
+          elif [ "$((REMAINING - IDEAL))" -le 2 ]; then
+            STATUS="⚠️ やや遅れ"
+          else
+            STATUS="🔴 遅れ ($(( REMAINING - IDEAL ))SP)"
+          fi
+
+          # バーンダウンチャート（テキスト）
+          BAR_DONE=$(printf '█%.0s' $(seq 1 $DONE_SP) 2>/dev/null || true)
+          BAR_LEFT=$(printf '░%.0s' $(seq 1 $REMAINING) 2>/dev/null || true)
+
+          # Issue にコメント
+          COMMENT="## 📊 バーンダウン更新 ($DATE $DAY)
+
+          | 指標 | 値 |
+          |---|---|
+          | 消化済SP | **${DONE_SP}** / ${TOTAL_SP} |
+          | 残SP | **${REMAINING}** |
+          | 理想残 | ${IDEAL} |
+          | 状態 | ${STATUS} |
+
+          \`\`\`
+          ${BAR_DONE}${BAR_LEFT} ${DONE_SP}/${TOTAL_SP} SP
+          \`\`\`
+
+          **Done Issues:**"
+
+          # Done の Issue タイトルを取得
+          DONE_TITLES=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Done")] | length')
+
+          gh issue comment $BURNDOWN_ISSUE \
+            --repo "$ORG/ROUAsset-Manager" \
+            --body "$COMMENT
+          $(gh project item-list $PROJECT_NUMBER --owner "$ORG" --format json \
+            --jq '.items[] | select(.status == "Done") | "- ✅ \(.title) (\(.["Story Points"] // 0) SP)"')"
