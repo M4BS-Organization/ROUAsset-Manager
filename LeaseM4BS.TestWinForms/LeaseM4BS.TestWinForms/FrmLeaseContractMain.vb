@@ -19,6 +19,7 @@ Public Class FrmLeaseContractMain
     Private ReadOnly FNT_SECTION As Font = New Font("Meiryo", 10.0F, FontStyle.Bold)
 
     Private _isLoaded As Boolean = False
+    Private _isSyncingData As Boolean = False
     Private _defaultTaxRate As Decimal = 0.10D
     Private _tooltipProvider As ToolTip
     Private _masterData As MasterDataLoader
@@ -526,6 +527,7 @@ Public Class FrmLeaseContractMain
         tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
         AddHandler tabMain.SelectedIndexChanged, Sub(s, e)
             If tabMain.SelectedTab Is pgAccounting Then UpdateAccountingTabValues()
+            If tabMain.SelectedTab Is pgJudgment Then SyncTab1ToJudge()
         End Sub
 
         lblJudgmentPreview = New Label() With {
@@ -645,14 +647,17 @@ Public Class FrmLeaseContractMain
 
         AddHandler dtpStartDate.ValueChanged, Sub(s, e)
                                                   CalcLeaseMonths()
+                                                  SyncTab1ToJudge()
                                                   RecalcAll()
                                               End Sub
         AddHandler dtpEndDate.ValueChanged, Sub(s, e)
                                                 CalcLeaseMonths()
+                                                SyncTab1ToJudge()
                                                 RecalcAll()
                                             End Sub
         AddHandler numFreePeriod.ValueChanged, Sub(s, e)
                                                    CalcLeaseMonths()
+                                                   SyncTab1ToJudge()
                                                    RecalcAll()
                                                End Sub
 
@@ -1920,6 +1925,40 @@ Public Class FrmLeaseContractMain
                     totalMonths, freePeriodVal, leaseMonths))
         Catch ex As Exception
             lblLeaseMonths.Text = "---ヶ月"
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' タブ1（契約入力）→ タブ5（リース判定）へデータを片方向同期する。
+    ''' イベント循環を _isSyncingData フラグで回避する。
+    ''' </summary>
+    Private Sub SyncTab1ToJudge()
+        If Not _isLoaded Then Return
+        If _isSyncingData Then Return
+        _isSyncingData = True
+        Try
+            ' 日付連動
+            RemoveHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
+            RemoveHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
+
+            dtpJudgeStart.Value = dtpStartDate.Value
+            dtpJudgeEnd.Value = dtpEndDate.Value
+
+            AddHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
+            AddHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
+
+            ' 期間連動: リース期間（月数）→ lblTermMonths
+            Dim startDt As DateTime = dtpStartDate.Value
+            Dim endDt As DateTime = dtpEndDate.Value
+            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
+            Dim freePeriodVal As Integer = CInt(numFreePeriod.Value)
+            Dim leaseMonths As Integer = Math.Max(0, totalMonths - freePeriodVal)
+            lblTermMonths.Text = leaseMonths.ToString()
+
+            ' 同期後に判定を再計算
+            RecalcJudge()
+        Finally
+            _isSyncingData = False
         End Try
     End Sub
 
