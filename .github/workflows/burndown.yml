@@ -28,7 +28,7 @@ jobs:
           ITEMS=$(gh project item-list $PROJECT_NUMBER \
             --owner "$ORG" \
             --format json \
-            --jq '.items[] | {title: .title, status: .status, sp: (.["Story Points"] // 0)}')
+            --jq '.items[] | {title: .title, status: .status, sp: (.["story Points"] // 0)}')
 
           # Done の SP を合計
           DONE_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Done") | .sp] | add // 0')
