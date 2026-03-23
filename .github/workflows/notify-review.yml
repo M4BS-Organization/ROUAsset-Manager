@@ -1,0 +1,107 @@
+name: Notify Code Review
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+jobs:
+  notify-review:
+    # PRへのレビューコメントのみ対象（Issue コメントは除外）
+    if: >
+      (github.event_name == 'pull_request_review') ||
+      (github.event_name == 'pull_request_review_comment') ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on review activity
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          EVENT="${{ github.event_name }}"
+
+          if [ "$EVENT" = "pull_request_review" ]; then
+            STATE="${{ github.event.review.state }}"
+            REVIEWER="${{ github.event.review.user.login }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_NUM="${{ github.event.pull_request.number }}"
+            PR_URL="${{ github.event.pull_request.html_url }}"
+            BODY=$(echo '${{ toJSON(github.event.review.body) }}' | jq -r '.' | head -c 300)
+
+            case "$STATE" in
+              approved)
+                EMOJI="✅"
+                ACTION="承認しました"
+                ;;
+              changes_requested)
+                EMOJI="🔄"
+                ACTION="変更をリクエストしました"
+                ;;
+              commented)
+                EMOJI="💬"
+                ACTION="コメントしました"
+                ;;
+              *)
+                EMOJI="📝"
+                ACTION="レビューしました"
+                ;;
+            esac
+
+            HEADER="${EMOJI} PR #${PR_NUM} を ${REVIEWER} が${ACTION}"
+
+          elif [ "$EVENT" = "pull_request_review_comment" ]; then
+            REVIEWER="${{ github.event.comment.user.login }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_NUM="${{ github.event.pull_request.number }}"
+            PR_URL="${{ github.event.comment.html_url }}"
+            BODY=$(echo '${{ toJSON(github.event.comment.body) }}' | jq -r '.' | head -c 300)
+            HEADER="💬 PR #${PR_NUM} に ${REVIEWER} がコードコメント"
+
+          else
+            REVIEWER="${{ github.event.comment.user.login }}"
+            PR_NUM="${{ github.event.issue.number }}"
+            PR_TITLE="${{ github.event.issue.title }}"
+            PR_URL="${{ github.event.comment.html_url }}"
+            BODY=$(echo '${{ toJSON(github.event.comment.body) }}' | jq -r '.' | head -c 300)
+            HEADER="💬 PR #${PR_NUM} に ${REVIEWER} がコメント"
+          fi
+
+          # bot のコメントは通知しない
+          if [ "$REVIEWER" = "github-actions[bot]" ] || [ "$REVIEWER" = "gemini-code-review[bot]" ]; then
+            echo "Bot comment, skipping"
+            exit 0
+          fi
+
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"blocks\": [
+                {
+                  \"type\": \"header\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"${HEADER}\",
+                    \"emoji\": true
+                  }
+                },
+                {
+                  \"type\": \"section\",
+                  \"text\": {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*${PR_TITLE}*\n\`\`\`${BODY:-（本文なし）}\`\`\`\"
+                  }
+                },
+                {
+                  \"type\": \"actions\",
+                  \"elements\": [
+                    {
+                      \"type\": \"button\",
+                      \"text\": {\"type\": \"plain_text\", \"text\": \"PRを確認\"},
+                      \"url\": \"${PR_URL}\"
+                    }
+                  ]
+                }
+              ]
+            }" "$SLACK_WEBHOOK_URL"
