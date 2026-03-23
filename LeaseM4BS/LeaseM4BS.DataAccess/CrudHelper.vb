@@ -217,16 +217,16 @@ Public Class CrudHelper
     Private Function CreateErrorMessage(ex As Exception, sql As String, parameters As List(Of NpgsqlParameter)) As String
         Dim sb As New StringBuilder()
         sb.AppendLine($"エラー内容: {ex.Message}")
-        
+
         ' 修正箇所: 文字列を作成してから AppendLine します
         sb.AppendLine(New String("-"c, 20))
-        
+
         sb.AppendLine($"[実行SQL]:")
         sb.AppendLine(sql)
-        
+
         ' 修正箇所: 文字列を作成してから AppendLine します
         sb.AppendLine(New String("-"c, 20))
-        
+
         sb.AppendLine($"[パラメータ]:")
 
         If parameters IsNot Nothing AndAlso parameters.Count > 0 Then

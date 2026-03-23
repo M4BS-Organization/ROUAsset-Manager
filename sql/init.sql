@@ -1,0 +1,2 @@
+CREATE USER manager WITH PASSWORD 'pass';
+CREATE DATABASE lease_m4bs OWNER manager ENCODING 'UTF8';

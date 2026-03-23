@@ -922,6 +922,74 @@
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\ApplicationEvents.vb" />
+    <Compile Include="CtbDataStore.vb" />
+    <Compile Include="CtbRepository.vb" />
+    <Compile Include="FrmAssetDetailEntry.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmAssetDetailEntry.Designer.vb">
+      <DependentUpon>FrmAssetDetailEntry.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmLeaseContractMain.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmFlexMenu.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmFlexMenu.Designer.vb">
+      <DependentUpon>FrmFlexMenu.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmLogin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmLogin.Designer.vb">
+      <DependentUpon>FrmLogin.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexContract.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexContract.Designer.vb">
+      <DependentUpon>FrmFlexContract.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexROUAsset.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexROUAsset.Designer.vb">
+      <DependentUpon>FrmFlexROUAsset.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexMonthlyPayments.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexMonthlyPayments.Designer.vb">
+      <DependentUpon>FrmFlexMonthlyPayments.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexMonthlyAccounting.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexMonthlyAccounting.Designer.vb">
+      <DependentUpon>FrmFlexMonthlyAccounting.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexPeriodBalance.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexPeriodBalance.Designer.vb">
+      <DependentUpon>FrmFlexPeriodBalance.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexTaxAdjustment.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexTaxAdjustment.Designer.vb">
+      <DependentUpon>FrmFlexTaxAdjustment.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FrmFlexMaster.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FrmFlexMaster.Designer.vb">
+      <DependentUpon>FrmFlexMaster.vb</DependentUpon>
+    </Compile>
+    <Compile Include="PopupBaseForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
@@ -1301,6 +1369,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form_f_flx_BUKN.resx">
       <DependentUpon>Form_f_flx_BUKN.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmAssetDetailEntry.resx">
+      <DependentUpon>FrmAssetDetailEntry.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
