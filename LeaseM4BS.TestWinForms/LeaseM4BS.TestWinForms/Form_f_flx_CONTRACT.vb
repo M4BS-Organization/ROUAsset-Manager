@@ -13,6 +13,8 @@ Partial Public Class Form_f_flx_CONTRACT
         ' 初期表示：全件検索
         SearchData()
         SecurityChecker.ApplyDataUpdateLimit(Me)
+        ' 使用権資産管理ボタンの権限制御（ApplyDataUpdateLimitの対象外のため個別制御）
+        cmd_ROU.Enabled = SecurityChecker.CanUpdate()
     End Sub
 
     ' ---------------------------------------------------------
@@ -112,6 +114,37 @@ Partial Public Class Form_f_flx_CONTRACT
     ' [閉じる] ボタン
     Private Sub cmd_CLOSE_Click(sender As Object, e As EventArgs) Handles cmd_CLOSE.Click
         Me.Close()
+    End Sub
+
+    ' [使用権資産管理] ボタン — 新リース対応版の4タブ画面を開く
+    Private Sub cmd_ROU_Click(sender As Object, e As EventArgs) Handles cmd_ROU.Click
+        Try
+            Dim frm As New FrmLeaseContractMain()
+            Dim selectedRow = dgv_LIST.GetSelectedRow()
+
+            If selectedRow IsNot Nothing AndAlso dgv_LIST.Rows.Count > 0 Then
+                ' 一覧にデータあり → 選択行の契約番号で編集モード
+                Dim contractNo As String = ""
+                If selectedRow.Cells("自社契約番号").Value IsNot Nothing Then
+                    contractNo = selectedRow.Cells("自社契約番号").Value.ToString()
+                End If
+                frm.Text = "新リース会計対応 リース契約管理 - " & contractNo
+                frm.Tag = contractNo
+            Else
+                ' 一覧が空 → 新規登録モード
+                frm.InitContractNo = FrmFlexContract.GetNextContractNo()
+                frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
+                frm.Tag = ""
+            End If
+
+            frm.ShowDialog()
+
+            ' 戻ってきたら一覧更新
+            SearchData()
+        Catch ex As Exception
+            MessageBox.Show("使用権資産管理画面の表示中にエラーが発生しました。" & Environment.NewLine & ex.Message,
+                            "画面遷移エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     ' [新規登録] ボタン
