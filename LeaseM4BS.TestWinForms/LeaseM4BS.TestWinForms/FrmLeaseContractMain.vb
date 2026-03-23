@@ -646,19 +646,16 @@ Public Class FrmLeaseContractMain
         _tooltipProvider.SetToolTip(lblLeaseMonths, "リース期間 = (終了日 - 開始日の月数) - 無償期間")
 
         AddHandler dtpStartDate.ValueChanged, Sub(s, e)
-                                                  CalcLeaseMonths()
-                                                  SyncTab1ToJudge()
                                                   RecalcAll()
+                                                  SyncTab1ToJudge()
                                               End Sub
         AddHandler dtpEndDate.ValueChanged, Sub(s, e)
-                                                CalcLeaseMonths()
-                                                SyncTab1ToJudge()
                                                 RecalcAll()
+                                                SyncTab1ToJudge()
                                             End Sub
         AddHandler numFreePeriod.ValueChanged, Sub(s, e)
-                                                   CalcLeaseMonths()
-                                                   SyncTab1ToJudge()
                                                    RecalcAll()
+                                                   SyncTab1ToJudge()
                                                End Sub
 
         ' Row 1: 契約番号, 契約名称
@@ -1947,13 +1944,11 @@ Public Class FrmLeaseContractMain
             AddHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
             AddHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
 
-            ' 期間連動: リース期間（月数）→ lblTermMonths
-            Dim startDt As DateTime = dtpStartDate.Value
-            Dim endDt As DateTime = dtpEndDate.Value
-            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
-            Dim freePeriodVal As Integer = CInt(numFreePeriod.Value)
-            Dim leaseMonths As Integer = Math.Max(0, totalMonths - freePeriodVal)
-            lblTermMonths.Text = leaseMonths.ToString()
+            ' 期間連動: CalcLeaseMonths() の計算結果から "ヶ月" を除去して転記
+            Dim monthsText As String = lblLeaseMonths.Text.Replace("ヶ月", "").Trim()
+            Dim months As Integer = 0
+            Integer.TryParse(monthsText, months)
+            lblTermMonths.Text = months.ToString()
 
             ' 同期後に判定を再計算
             RecalcJudge()
