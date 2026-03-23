@@ -1912,9 +1912,9 @@ Public Class FrmLeaseContractMain
         Try
             Dim startDt As DateTime = dtpStartDate.Value
             Dim endDt As DateTime = dtpEndDate.Value
-            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
             Dim freePeriodVal As Integer = CInt(numFreePeriod.Value)
-            Dim leaseMonths As Integer = Math.Max(0, totalMonths - freePeriodVal)
+            Dim leaseMonths As Integer = ContractCalcHelper.CalcLeaseMonths(startDt, endDt, freePeriodVal)
+            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
             lblLeaseMonths.Text = leaseMonths.ToString() & "ヶ月"
             _tooltipProvider.SetToolTip(lblLeaseMonths,
                 String.Format("計算式: ({0} - {1})の月数{2} - 無償期間{3}ヶ月 = {4}ヶ月",

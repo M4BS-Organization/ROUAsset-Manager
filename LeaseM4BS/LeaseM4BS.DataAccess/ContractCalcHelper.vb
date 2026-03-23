@@ -146,4 +146,18 @@ Public NotInheritable Class ContractCalcHelper
             Return result
         End Function
 
+        ' =========================================================
+        '  リース期間(月数)計算
+        '  = (終了年 - 開始年) × 12 + (終了月 - 開始月) - 無償期間
+        ' =========================================================
+        ''' <summary>リース期間(月数)を算出する</summary>
+        ''' <param name="startDt">開始日</param>
+        ''' <param name="endDt">終了日</param>
+        ''' <param name="freePeriod">無償期間(月)</param>
+        ''' <returns>リース期間(月数)。0未満の場合は0</returns>
+        Public Shared Function CalcLeaseMonths(startDt As DateTime, endDt As DateTime, freePeriod As Integer) As Integer
+            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
+            Return Math.Max(0, totalMonths - freePeriod)
+        End Function
+
 End Class
