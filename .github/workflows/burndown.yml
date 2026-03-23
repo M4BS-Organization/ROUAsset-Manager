@@ -19,18 +19,20 @@ jobs:
       issues: write
       repository-projects: read
     steps:
-      - name: Calculate burndown
+      - name: Calculate and notify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           # プロジェクトアイテムを取得（Status と Story Points）
           ITEMS=$(gh project item-list $PROJECT_NUMBER \
             --owner "$ORG" \
             --format json \
-            --jq '.items[] | {status: .status, sp: (.["Story Points"] // 0)}')
+            --jq '.items[] | {title: .title, status: .status, sp: (.["Story Points"] // 0)}')
 
           # Done の SP を合計
           DONE_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Done") | .sp] | add // 0')
+          IN_PROGRESS_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "In Progress") | .sp] | add // 0')
 
           # 残 SP
           REMAINING=$((TOTAL_SP - DONE_SP))
@@ -41,50 +43,112 @@ jobs:
 
           # 理想残の計算 (月=16, 火=11, 水=6, 木=バッファ, 金=0)
           case $DAY in
-            Mon) IDEAL=16 ;;
-            Tue) IDEAL=11 ;;
-            Wed) IDEAL=6 ;;
-            Thu) IDEAL="-" ;;
-            Fri) IDEAL=0 ;;
-            *)   IDEAL="-" ;;
+            Mon) IDEAL=16; DAY_JP="月" ;;
+            Tue) IDEAL=11; DAY_JP="火" ;;
+            Wed) IDEAL=6;  DAY_JP="水" ;;
+            Thu) IDEAL="-"; DAY_JP="木" ;;
+            Fri) IDEAL=0;  DAY_JP="金" ;;
+            *)   IDEAL="-"; DAY_JP="—" ;;
           esac
 
           # 状態判定
           if [ "$IDEAL" = "-" ]; then
-            STATUS="バッファ"
+            STATUS="📦 バッファ日"
+            EMOJI=":package:"
           elif [ "$REMAINING" -le "$IDEAL" ]; then
             STATUS="✅ 順調"
+            EMOJI=":white_check_mark:"
           elif [ "$((REMAINING - IDEAL))" -le 2 ]; then
             STATUS="⚠️ やや遅れ"
+            EMOJI=":warning:"
           else
-            STATUS="🔴 遅れ ($(( REMAINING - IDEAL ))SP)"
+            STATUS="🔴 遅れ ($((REMAINING - IDEAL))SP)"
+            EMOJI=":red_circle:"
           fi
 
-          # バーンダウンチャート（テキスト）
-          BAR_DONE=$(printf '█%.0s' $(seq 1 $DONE_SP) 2>/dev/null || true)
-          BAR_LEFT=$(printf '░%.0s' $(seq 1 $REMAINING) 2>/dev/null || true)
+          # Done Issue リスト
+          DONE_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Done") | "✅ \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
+          PROGRESS_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "In Progress") | "🔧 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
+          TODO_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Todo") | "📋 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
 
-          # Issue にコメント
-          COMMENT="## 📊 バーンダウン更新 ($DATE $DAY)
+          # プログレスバー (20文字幅)
+          PCT=$((DONE_SP * 100 / TOTAL_SP))
+          FILLED=$((PCT / 5))
+          EMPTY=$((20 - FILLED))
+          BAR=$(printf '▓%.0s' $(seq 1 $FILLED) 2>/dev/null || true)
+          BAR="${BAR}$(printf '░%.0s' $(seq 1 $EMPTY) 2>/dev/null || true)"
 
-          | 指標 | 値 |
-          |---|---|
-          | 消化済SP | **${DONE_SP}** / ${TOTAL_SP} |
-          | 残SP | **${REMAINING}** |
-          | 理想残 | ${IDEAL} |
-          | 状態 | ${STATUS} |
+          # --- Slack 通知 ---
+          SLACK_PAYLOAD=$(cat <<PAYLOAD
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "📊 スプリント バーンダウン  ${DATE}(${DAY_JP})",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {"type": "mrkdwn", "text": "*消化SP:*\n${DONE_SP} / ${TOTAL_SP}"},
+                  {"type": "mrkdwn", "text": "*残SP:*\n${REMAINING}"},
+                  {"type": "mrkdwn", "text": "*理想残:*\n${IDEAL}"},
+                  {"type": "mrkdwn", "text": "*状態:*\n${STATUS}"}
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "\`${BAR}\` ${PCT}% (${DONE_SP}/${TOTAL_SP} SP)"
+                }
+              },
+              {
+                "type": "divider"
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Done:*\n${DONE_LIST:-なし}\n\n*In Progress:*\n${PROGRESS_LIST:-なし}\n\n*Todo:*\n${TODO_LIST:-なし}"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "<https://github.com/orgs/M4BS-Organization/projects/3|📋 Project Board> | <https://github.com/M4BS-Organization/ROUAsset-Manager/issues/10|📈 バーンダウンIssue>"
+                  }
+                ]
+              }
+            ]
+          }
+          PAYLOAD
+          )
 
-          \`\`\`
-          ${BAR_DONE}${BAR_LEFT} ${DONE_SP}/${TOTAL_SP} SP
-          \`\`\`
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data "$SLACK_PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
 
-          **Done Issues:**"
+          echo "Slack notification sent"
 
-          # Done の Issue タイトルを取得
-          DONE_TITLES=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Done")] | length')
-
+          # --- GitHub Issue にも記録 ---
           gh issue comment $BURNDOWN_ISSUE \
             --repo "$ORG/ROUAsset-Manager" \
-            --body "$COMMENT
-          $(gh project item-list $PROJECT_NUMBER --owner "$ORG" --format json \
-            --jq '.items[] | select(.status == "Done") | "- ✅ \(.title) (\(.["Story Points"] // 0) SP)"')"
+            --body "## 📊 バーンダウン ${DATE}(${DAY_JP})
+
+          | 消化SP | 残SP | 理想残 | 状態 |
+          |---|---|---|---|
+          | **${DONE_SP}** / ${TOTAL_SP} | **${REMAINING}** | ${IDEAL} | ${STATUS} |
+
+          \`\`\`
+          ${BAR} ${PCT}% (${DONE_SP}/${TOTAL_SP} SP)
+          \`\`\`
+
+          **Done:** ${DONE_LIST:-なし}
+          **In Progress:** ${PROGRESS_LIST:-なし}
+          **Todo:** ${TODO_LIST:-なし}"
