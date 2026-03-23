@@ -1977,7 +1977,7 @@ Public Class FrmLeaseContractMain
 
     Private Sub CalcMonthlyTotals()
         If Not _isLoaded Then Return
-        Dim totalExTax As Decimal = 0
+        Dim totalExTax As Decimal = CalcMonthlyPaymentTotal()
         Dim totalTax As Decimal = 0
         Dim totalIncTax As Decimal = 0
 
@@ -1992,7 +1992,6 @@ Public Class FrmLeaseContractMain
                 Dim incTax As Decimal = exTax + tax
                 row.Cells("MTax").Value = tax
                 row.Cells("MTotalIncTax").Value = incTax
-                totalExTax += exTax
                 totalTax += tax
                 totalIncTax += incTax
             Catch ex As Exception
@@ -2011,14 +2010,11 @@ Public Class FrmLeaseContractMain
         Dim total As Decimal = 0
         For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
             If row.IsNewRow Then Continue For
-            Try
-                If row.Cells("MAmountExTax").Value IsNot Nothing Then
-                    Dim exTax As Decimal = 0
-                    Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString().Replace(",", ""), exTax)
-                    total += exTax
-                End If
-            Catch ex As Exception
-            End Try
+            If row.Cells("MAmountExTax").Value IsNot Nothing Then
+                Dim exTax As Decimal = 0
+                Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString().Replace(",", ""), exTax)
+                total += exTax
+            End If
         Next
         Return total
     End Function
