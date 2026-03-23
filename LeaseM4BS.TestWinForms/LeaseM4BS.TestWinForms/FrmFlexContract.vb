@@ -27,7 +27,7 @@ Partial Public Class FrmFlexContract
     ''' <summary>
     ''' DBとメモリストアから次の契約番号を生成する
     ''' </summary>
-    Private Shared Function GetNextContractNo() As String
+    Public Shared Function GetNextContractNo() As String
         Dim maxCounter As Integer = 0
 
         ' DBから最大カウンタを取得

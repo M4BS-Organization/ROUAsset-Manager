@@ -467,6 +467,7 @@ Public Class FrmLeaseContractMain
 
         MessageBox.Show("契約を登録しました。（CTBレコード: " & ctbCount.ToString() & "件）",
                         "登録完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Me.DialogResult = DialogResult.OK
         Me.Close()
     End Sub
 
