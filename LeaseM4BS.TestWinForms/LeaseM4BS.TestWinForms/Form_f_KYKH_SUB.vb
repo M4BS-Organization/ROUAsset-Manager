@@ -161,44 +161,89 @@ Partial Public Class Form_f_KYKH_SUB
     '  ボタンイベント
     ' =========================================================
     Private Sub cmd_現金購入価額_Click(sender As Object, e As EventArgs) Handles cmd_現金購入価額.Click
-        MessageBox.Show("現金購入価額照会は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykhId = 0 OrElse _rows.Count < 2 Then
+            MessageBox.Show("按分対象の物件が2件以上必要です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Try
+            ' 契約書の金額を取得
+            Dim khDt = _crud.GetDataTable(
+                "SELECT COALESCE(k_klsryo,0) AS k_klsryo, COALESCE(k_glsryo,0) AS k_glsryo, " &
+                "       COALESCE(k_mlsryo,0) AS k_mlsryo, COALESCE(k_ijiknr,0) AS k_ijiknr, " &
+                "       COALESCE(k_zanryo,0) AS k_zanryo " &
+                "FROM d_kykh WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
+            If khDt Is Nothing OrElse khDt.Rows.Count = 0 Then Return
+            Dim kh = khDt.Rows(0)
+            Dim kKlsryo = Convert.ToDouble(kh("k_klsryo"))
+            Dim kGlsryo = Convert.ToDouble(kh("k_glsryo"))
+            Dim kMlsryo = Convert.ToDouble(kh("k_mlsryo"))
+            Dim kIjiknr = Convert.ToDouble(kh("k_ijiknr"))
+            Dim kZanryo = Convert.ToDouble(kh("k_zanryo"))
+
+            ' 全物件の現金購入価額合計を取得
+            Dim totalKnyukn As Double = 0
+            For Each r In _rows
+                totalKnyukn += NzDbl(r("b_knyukn"))
+            Next
+
+            If totalKnyukn = 0 Then
+                MessageBox.Show("現金購入価額の合計が0のため按分できません。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+
+            If MessageBox.Show("現金購入価額の比率でリース料を按分します。よろしいですか？",
+                               "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then Return
+
+            ' 各物件に按分 (端数は最終物件で調整)
+            Dim sumK As Double = 0, sumG As Double = 0, sumM As Double = 0
+            Dim sumIj As Double = 0, sumZ As Double = 0
+
+            For i = 0 To _rows.Count - 1
+                Dim r = _rows(i)
+                Dim kykmId = Convert.ToInt32(r("kykm_id"))
+                Dim bKnyukn = NzDbl(r("b_knyukn"))
+                Dim ratio = bKnyukn / totalKnyukn
+
+                Dim bK, bG, bM, bIj, bZn As Double
+                If i = _rows.Count - 1 Then
+                    ' 最終行: 端数調整
+                    bK = kKlsryo - sumK
+                    bG = kGlsryo - sumG
+                    bM = kMlsryo - sumM
+                    bIj = kIjiknr - sumIj
+                    bZn = kZanryo - sumZ
+                Else
+                    bK = Math.Truncate(kKlsryo * ratio)
+                    bG = Math.Truncate(kGlsryo * ratio)
+                    bM = Math.Truncate(kMlsryo * ratio)
+                    bIj = Math.Truncate(kIjiknr * ratio)
+                    bZn = Math.Truncate(kZanryo * ratio)
+                End If
+
+                sumK += bK : sumG += bG : sumM += bM : sumIj += bIj : sumZ += bZn
+
+                _crud.ExecuteNonQuery(
+                    "UPDATE d_kykm SET b_klsryo=@k, b_glsryo=@g, b_mlsryo=@m, " &
+                    "b_ijiknr=@ij, b_zanryo=@z, b_update_dt=NOW() " &
+                    "WHERE kykm_id=@id",
+                    New List(Of NpgsqlParameter) From {
+                        New NpgsqlParameter("@k", bK),
+                        New NpgsqlParameter("@g", bG),
+                        New NpgsqlParameter("@m", bM),
+                        New NpgsqlParameter("@ij", bIj),
+                        New NpgsqlParameter("@z", bZn),
+                        New NpgsqlParameter("@id", kykmId)
+                    })
+            Next
+
+            MessageBox.Show("現金購入価額比率で按分しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadData()
+        Catch ex As Exception
+            MessageBox.Show("按分エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
-
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzDtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Dim dt As DateTime
-        If DateTime.TryParse(v.ToString(), dt) Then Return dt.ToString("yyyy/MM/dd")
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
-    End Function
-
-    Private Function NzDbl(v As Object) As Double
-        If IsDBNull(v) OrElse v Is Nothing Then Return 0.0
-        Try : Return Convert.ToDouble(v)
-        Catch : Return 0.0
-        End Try
-    End Function
 
     Private Sub Form_f_KYKH_SUB_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()

@@ -403,15 +403,74 @@ Partial Public Class Form_f_KYKM
     End Sub
 
     Private Sub cmd_残額複写_Click(sender As Object, e As EventArgs) Handles cmd_残額複写.Click
-        MessageBox.Show("残額複写機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _currentIndex < 0 OrElse _currentIndex >= _records.Count Then Return
+        Try
+            ' 契約書の金額を取得
+            Dim kykhDt = _crud.GetDataTable(
+                "SELECT COALESCE(k_knyukn,0) AS k_knyukn, COALESCE(k_klsryo,0) AS k_klsryo, " &
+                "       COALESCE(k_glsryo,0) AS k_glsryo, COALESCE(k_mlsryo,0) AS k_mlsryo " &
+                "FROM d_kykh WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
+            If kykhDt Is Nothing OrElse kykhDt.Rows.Count = 0 Then Return
+            Dim kh = kykhDt.Rows(0)
+
+            ' 既存物件の金額合計を取得
+            Dim sumDt = _crud.GetDataTable(
+                "SELECT COALESCE(SUM(knyukn),0) AS s_knyukn, COALESCE(SUM(b_klsryo),0) AS s_klsryo, " &
+                "       COALESCE(SUM(b_glsryo),0) AS s_glsryo, COALESCE(SUM(b_mlsryo),0) AS s_mlsryo " &
+                "FROM d_kykm WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
+            Dim sm = sumDt.Rows(0)
+
+            ' 残額算出
+            Dim remKnyukn = Convert.ToDouble(kh("k_knyukn")) - Convert.ToDouble(sm("s_knyukn"))
+            Dim remKlsryo = Convert.ToDouble(kh("k_klsryo")) - Convert.ToDouble(sm("s_klsryo"))
+            Dim remGlsryo = Convert.ToDouble(kh("k_glsryo")) - Convert.ToDouble(sm("s_glsryo"))
+            Dim remMlsryo = Convert.ToDouble(kh("k_mlsryo")) - Convert.ToDouble(sm("s_mlsryo"))
+
+            If remKnyukn <= 0 AndAlso remKlsryo <= 0 Then
+                MessageBox.Show("残額がありません。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Return
+            End If
+
+            ' 新しいkykm_idを採番
+            Dim maxObj = _crud.ExecuteScalar(Of Object)("SELECT COALESCE(MAX(kykm_id),0) FROM d_kykm", Nothing)
+            Dim newKykmId = Convert.ToInt32(maxObj) + 1
+
+            ' 新しいkykm_noを採番
+            Dim maxNoObj = _crud.ExecuteScalar(Of Object)(
+                "SELECT COALESCE(MAX(kykm_no),0) FROM d_kykm WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
+            Dim newKykmNo = Convert.ToInt32(maxNoObj) + 1
+
+            ' INSERT
+            Dim val As New Dictionary(Of String, Object)
+            val.Add("kykm_id", newKykmId)
+            val.Add("kykh_id", _kykhId)
+            val.Add("kykm_no", newKykmNo)
+            val.Add("bukn_nm", "残額複写")
+            val.Add("knyukn", remKnyukn)
+            val.Add("b_klsryo", remKlsryo)
+            val.Add("b_glsryo", remGlsryo)
+            val.Add("b_mlsryo", remMlsryo)
+            val.Add("suuryo", 1)
+            val.Add("b_create_dt", DateTime.Now)
+            val.Add("b_update_dt", DateTime.Now)
+            _crud.Insert("d_kykm", val)
+
+            MessageBox.Show("残額で新しい物件を作成しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadAllRecords()
+        Catch ex As Exception
+            MessageBox.Show("残額複写エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_HENL_Click(sender As Object, e As EventArgs) Handles cmd_HENL.Click
-        MessageBox.Show("返却(HENL)機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        MessageBox.Show("変額リース料画面(f_HENL)はIssue #31スコープ外のため未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
     Private Sub cmd_HENF_Click(sender As Object, e As EventArgs) Handles cmd_HENF.Click
-        MessageBox.Show("変更(HENF)機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        MessageBox.Show("付帯費用画面(f_HENF)はIssue #31スコープ外のため未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
     Private Sub cmd_CHUUKI_Click(sender As Object, e As EventArgs) Handles cmd_CHUUKI.Click
@@ -426,6 +485,12 @@ Partial Public Class Form_f_KYKM
 
     Private Sub cmd_分割_Click(sender As Object, e As EventArgs) Handles cmd_分割.Click
         If _currentIndex < 0 OrElse _currentIndex >= _records.Count Then Return
+        ' 数量チェック: 分割には数量2以上が必要
+        Dim suuryo = ParseIntFromText(txt_SUURYO.Text)
+        If suuryo < 2 Then
+            MessageBox.Show("分割するには数量が2以上必要です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
         Dim kykmId As Integer = 0
         Integer.TryParse(txt_KYKM_ID.Text, kykmId)
         If kykmId = 0 Then Return
@@ -540,6 +605,37 @@ Partial Public Class Form_f_KYKM
         End Try
     End Sub
 
+    ' =========================================================
+    '  金額AfterUpdateイベント (Access版の連鎖再計算を再現)
+    ' =========================================================
+    Private Sub txt_KLSRYO_Leave(sender As Object, e As EventArgs) Handles txt_KLSRYO.Leave
+        If Not _isDirty Then Return
+        ' 1回額変更 → 税額・税込連動
+        Dim klsryo = ParseDblFromText(txt_KLSRYO.Text)
+        Dim zritu = 0.1  ' TODO: 契約書の消費税率を参照
+        Dim kzei = ContractCalcHelper.CalcZei(klsryo, zritu)
+        txt_KZEI.Text = kzei.ToString("N0")
+        txt_KLSRYO_ZKOMI.Text = ContractCalcHelper.CalcZkomi(klsryo, kzei).ToString("N0")
+    End Sub
+
+    Private Sub txt_GLSRYO_Leave(sender As Object, e As EventArgs) Handles txt_GLSRYO.Leave
+        If Not _isDirty Then Return
+        Dim glsryo = ParseDblFromText(txt_GLSRYO.Text)
+        Dim zritu = 0.1
+        Dim gzei = ContractCalcHelper.CalcZei(glsryo, zritu)
+        txt_GZEI.Text = gzei.ToString("N0")
+        txt_GLSRYO_ZKOMI.Text = ContractCalcHelper.CalcZkomi(glsryo, gzei).ToString("N0")
+    End Sub
+
+    Private Sub txt_MLSRYO_Leave(sender As Object, e As EventArgs) Handles txt_MLSRYO.Leave
+        If Not _isDirty Then Return
+        Dim mlsryo = ParseDblFromText(txt_MLSRYO.Text)
+        Dim zritu = 0.1
+        Dim mzei = ContractCalcHelper.CalcZei(mlsryo, zritu)
+        txt_MZEI.Text = mzei.ToString("N0")
+        txt_MLSRYO_ZKOMI.Text = ContractCalcHelper.CalcZkomi(mlsryo, mzei).ToString("N0")
+    End Sub
+
     Private Sub cmd_閉じる_Click(sender As Object, e As EventArgs) Handles cmd_閉じる.Click
         If _isDirty Then
             Dim res = MessageBox.Show("変更を保存して閉じますか？", "確認", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question)
@@ -562,49 +658,10 @@ Partial Public Class Form_f_KYKM
     ' =========================================================
     '  ヘルパー
     ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzDtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Dim dt As DateTime
-        If DateTime.TryParse(v.ToString(), dt) Then Return dt.ToString("yyyy/MM/dd")
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
-    End Function
-
     Private Function NzInt(s As String) As Integer
         Dim v As Integer
         If Integer.TryParse(s.Replace(",", "").Trim(), v) Then Return v
         Return 0
-    End Function
-
-    Private Function NzDbl(s As String) As Double
-        Dim v As Double
-        If Double.TryParse(s.Replace(",", "").Trim(), v) Then Return v
-        Return 0.0
-    End Function
-
-    Private Function ParseDt(s As String) As Object
-        If String.IsNullOrWhiteSpace(s) Then Return DBNull.Value
-        Dim dt As DateTime
-        If DateTime.TryParse(s, dt) Then Return dt
-        Return DBNull.Value
     End Function
 
     Private Sub Form_f_KYKM_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed

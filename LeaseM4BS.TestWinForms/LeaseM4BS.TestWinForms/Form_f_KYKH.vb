@@ -205,9 +205,9 @@ Partial Public Class Form_f_KYKH
             val.Add("shri_dt1", ParseDt(txt_SHRI_DT1.Text))
             val.Add("shri_dt2", ParseDt(txt_SHRI_DT2.Text))
             val.Add("shri_dt3", NzInt(txt_SHRI_DT3.Text))  ' smallint
-            val.Add("k_knyukn", NzDbl(txt_KNYUKN.Text))
-            val.Add("ryoritu", NzDbl(txt_RYORITU.Text))
-            val.Add("k_ijiknr", NzDbl(txt_IJIKNR.Text))
+            val.Add("k_knyukn", ParseDblFromText(txt_KNYUKN.Text))
+            val.Add("ryoritu", ParseDblFromText(txt_RYORITU.Text))
+            val.Add("k_ijiknr", ParseDblFromText(txt_IJIKNR.Text))
             val.Add("mkaisu", NzInt(txt_MKAISU.Text))
             val.Add("mae_dt", ParseDt(txt_MAE_DT.Text))
             val.Add("rng_bango", txt_RNG_BANGO.Text.Trim())
@@ -240,9 +240,55 @@ Partial Public Class Form_f_KYKH
         SetEditMode()
     End Sub
 
-    ''' <summary>再リース/返却（未実装）</summary>
+    ''' <summary>再リース処理</summary>
     Private Sub cmd_SAILEASE_Click(sender As Object, e As EventArgs) Handles cmd_SAILEASE.Click
-        MessageBox.Show("再リース/返却機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykhId = 0 Then Return
+        If MessageBox.Show("再リース処理を実行しますか？" & vbCrLf &
+                           "再リース回数が+1されます。",
+                           "再リース確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then
+            Return
+        End If
+
+        Try
+            ' 現在の再リース回数を取得
+            Dim currentSaikaisu = NzInt(txt_SAIKAISU.Text)
+            Dim newSaikaisu = currentSaikaisu + 1
+
+            _crud.BeginTransaction()
+
+            ' d_kykh.saikaisu を更新
+            _crud.ExecuteNonQuery(
+                "UPDATE d_kykh SET saikaisu = @saikaisu, k_update_dt = NOW() WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@saikaisu", newSaikaisu),
+                    New NpgsqlParameter("@id", _kykhId)
+                })
+
+            ' d_haif.saikaisu も更新
+            _crud.ExecuteNonQuery(
+                "UPDATE d_haif SET saikaisu = @saikaisu WHERE kykm_id IN (SELECT kykm_id FROM d_kykm WHERE kykh_id = @id)",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@saikaisu", newSaikaisu),
+                    New NpgsqlParameter("@id", _kykhId)
+                })
+
+            ' 解約フラグをリセット (再リース開始)
+            _crud.ExecuteNonQuery(
+                "UPDATE d_kykm SET b_ckaiyk_f = FALSE, ckaiyk_dt = NULL, " &
+                "  ckaiyk_esdt_t = NULL, ckaiyk_esdt_h = NULL, iyaku_kin = NULL " &
+                "WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
+
+            _crud.Commit()
+
+            MessageBox.Show($"再リース処理が完了しました。(再リース回数: {newSaikaisu})",
+                            "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadContract()
+            SetReadOnlyMode()
+        Catch ex As Exception
+            _crud.Rollback()
+            MessageBox.Show("再リースエラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     ''' <summary>中途解約：物件がある場合 f_KAIYAK を開く</summary>
@@ -265,9 +311,52 @@ Partial Public Class Form_f_KYKH
         End Try
     End Sub
 
-    ''' <summary>再リース取消（未実装）</summary>
+    ''' <summary>再リース取消</summary>
     Private Sub cmd_ROLLBACK_SAI_Click(sender As Object, e As EventArgs) Handles cmd_ROLLBACK_SAI.Click
-        MessageBox.Show("再リース取消機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykhId = 0 Then Return
+        Dim currentSaikaisu = NzInt(txt_SAIKAISU.Text)
+        If currentSaikaisu <= 0 Then
+            MessageBox.Show("再リース回数が0のため取消できません。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        If MessageBox.Show("再リースを取り消しますか？" & vbCrLf &
+                           $"再リース回数が {currentSaikaisu} → {currentSaikaisu - 1} に戻ります。",
+                           "再リース取消確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+            Return
+        End If
+
+        Try
+            Dim newSaikaisu = currentSaikaisu - 1
+
+            _crud.BeginTransaction()
+
+            ' d_kykh.saikaisu を更新
+            _crud.ExecuteNonQuery(
+                "UPDATE d_kykh SET saikaisu = @saikaisu, k_update_dt = NOW() WHERE kykh_id = @id",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@saikaisu", newSaikaisu),
+                    New NpgsqlParameter("@id", _kykhId)
+                })
+
+            ' d_haif.saikaisu も更新
+            _crud.ExecuteNonQuery(
+                "UPDATE d_haif SET saikaisu = @saikaisu WHERE kykm_id IN (SELECT kykm_id FROM d_kykm WHERE kykh_id = @id)",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@saikaisu", newSaikaisu),
+                    New NpgsqlParameter("@id", _kykhId)
+                })
+
+            _crud.Commit()
+
+            MessageBox.Show($"再リースを取り消しました。(再リース回数: {newSaikaisu})",
+                            "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadContract()
+            SetReadOnlyMode()
+        Catch ex As Exception
+            _crud.Rollback()
+            MessageBox.Show("再リース取消エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     ''' <summary>削除（d_kykh + d_kykm をトランザクションで削除）</summary>
@@ -321,45 +410,63 @@ Partial Public Class Form_f_KYKH
         LoadContract()  ' 戻ったら集計再読み込み
     End Sub
 
-    ''' <summary>料率マスタ参照（未実装）</summary>
+    ''' <summary>料率マスタ参照</summary>
     Private Sub cmd_料率_Click(sender As Object, e As EventArgs) Handles cmd_料率.Click
-        MessageBox.Show("料率マスタ参照は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Try
+            Dim dt = _crud.GetDataTable("SELECT * FROM m_ryoritu ORDER BY ryoritu_id")
+            If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+                MessageBox.Show("料率データがありません。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Return
+            End If
+            Using frm As New Form()
+                frm.Text = "料率マスタ一覧"
+                frm.Size = New System.Drawing.Size(600, 400)
+                frm.StartPosition = FormStartPosition.CenterParent
+                Dim dgv As New DataGridView()
+                dgv.Dock = DockStyle.Fill
+                dgv.ReadOnly = True
+                dgv.AllowUserToAddRows = False
+                dgv.AllowUserToDeleteRows = False
+                dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+                dgv.DataSource = dt
+                frm.Controls.Add(dgv)
+                frm.ShowDialog(Me)
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("料率マスタ取得エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
-    ''' <summary>税率マスタ参照（未実装）</summary>
+    ''' <summary>税率マスタ参照</summary>
     Private Sub cmd_税率_Click(sender As Object, e As EventArgs) Handles cmd_税率.Click
-        MessageBox.Show("税率マスタ参照は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Try
+            Dim dt = _crud.GetDataTable("SELECT zei_kaisei_id, teki_dt_from, teki_dt_to, zritu, kkyak_dt_from, kkyak_dt_to FROM t_zei_kaisei ORDER BY teki_dt_from")
+            If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+                MessageBox.Show("税率データがありません。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Return
+            End If
+            Using frm As New Form()
+                frm.Text = "税率改正マスタ一覧"
+                frm.Size = New System.Drawing.Size(700, 400)
+                frm.StartPosition = FormStartPosition.CenterParent
+                Dim dgv As New DataGridView()
+                dgv.Dock = DockStyle.Fill
+                dgv.ReadOnly = True
+                dgv.AllowUserToAddRows = False
+                dgv.AllowUserToDeleteRows = False
+                dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+                dgv.DataSource = dt
+                frm.Controls.Add(dgv)
+                frm.ShowDialog(Me)
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("税率マスタ取得エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     ' =========================================================
-    '  ヘルパー関数
+    '  テキスト→数値ヘルパー (カンマ除去付き、TextBox専用)
     ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzDtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Dim dt As DateTime
-        If DateTime.TryParse(v.ToString(), dt) Then Return dt.ToString("yyyy/MM/dd")
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
-    End Function
-
     Private Function NzInt(s As String) As Integer
         Dim v As Integer
         If Integer.TryParse(s.Replace(",", "").Trim(), v) Then Return v
@@ -372,12 +479,167 @@ Partial Public Class Form_f_KYKH
         Return 0.0
     End Function
 
-    Private Function ParseDt(s As String) As Object
-        If String.IsNullOrWhiteSpace(s) Then Return DBNull.Value
-        Dim dt As DateTime
-        If DateTime.TryParse(s, dt) Then Return dt
-        Return DBNull.Value
+    ' =========================================================
+    '  計算ロジック (Access版 pc_f_KYKH / Form_f_KYKH 移植)
+    ' =========================================================
+
+    ''' <summary>終了日を算出してセット (Access版: gSetCTL_END_DT)</summary>
+    Private Sub CalcAndSetEndDt()
+        Dim startDt As Date?
+        Dim d As DateTime
+        If DateTime.TryParse(txt_START_DT.Text, d) Then startDt = d
+        Dim lkikan = NzInt(txt_LKIKAN.Text)
+        Dim endDt = ContractCalcHelper.CalcEndDt(startDt, lkikan)
+        txt_SHRI_EN_DT.Text = If(endDt IsNot Nothing, endDt.Value.ToString("yyyy/MM/dd"), "")
+    End Sub
+
+    ''' <summary>支払回数を算出してセット (Access版: mSetCTL_SHRI_CNT)</summary>
+    Private Sub CalcAndSetShriCnt()
+        If chk_JENCHO_F.Checked Then Return  ' 延長フラグON時は計算しない
+        Dim lkikan = NzInt(txt_LKIKAN.Text)
+        Dim mkaisu = NzInt(txt_MKAISU.Text)
+        Dim shriKn = NzInt(txt_SHRI_KN.Text)
+        Dim cnt = ContractCalcHelper.CalcShriCnt(lkikan, mkaisu, shriKn)
+        If cnt >= 0 Then txt_SHRI_CNT.Text = cnt.ToString()
+    End Sub
+
+    ''' <summary>総額を算出してセット (Access版: gCALC_SLSRYO)</summary>
+    Private Sub CalcAndSetSlsryo()
+        Dim klsryo = NzDbl(txt_KLSRYO.Text)
+        Dim shriCnt = NzInt(txt_SHRI_CNT.Text)
+        Dim mlsryo = NzDbl(txt_MLSRYO.Text)
+        Dim henlSum = NzDbl(txt_HENL_SUM.Text)
+        txt_SLSRYO.Text = ContractCalcHelper.CalcSlsryo(klsryo, shriCnt, mlsryo, henlSum).ToString("N0")
+    End Sub
+
+    ''' <summary>月額の税額・税込を連動計算</summary>
+    Private Sub CalcGlsryoZei()
+        Dim glsryo = NzDbl(txt_GLSRYO.Text)
+        Dim zritu = GetCurrentZritu()
+        Dim gzei = ContractCalcHelper.CalcZei(glsryo, zritu)
+        txt_GZEI.Text = gzei.ToString("N0")
+        txt_GLSRYO_ZKOMI.Text = ContractCalcHelper.CalcZkomi(glsryo, gzei).ToString("N0")
+    End Sub
+
+    ''' <summary>1回額の税額・税込を連動計算</summary>
+    Private Sub CalcKlsryoZei()
+        Dim klsryo = NzDbl(txt_KLSRYO.Text)
+        Dim zritu = GetCurrentZritu()
+        Dim kzei = ContractCalcHelper.CalcZei(klsryo, zritu)
+        txt_KZEI.Text = kzei.ToString("N0")
+        txt_KLSRYO_ZKOMI.Text = ContractCalcHelper.CalcZkomi(klsryo, kzei).ToString("N0")
+    End Sub
+
+    ''' <summary>前払額の税額・税込を連動計算</summary>
+    Private Sub CalcMlsryoZei()
+        Dim mlsryo = NzDbl(txt_MLSRYO.Text)
+        Dim zritu = GetCurrentZritu()
+        Dim mzei = ContractCalcHelper.CalcZei(mlsryo, zritu)
+        txt_MZEI.Text = mzei.ToString("N0")
+        txt_MLSRYO_ZKOMI.Text = ContractCalcHelper.CalcZkomi(mlsryo, mzei).ToString("N0")
+    End Sub
+
+    ''' <summary>現在の消費税率を取得 (画面上のテキストから)</summary>
+    Private Function GetCurrentZritu() As Double
+        ' TODO: ComboBox化後はSelectedValueから取得
+        Dim v As Double
+        If Double.TryParse(txt_K_ZOKUSEI1.Tag?.ToString(), v) Then Return v
+        ' フォールバック: 10%
+        Return 0.1
     End Function
+
+    ''' <summary>消費税率を自動セット (Access版: mSetCTL_ZRITU)</summary>
+    Private Sub AutoSetZritu()
+        Try
+            Dim startDt As Date? = Nothing
+            Dim endDt As Date? = Nothing
+            Dim d As DateTime
+            If DateTime.TryParse(txt_START_DT.Text, d) Then startDt = d
+            If DateTime.TryParse(txt_SHRI_EN_DT.Text, d) Then endDt = d
+            Dim saikaisu = NzInt(txt_SAIKAISU.Text)
+
+            Using helper As New TaxRateHelper()
+                Dim rate = helper.GetZrituForKykh(0, Nothing, startDt, endDt, saikaisu)
+                If rate IsNot Nothing Then
+                    txt_K_ZOKUSEI1.Tag = rate.Value  ' 税率を保持
+                End If
+            End Using
+        Catch
+            ' 税率取得失敗時は無視
+        End Try
+    End Sub
+
+    ' =========================================================
+    '  AfterUpdate イベント連動 (Access版の連鎖再計算を再現)
+    ' =========================================================
+
+    Private Sub txt_START_DT_Leave(sender As Object, e As EventArgs) Handles txt_START_DT.Leave
+        If Not _isEditMode Then Return
+        CalcAndSetEndDt()
+        AutoSetZritu()
+    End Sub
+
+    Private Sub txt_LKIKAN_Leave(sender As Object, e As EventArgs) Handles txt_LKIKAN.Leave
+        If Not _isEditMode Then Return
+        CalcAndSetEndDt()
+        CalcAndSetShriCnt()
+        AutoSetZritu()
+    End Sub
+
+    Private Sub txt_SHRI_KN_Leave(sender As Object, e As EventArgs) Handles txt_SHRI_KN.Leave
+        If Not _isEditMode Then Return
+        ' 支払間隔変更確認
+        If NzInt(txt_SHRI_KN.Text) > 0 AndAlso NzDbl(txt_KLSRYO.Text) > 0 Then
+            If MessageBox.Show("支払間隔を変更するとリース料が再計算されます。よろしいですか？",
+                               "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then
+                Return
+            End If
+        End If
+        CalcAndSetShriCnt()
+    End Sub
+
+    Private Sub txt_SHRI_CNT_Leave(sender As Object, e As EventArgs) Handles txt_SHRI_CNT.Leave
+        If Not _isEditMode Then Return
+        CalcAndSetSlsryo()
+    End Sub
+
+    Private Sub txt_MKAISU_Leave(sender As Object, e As EventArgs) Handles txt_MKAISU.Leave
+        If Not _isEditMode Then Return
+        CalcAndSetShriCnt()
+    End Sub
+
+    Private Sub txt_GLSRYO_Leave(sender As Object, e As EventArgs) Handles txt_GLSRYO.Leave
+        If Not _isEditMode Then Return
+        CalcGlsryoZei()
+    End Sub
+
+    Private Sub txt_KLSRYO_Leave(sender As Object, e As EventArgs) Handles txt_KLSRYO.Leave
+        If Not _isEditMode Then Return
+        CalcKlsryoZei()
+        CalcAndSetSlsryo()
+    End Sub
+
+    Private Sub txt_MLSRYO_Leave(sender As Object, e As EventArgs) Handles txt_MLSRYO.Leave
+        If Not _isEditMode Then Return
+        CalcMlsryoZei()
+        CalcAndSetSlsryo()
+    End Sub
+
+    Private Sub chk_JENCHO_F_CheckedChanged(sender As Object, e As EventArgs) Handles chk_JENCHO_F.CheckedChanged
+        If Not _isEditMode Then Return
+        CalcAndSetShriCnt()
+        CalcAndSetSlsryo()
+    End Sub
+
+    Private Sub txt_KYAK_DT_Leave(sender As Object, e As EventArgs) Handles txt_KYAK_DT.Leave
+        If Not _isEditMode Then Return
+        ' 契約日→開始日デフォルト (開始日が空なら契約日をコピー)
+        If String.IsNullOrWhiteSpace(txt_START_DT.Text) Then
+            txt_START_DT.Text = txt_KYAK_DT.Text
+            CalcAndSetEndDt()
+        End If
+        AutoSetZritu()
+    End Sub
 
     Private Sub Form_f_KYKH_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()

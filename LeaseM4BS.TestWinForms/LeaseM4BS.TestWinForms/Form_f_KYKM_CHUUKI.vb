@@ -129,6 +129,21 @@ Partial Public Class Form_f_KYKM_CHUUKI
     '  ボタンイベント
     ' =========================================================
     Private Sub cmd_閉じる_Click(sender As Object, e As EventArgs) Handles cmd_閉じる.Click
+        ' 減損行の年月重複チェック
+        If _kykmId > 0 Then
+            Try
+                Dim dupDt = _crud.GetDataTable(
+                    "SELECT gson_dt, COUNT(*) AS cnt FROM d_gson " &
+                    "WHERE kykm_id = @id AND gson_dt IS NOT NULL " &
+                    "GROUP BY gson_dt HAVING COUNT(*) > 1",
+                    New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+                If dupDt IsNot Nothing AndAlso dupDt.Rows.Count > 0 Then
+                    MessageBox.Show("減損行に同一年月の重複があります。確認してください。",
+                                    "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                End If
+            Catch
+            End Try
+        End If
         SaveMsFlags()
         Me.Close()
     End Sub
@@ -141,7 +156,26 @@ Partial Public Class Form_f_KYKM_CHUUKI
     End Sub
 
     Private Sub cmd_GSON_ADD_Click(sender As Object, e As EventArgs) Handles cmd_GSON_ADD.Click
-        MessageBox.Show("減損行追加は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykmId = 0 Then Return
+        Try
+            ' 次の line_id を採番
+            Dim maxObj = _crud.ExecuteScalar(Of Object)(
+                "SELECT COALESCE(MAX(line_id), 0) FROM d_gson WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            Dim newLineId As Integer = Convert.ToInt32(maxObj) + 1
+
+            ' INSERT (初期値: gson_dt=NULL, gson_ryo=0, gson_rkei=0)
+            _crud.ExecuteNonQuery(
+                "INSERT INTO d_gson (kykm_id, line_id, gson_ryo, gson_rkei, g_create_dt, g_update_dt) " &
+                "VALUES (@kykm_id, @line_id, 0, 0, NOW(), NOW())",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@kykm_id", _kykmId),
+                    New NpgsqlParameter("@line_id", CShort(newLineId))
+                })
+            MessageBox.Show($"減損行 (LINE_ID={newLineId}) を追加しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Catch ex As Exception
+            MessageBox.Show("減損行追加エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_GSON_DEL_Click(sender As Object, e As EventArgs) Handles cmd_GSON_DEL.Click
@@ -170,34 +204,95 @@ Partial Public Class Form_f_KYKM_CHUUKI
     End Sub
 
     Private Sub cmd_注記判定_Click(sender As Object, e As EventArgs) Handles cmd_注記判定.Click
-        MessageBox.Show("注記判定再計算は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykmId = 0 Then Return
+        Try
+            ' 物件+契約書の情報を取得
+            Dim dt = _crud.GetDataTable(
+                "SELECT m.knyukn, m.b_slsryo, m.b_ijiknr, m.b_zanryo, m.b_syutok, " &
+                "       m.kari_ritu, m.taiyo_nen, " &
+                "       h.lkikan, h.k_knyukn, h.k_slsryo " &
+                "FROM d_kykm m " &
+                "LEFT JOIN d_kykh h ON h.kykh_id = m.kykh_id " &
+                "WHERE m.kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            If dt Is Nothing OrElse dt.Rows.Count = 0 Then Return
+            Dim r = dt.Rows(0)
+
+            ' 90% / 75% 判定
+            Dim knyukn = NzDbl(r("knyukn"))
+            Dim slsryo = NzDbl(r("b_slsryo"))
+            Dim ijiknr = NzDbl(r("b_ijiknr"))
+            Dim zanryo = NzDbl(r("b_zanryo"))
+            Dim syutok = NzDbl(r("b_syutok"))
+
+            ' 取得額(現在価値)
+            If syutok = 0 Then syutok = knyukn
+
+            ' 90%判定: (総額 - 維持管理) / 取得額 >= 90% → ファイナンス
+            Dim ratio90 As Double = 0
+            If syutok > 0 Then ratio90 = (slsryo - ijiknr) / syutok * 100.0
+            Dim rslt90 As String = If(ratio90 >= 90.0, "90%以上(ファイナンス)", $"{ratio90:N1}% (90%未満)")
+
+            ' 75%判定: リース期間 / 耐用年数 >= 75% → ファイナンス
+            Dim lkikan = NzDbl(r("lkikan"))
+            Dim taiyoNen = NzDbl(r("taiyo_nen"))
+            Dim ratio75 As Double = 0
+            If taiyoNen > 0 Then ratio75 = (lkikan / 12.0) / taiyoNen * 100.0
+            Dim rslt75 As String = If(ratio75 >= 75.0, "75%以上(ファイナンス)", $"{ratio75:N1}% (75%未満)")
+
+            ' 画面に反映
+            txt_RSLT90P_STR.Text = rslt90
+            txt_RSLT75P_STR.Text = rslt75
+
+            ' DB更新
+            _crud.ExecuteNonQuery(
+                "UPDATE d_kykm SET rslt90p_str = @r90, rslt75p_str = @r75, " &
+                "  b_ghassei = @ghassei, b_syutok = @syutok " &
+                "WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@r90", rslt90),
+                    New NpgsqlParameter("@r75", rslt75),
+                    New NpgsqlParameter("@ghassei", slsryo - ijiknr),
+                    New NpgsqlParameter("@syutok", syutok),
+                    New NpgsqlParameter("@id", _kykmId)
+                })
+
+            txt_B_GHASSEI.Text = (slsryo - ijiknr).ToString("N0")
+            txt_B_SYUTOK.Text = syutok.ToString("N0")
+            MessageBox.Show("注記判定を実行しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Catch ex As Exception
+            MessageBox.Show("注記判定エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_SCH_Click(sender As Object, e As EventArgs) Handles cmd_SCH.Click
-        MessageBox.Show("返済スケジュールは未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykmId = 0 Then Return
+        Try
+            Dim dt = _crud.GetDataTable(
+                "SELECT * FROM d_rsok WHERE kykm_id = @id ORDER BY line_id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+                MessageBox.Show("返済スケジュールデータがありません。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Return
+            End If
+            Using frm As New Form()
+                frm.Text = "返済スケジュール"
+                frm.Size = New System.Drawing.Size(700, 500)
+                frm.StartPosition = FormStartPosition.CenterParent
+                Dim dgv As New DataGridView()
+                dgv.Dock = DockStyle.Fill
+                dgv.ReadOnly = True
+                dgv.AllowUserToAddRows = False
+                dgv.AllowUserToDeleteRows = False
+                dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+                dgv.DataSource = dt
+                frm.Controls.Add(dgv)
+                frm.ShowDialog(Me)
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("返済スケジュール表示エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
-
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
-    End Function
 
     Private Sub Form_f_KYKM_CHUUKI_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()

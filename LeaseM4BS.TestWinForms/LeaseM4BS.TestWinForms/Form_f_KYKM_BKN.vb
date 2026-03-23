@@ -88,7 +88,7 @@ Partial Public Class Form_f_KYKM_BKN
         txt_W_KYKM_ID.Text = NzStr(r("kykm_id"))
 
         ' 契約情報
-        txt_START_DT.Text = NzDateStr(r("start_dt"))
+        txt_START_DT.Text = NzDtStr(r("start_dt"))
         txt_KYKBNL.Text = NzStr(r("kykbnl"))
         txt_KKBN_NM.Text = NzStr(r("kkbn_nm"))
         txt_KYKBNF.Text = NzStr(r("kykbnf"))
@@ -104,7 +104,7 @@ Partial Public Class Form_f_KYKM_BKN
         txt_K_KNYUKN.Text = NzAmtStr(r("k_knyukn"))
         txt_B_TANKA.Text = NzAmtStr(r("b_tanka"))
         txt_B_SAIRYO.Text = NzAmtStr(r("b_sairyo"))
-        txt_B_KJYO_EN_DT.Text = NzDateStr(r("b_kjyo_en_dt"))
+        txt_B_KJYO_EN_DT.Text = NzDtStr(r("b_kjyo_en_dt"))
 
         ' リース料
         txt_SLSRYO.Text = NzAmtStr(r("slsryo"))
@@ -127,11 +127,11 @@ Partial Public Class Form_f_KYKM_BKN
         txt_B_HENF_KLSRYO_NEW.Text = NzAmtStr(r("b_henf_klsryo_new"))
         txt_B_HENL_F.Text = NzStr(r("b_henl_f"))
         txt_B_HENF_F.Text = NzStr(r("b_henf_f"))
-        txt_HENL_SEDT.Text = NzDateStr(r("henl_sedt"))
-        txt_HENF_SEDT.Text = NzDateStr(r("henf_sedt"))
-        txt_CKAIYK_DT.Text = NzDateStr(r("ckaiyk_dt"))
-        txt_CKAIYK_ESDT_T.Text = NzDateStr(r("ckaiyk_esdt_t"))
-        txt_CKAIYK_ESDT_H.Text = NzDateStr(r("ckaiyk_esdt_h"))
+        txt_HENL_SEDT.Text = NzDtStr(r("henl_sedt"))
+        txt_HENF_SEDT.Text = NzDtStr(r("henf_sedt"))
+        txt_CKAIYK_DT.Text = NzDtStr(r("ckaiyk_dt"))
+        txt_CKAIYK_ESDT_T.Text = NzDtStr(r("ckaiyk_esdt_t"))
+        txt_CKAIYK_ESDT_H.Text = NzDtStr(r("ckaiyk_esdt_h"))
         txt_IYAKU_KIN.Text = NzAmtStr(r("iyaku_kin"))
 
         ' 管理部署（bcat）
@@ -140,7 +140,7 @@ Partial Public Class Form_f_KYKM_BKN
         txt_BCAT3_NM.Text = NzStr(r("bcat3_nm"))
         txt_BCAT4_NM.Text = NzStr(r("bcat4_nm"))
         txt_BCAT5_NM.Text = NzStr(r("bcat5_nm"))
-        txt_IDO_DT.Text = NzDateStr(r("ido_dt"))
+        txt_IDO_DT.Text = NzDtStr(r("ido_dt"))
         txt_B_BCAT_NM_K.Text = NzStr(r("b_bcat_nm_k"))
 
         ' 移動先R1
@@ -149,7 +149,7 @@ Partial Public Class Form_f_KYKM_BKN
         txt_BCAT3_NM_R1.Text = NzStr(r("bcat3_nm_r1"))
         txt_BCAT4_NM_R1.Text = NzStr(r("bcat4_nm_r1"))
         txt_BCAT5_NM_R1.Text = NzStr(r("bcat5_nm_r1"))
-        txt_IDO_DT_R1.Text = NzDateStr(r("ido_dt_r1"))
+        txt_IDO_DT_R1.Text = NzDtStr(r("ido_dt_r1"))
 
         ' 移動先R2
         txt_BCAT1_NM_R2.Text = NzStr(r("bcat1_nm_r2"))
@@ -157,7 +157,7 @@ Partial Public Class Form_f_KYKM_BKN
         txt_BCAT3_NM_R2.Text = NzStr(r("bcat3_nm_r2"))
         txt_BCAT4_NM_R2.Text = NzStr(r("bcat4_nm_r2"))
         txt_BCAT5_NM_R2.Text = NzStr(r("bcat5_nm_r2"))
-        txt_IDO_DT_R2.Text = NzDateStr(r("ido_dt_r2"))
+        txt_IDO_DT_R2.Text = NzDtStr(r("ido_dt_r2"))
 
         ' 移動先R3
         txt_BCAT1_NM_R3.Text = NzStr(r("bcat1_nm_r3"))
@@ -165,7 +165,7 @@ Partial Public Class Form_f_KYKM_BKN
         txt_BCAT3_NM_R3.Text = NzStr(r("bcat3_nm_r3"))
         txt_BCAT4_NM_R3.Text = NzStr(r("bcat4_nm_r3"))
         txt_BCAT5_NM_R3.Text = NzStr(r("bcat5_nm_r3"))
-        txt_IDO_DT_R3.Text = NzDateStr(r("ido_dt_r3"))
+        txt_IDO_DT_R3.Text = NzDtStr(r("ido_dt_r3"))
 
         ' 名称参照
         txt_SKMK_NM.Text = NzStr(r("skmk_nm"))
@@ -177,13 +177,13 @@ Partial Public Class Form_f_KYKM_BKN
         ' 廃棄
         txt_HKHO_NM.Text = NzStr(r("hkho_nm"))
         txt_HK_GSHA_NM.Text = NzStr(r("hk_gsha_nm"))
-        txt_HK_DT.Text = NzDateStr(r("hk_dt"))
+        txt_HK_DT.Text = NzDtStr(r("hk_dt"))
 
         ' 物件番号
         txt_BUKN_BANGO1.Text = NzStr(r("bukn_bango1"))
         txt_BUKN_BANGO2.Text = NzStr(r("bukn_bango2"))
         txt_BUKN_BANGO3.Text = NzStr(r("bukn_bango3"))
-        txt_SETTI_DT.Text = NzDateStr(r("setti_dt"))
+        txt_SETTI_DT.Text = NzDtStr(r("setti_dt"))
 
         ' 属性
         txt_B_ZOKUSEI1.Text = NzStr(r("b_zokusei1"))
@@ -198,8 +198,8 @@ Partial Public Class Form_f_KYKM_BKN
         txt_F_HKMK_ID.Text = NzStr(r("f_hkmk_id"))
         txt_F_GSHA_ID.Text = NzStr(r("f_gsha_id"))
         txt_INF.Text = NzStr(r("inf"))
-        txt_B_CREATE_DT.Text = NzDateStr(r("b_create_dt"))
-        txt_B_UPDATE_DT.Text = NzDateStr(r("b_update_dt"))
+        txt_B_CREATE_DT.Text = NzDtStr(r("b_create_dt"))
+        txt_B_UPDATE_DT.Text = NzDtStr(r("b_update_dt"))
         txt_DMY.Text = NzStr(r("dmy"))
     End Sub
 
@@ -211,11 +211,90 @@ Partial Public Class Form_f_KYKM_BKN
     End Sub
 
     Private Sub cmd_TOUROKU_Click(sender As Object, e As EventArgs) Handles cmd_TOUROKU.Click
-        MessageBox.Show("分割登録機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykmId = 0 Then Return
+        If MessageBox.Show("変更を保存しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then Return
+        Try
+            Dim val As New Dictionary(Of String, Object)
+            val.Add("bukn_nm", txt_BUKN_NM.Text.Trim())
+            val.Add("suuryo", ParseIntFromText(txt_SUURYO.Text))
+            val.Add("b_kedaban", txt_B_KEDABAN.Text.Trim())
+            val.Add("b_update_dt", DateTime.Now)
+            Dim whereParams As New List(Of NpgsqlParameter) From {
+                New NpgsqlParameter("@kykm_id", _kykmId)
+            }
+            _crud.Update("d_kykm", val, "kykm_id = @kykm_id", whereParams)
+            MessageBox.Show("保存しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Me.Close()
+        Catch ex As Exception
+            MessageBox.Show("保存エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_HAIF_ADD_Click(sender As Object, e As EventArgs) Handles cmd_HAIF_ADD.Click
-        MessageBox.Show("配賦追加機能は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If _kykmId = 0 Then Return
+        Try
+            ' 親物件の情報を取得
+            Dim parentDt = _crud.GetDataTable(
+                "SELECT kykh_id, kykh_no, saikaisu, kykm_no, " &
+                "       COALESCE(b_klsryo,0) AS b_klsryo, COALESCE(b_kzei,0) AS b_kzei, " &
+                "       COALESCE(b_mlsryo,0) AS b_mlsryo, COALESCE(b_mzei,0) AS b_mzei " &
+                "FROM d_kykm WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            If parentDt Is Nothing OrElse parentDt.Rows.Count = 0 Then Return
+            Dim pr = parentDt.Rows(0)
+
+            ' 次のline_idを採番
+            Dim maxLineObj = _crud.ExecuteScalar(Of Object)(
+                "SELECT COALESCE(MAX(line_id), 0) FROM d_haif WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            Dim newLineId As Integer = Convert.ToInt32(maxLineObj) + 1
+
+            ' 残配賦率を算出
+            Dim sumObj = _crud.ExecuteScalar(Of Object)(
+                "SELECT COALESCE(SUM(haifritu), 0) FROM d_haif WHERE kykm_id = @id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            Dim newHaifritu As Double = Math.Max(100.0 - Convert.ToDouble(sumObj), 0.0)
+
+            ' 金額 = 親物件金額 × 配賦率 / 100
+            Dim bKlsryo = Convert.ToDouble(pr("b_klsryo"))
+            Dim bKzei = Convert.ToDouble(pr("b_kzei"))
+            Dim bMlsryo = Convert.ToDouble(pr("b_mlsryo"))
+            Dim bMzei = Convert.ToDouble(pr("b_mzei"))
+            Dim hKlsryo = Math.Floor(bKlsryo * newHaifritu / 100.0)
+            Dim hKzei = Math.Floor(bKzei * newHaifritu / 100.0)
+            Dim hMlsryo = Math.Floor(bMlsryo * newHaifritu / 100.0)
+            Dim hMzei = Math.Floor(bMzei * newHaifritu / 100.0)
+
+            Dim sql As String =
+                "INSERT INTO d_haif (kykm_id, line_id, kykh_id, kykh_no, saikaisu, kykm_no, " &
+                "  haifritu, h_klsryo, h_kzei, h_klsryo_zkomi, " &
+                "  h_mlsryo, h_mzei, h_mlsryo_zkomi, " &
+                "  h_create_id, h_create_dt, h_update_id, h_update_dt) " &
+                "VALUES (@kykm_id, @line_id, @kykh_id, @kykh_no, @saikaisu, @kykm_no, " &
+                "  @haifritu, @h_klsryo, @h_kzei, @h_klsryo_zkomi, " &
+                "  @h_mlsryo, @h_mzei, @h_mlsryo_zkomi, " &
+                "  0, NOW(), 0, NOW())"
+            Dim prm As New List(Of NpgsqlParameter)
+            prm.Add(New NpgsqlParameter("@kykm_id", _kykmId))
+            prm.Add(New NpgsqlParameter("@line_id", CShort(newLineId)))
+            prm.Add(New NpgsqlParameter("@kykh_id", If(IsDBNull(pr("kykh_id")), CObj(DBNull.Value), pr("kykh_id"))))
+            prm.Add(New NpgsqlParameter("@kykh_no", If(IsDBNull(pr("kykh_no")), CObj(DBNull.Value), pr("kykh_no"))))
+            prm.Add(New NpgsqlParameter("@saikaisu", If(IsDBNull(pr("saikaisu")), CObj(DBNull.Value), pr("saikaisu"))))
+            prm.Add(New NpgsqlParameter("@kykm_no", If(IsDBNull(pr("kykm_no")), CObj(DBNull.Value), pr("kykm_no"))))
+            prm.Add(New NpgsqlParameter("@haifritu", newHaifritu))
+            prm.Add(New NpgsqlParameter("@h_klsryo", hKlsryo))
+            prm.Add(New NpgsqlParameter("@h_kzei", hKzei))
+            prm.Add(New NpgsqlParameter("@h_klsryo_zkomi", hKlsryo + hKzei))
+            prm.Add(New NpgsqlParameter("@h_mlsryo", hMlsryo))
+            prm.Add(New NpgsqlParameter("@h_mzei", hMzei))
+            prm.Add(New NpgsqlParameter("@h_mlsryo_zkomi", hMlsryo + hMzei))
+            _crud.ExecuteNonQuery(sql, prm)
+
+            MessageBox.Show("配賦行を追加しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            LoadData()  ' データ再読み込み
+        Catch ex As Exception
+            MessageBox.Show("配賦行追加エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub cmd_HAIF_DEL_Click(sender As Object, e As EventArgs) Handles cmd_HAIF_DEL.Click
@@ -239,28 +318,6 @@ Partial Public Class Form_f_KYKM_BKN
             MessageBox.Show("削除エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzDateStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Try : Return Convert.ToDateTime(v).ToString("yyyy/MM/dd")
-        Catch : Return v.ToString()
-        End Try
-    End Function
 
     Private Sub Form_f_KYKM_BKN_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()

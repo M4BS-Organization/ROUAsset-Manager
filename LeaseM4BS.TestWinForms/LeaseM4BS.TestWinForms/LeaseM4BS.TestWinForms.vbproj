@@ -982,12 +982,6 @@
     <Compile Include="Form_f_KYKM_CHUUKI.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form_f_KYKM_CHUUKI_SUB_GSON.Designer.vb">
-      <DependentUpon>Form_f_KYKM_CHUUKI_SUB_GSON.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Form_f_KYKM_CHUUKI_SUB_GSON.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Form_f_KYKM_CHUUKI_拡張設定.Designer.vb">
       <DependentUpon>Form_f_KYKM_CHUUKI_拡張設定.vb</DependentUpon>
     </Compile>

@@ -91,16 +91,6 @@ Partial Public Class Form_f_KYKM_CHUUKI_拡張設定
         MessageBox.Show("注記判定再計算は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
-    End Function
-
     Private Sub Form_f_KYKM_CHUUKI_拡張設定_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()
     End Sub

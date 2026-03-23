@@ -192,4 +192,68 @@ Public Module FormHelper
     Public Sub SetAmount(target As TextBox, value As Object)
         target.Text = ToCurrency(value)
     End Sub
+
+    ' =========================================================
+    '  共通ヘルパー関数 (各フォームの重複定義を集約)
+    ' =========================================================
+
+    ''' <summary>DBNull/Nothing を空文字に変換</summary>
+    Public Function NzStr(v As Object) As String
+        If IsDBNull(v) OrElse v Is Nothing Then Return ""
+        Return v.ToString()
+    End Function
+
+    ''' <summary>DBNull/Nothing を "0" に変換し、3桁区切りフォーマット</summary>
+    Public Function NzAmtStr(v As Object) As String
+        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
+        Try : Return Convert.ToDouble(v).ToString("N0")
+        Catch : Return v.ToString()
+        End Try
+    End Function
+
+    ''' <summary>DBNull/Nothing を空文字に変換し、yyyy/MM/dd フォーマット</summary>
+    Public Function NzDtStr(v As Object) As String
+        If IsDBNull(v) OrElse v Is Nothing Then Return ""
+        Dim dt As DateTime
+        If DateTime.TryParse(v.ToString(), dt) Then Return dt.ToString("yyyy/MM/dd")
+        Return v.ToString()
+    End Function
+
+    ''' <summary>DBNull/Nothing を False に変換</summary>
+    Public Function NzBool(v As Object) As Boolean
+        If IsDBNull(v) OrElse v Is Nothing Then Return False
+        Try : Return Convert.ToBoolean(v)
+        Catch : Return False
+        End Try
+    End Function
+
+    ''' <summary>DBNull/Nothing を 0.0 に変換</summary>
+    Public Function NzDbl(v As Object) As Double
+        If IsDBNull(v) OrElse v Is Nothing Then Return 0.0
+        Try : Return Convert.ToDouble(v)
+        Catch : Return 0.0
+        End Try
+    End Function
+
+    ''' <summary>文字列を日付に変換。空/無効はDBNull.Valueを返す (DB登録用)</summary>
+    Public Function ParseDt(s As String) As Object
+        If String.IsNullOrWhiteSpace(s) Then Return DBNull.Value
+        Dim dt As DateTime
+        If DateTime.TryParse(s, dt) Then Return dt
+        Return DBNull.Value
+    End Function
+
+    ''' <summary>カンマ区切り文字列をIntegerに変換 (テキストボックス値の読取用)</summary>
+    Public Function ParseIntFromText(s As String) As Integer
+        Dim v As Integer
+        If Integer.TryParse(s.Replace(",", "").Trim(), v) Then Return v
+        Return 0
+    End Function
+
+    ''' <summary>カンマ区切り文字列をDoubleに変換 (テキストボックス値の読取用)</summary>
+    Public Function ParseDblFromText(s As String) As Double
+        Dim v As Double
+        If Double.TryParse(s.Replace(",", "").Trim(), v) Then Return v
+        Return 0.0
+    End Function
 End Module
