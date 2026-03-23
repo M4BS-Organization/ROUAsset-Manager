@@ -19,6 +19,7 @@ Public Class FrmLeaseContractMain
     Private ReadOnly FNT_SECTION As Font = New Font("Meiryo", 10.0F, FontStyle.Bold)
 
     Private _isLoaded As Boolean = False
+    Private _isSyncingData As Boolean = False
     Private _defaultTaxRate As Decimal = 0.10D
     Private _tooltipProvider As ToolTip
     Private _masterData As MasterDataLoader
@@ -527,6 +528,7 @@ Public Class FrmLeaseContractMain
         tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
         AddHandler tabMain.SelectedIndexChanged, Sub(s, e)
             If tabMain.SelectedTab Is pgAccounting Then UpdateAccountingTabValues()
+            If tabMain.SelectedTab Is pgJudgment Then SyncTab1ToJudge()
         End Sub
 
         lblJudgmentPreview = New Label() With {
@@ -645,16 +647,16 @@ Public Class FrmLeaseContractMain
         _tooltipProvider.SetToolTip(lblLeaseMonths, "リース期間 = (終了日 - 開始日の月数) - 無償期間")
 
         AddHandler dtpStartDate.ValueChanged, Sub(s, e)
-                                                  CalcLeaseMonths()
                                                   RecalcAll()
+                                                  SyncTab1ToJudge()
                                               End Sub
         AddHandler dtpEndDate.ValueChanged, Sub(s, e)
-                                                CalcLeaseMonths()
                                                 RecalcAll()
+                                                SyncTab1ToJudge()
                                             End Sub
         AddHandler numFreePeriod.ValueChanged, Sub(s, e)
-                                                   CalcLeaseMonths()
                                                    RecalcAll()
+                                                   SyncTab1ToJudge()
                                                End Sub
 
         ' Row 1: 契約番号, 契約名称
@@ -1911,9 +1913,9 @@ Public Class FrmLeaseContractMain
         Try
             Dim startDt As DateTime = dtpStartDate.Value
             Dim endDt As DateTime = dtpEndDate.Value
-            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
             Dim freePeriodVal As Integer = CInt(numFreePeriod.Value)
-            Dim leaseMonths As Integer = Math.Max(0, totalMonths - freePeriodVal)
+            Dim leaseMonths As Integer = ContractCalcHelper.CalcLeaseMonths(startDt, endDt, freePeriodVal)
+            Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
             lblLeaseMonths.Text = leaseMonths.ToString() & "ヶ月"
             _tooltipProvider.SetToolTip(lblLeaseMonths,
                 String.Format("計算式: ({0} - {1})の月数{2} - 無償期間{3}ヶ月 = {4}ヶ月",
@@ -1921,6 +1923,44 @@ Public Class FrmLeaseContractMain
                     totalMonths, freePeriodVal, leaseMonths))
         Catch ex As Exception
             lblLeaseMonths.Text = "---ヶ月"
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' タブ1（契約入力）→ タブ5（リース判定）へデータを片方向同期する。
+    ''' イベント循環を _isSyncingData フラグで回避する。
+    ''' </summary>
+    Private Sub SyncTab1ToJudge()
+        If Not _isLoaded Then Return
+        If _isSyncingData Then Return
+        _isSyncingData = True
+        Try
+            ' 日付連動
+            RemoveHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
+            RemoveHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
+
+            dtpJudgeStart.Value = dtpStartDate.Value
+            dtpJudgeEnd.Value = dtpEndDate.Value
+
+            AddHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
+            AddHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
+
+            ' 期間連動: CalcLeaseMonths() の計算結果から "ヶ月" を除去して転記
+            Dim monthsText As String = lblLeaseMonths.Text.Replace("ヶ月", "").Trim()
+            Dim months As Integer = 0
+            Integer.TryParse(monthsText, months)
+            lblTermMonths.Text = months.ToString()
+
+            ' 金額連動: 月額支払グリッドの税抜合計 → 判定用月額リース料
+            RemoveHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
+            Dim totalExTax As Decimal = CalcMonthlyPaymentTotal()
+            numMonthlyRentJudge.Value = Math.Min(totalExTax, numMonthlyRentJudge.Maximum)
+            AddHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
+
+            ' 同期後に判定を再計算
+            RecalcJudge()
+        Finally
+            _isSyncingData = False
         End Try
     End Sub
 
@@ -1938,7 +1978,7 @@ Public Class FrmLeaseContractMain
 
     Private Sub CalcMonthlyTotals()
         If Not _isLoaded Then Return
-        Dim totalExTax As Decimal = 0
+        Dim totalExTax As Decimal = CalcMonthlyPaymentTotal()
         Dim totalTax As Decimal = 0
         Dim totalIncTax As Decimal = 0
 
@@ -1953,7 +1993,6 @@ Public Class FrmLeaseContractMain
                 Dim incTax As Decimal = exTax + tax
                 row.Cells("MTax").Value = tax
                 row.Cells("MTotalIncTax").Value = incTax
-                totalExTax += exTax
                 totalTax += tax
                 totalIncTax += incTax
             Catch ex As Exception
@@ -1964,6 +2003,22 @@ Public Class FrmLeaseContractMain
         lblMonthlyTotalTax.Text = String.Format("税: {0:N0}", totalTax)
         lblMonthlyTotalIncTax.Text = String.Format("税込: {0:N0}", totalIncTax)
     End Sub
+
+    ''' <summary>
+    ''' 月額支払グリッド (dgvMonthlyPayments) の税抜合計を算出する。
+    ''' </summary>
+    Private Function CalcMonthlyPaymentTotal() As Decimal
+        Dim total As Decimal = 0
+        For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
+            If row.IsNewRow Then Continue For
+            If row.Cells("MAmountExTax").Value IsNot Nothing Then
+                Dim exTax As Decimal = 0
+                Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString().Replace(",", ""), exTax)
+                total += exTax
+            End If
+        Next
+        Return total
+    End Function
 
     Private Sub OnExtOptionChanged(sender As Object, e As EventArgs)
         If Not _isLoaded Then Return
@@ -2173,6 +2228,7 @@ Public Class FrmLeaseContractMain
         If e.RowIndex < 0 Then Return
         CalcMonthlyTotals()
         RecalcAll()
+        SyncTab1ToJudge()
     End Sub
 
     Private Sub OnMonthlyPaymentCellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
