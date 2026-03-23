@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Calculate and notify
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           # プロジェクトアイテムを取得（Status と Story Points）
