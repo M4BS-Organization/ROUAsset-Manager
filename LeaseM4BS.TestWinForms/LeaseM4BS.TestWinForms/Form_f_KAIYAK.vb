@@ -66,17 +66,58 @@ Partial Public Class Form_f_KAIYAK
             Return
         End If
 
+        ' --- バリデーション ---
+        ' 解約対象物件の存在チェック
+        Try
+            Dim cntDt = _crud.GetDataTable(
+                "SELECT COUNT(*) AS cnt FROM d_kykm WHERE kykh_id = @id AND b_ckaiyk_f = FALSE",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykhId)})
+            If cntDt Is Nothing OrElse Convert.ToInt32(cntDt.Rows(0)("cnt")) = 0 Then
+                MessageBox.Show("解約対象の物件がありません。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+        Catch ex As Exception
+            MessageBox.Show("チェックエラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End Try
+
+        ' 解約日の妥当性チェック
+        Dim startDt As DateTime
+        Dim endDt As DateTime
+        Dim hasStartDt = DateTime.TryParse(txt_START_DT.Text, startDt)
+        Dim kaiyakDt = DateTime.Now
+
+        If hasStartDt AndAlso kaiyakDt < startDt Then
+            MessageBox.Show("解約日が開始日より前です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        ' 延長契約でない場合: 終了日チェック
+        If Not chk_JENCHO_F.Checked Then
+            Dim lkikan = ParseIntFromText(txt_LKIKAN.Text)
+            If hasStartDt AndAlso lkikan > 0 Then
+                endDt = startDt.AddMonths(lkikan).AddDays(-1)
+                If kaiyakDt > endDt Then
+                    If MessageBox.Show($"解約日が終了日({endDt:yyyy/MM/dd})を超えています。続行しますか？",
+                                       "警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
+                        Return
+                    End If
+                End If
+            End If
+        End If
+
         If MessageBox.Show(
             "選択した契約の全物件を解約します。よろしいですか？",
             "解約確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then
             Return
         End If
 
+        ' --- 解約実行 ---
         Try
             _crud.BeginTransaction()
             Dim val As New Dictionary(Of String, Object) From {
                 {"b_ckaiyk_f", True},
-                {"ckaiyk_dt", DateTime.Now}
+                {"ckaiyk_dt", kaiyakDt}
             }
             Dim whereParams As New List(Of NpgsqlParameter) From {
                 New NpgsqlParameter("@kykh_id", _kykhId)
@@ -104,26 +145,10 @@ Partial Public Class Form_f_KAIYAK
         LoadContract()
     End Sub
 
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzDtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Dim dt As DateTime
-        If DateTime.TryParse(v.ToString(), dt) Then Return dt.ToString("yyyy/MM/dd")
-        Return v.ToString()
-    End Function
-
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
+    Private Function ParseIntFromText(text As String) As Integer
+        Dim result As Integer = 0
+        Integer.TryParse(text, result)
+        Return result
     End Function
 
     Private Sub Form_f_KAIYAK_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed

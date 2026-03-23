@@ -251,42 +251,6 @@ Partial Public Class Form_f_KAIYAK_SUB
         LoadData()
     End Sub
 
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzDtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Dim dt As DateTime
-        If DateTime.TryParse(v.ToString(), dt) Then Return dt.ToString("yyyy/MM/dd")
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzBool(v As Object) As Boolean
-        If IsDBNull(v) OrElse v Is Nothing Then Return False
-        Try : Return Convert.ToBoolean(v)
-        Catch : Return False
-        End Try
-    End Function
-
-    Private Function NzDbl(v As Object) As Double
-        If IsDBNull(v) OrElse v Is Nothing Then Return 0.0
-        Try : Return Convert.ToDouble(v)
-        Catch : Return 0.0
-        End Try
-    End Function
-
     Private Sub Form_f_KAIYAK_SUB_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()
     End Sub

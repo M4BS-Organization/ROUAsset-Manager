@@ -20,6 +20,16 @@ Partial Public Class Form_f_KYKM_CHUUKI_SUB_GSON
         InitializeComponent()
     End Sub
 
+    ''' <summary>外部からパラメータをセット（Double互換）</summary>
+    Public Property KykmId As Double
+        Get
+            Return _kykmId
+        End Get
+        Set(value As Double)
+            _kykmId = CInt(value)
+        End Set
+    End Property
+
     ''' <summary>外部からパラメータをセット</summary>
     Public Sub SetParams(kykmId As Integer)
         _kykmId = kykmId
@@ -80,7 +90,6 @@ Partial Public Class Form_f_KYKM_CHUUKI_SUB_GSON
         txt_W_KYKM_ID.Text = NzStr(r("kykm_id"))
         txt_LINE_ID.Text = NzStr(r("line_id"))
 
-        ' gson_dt を YYYY/MM 形式で表示
         Dim dtVal As Object = r("gson_dt")
         If Not IsDBNull(dtVal) AndAlso dtVal IsNot Nothing Then
             Try
@@ -109,26 +118,66 @@ Partial Public Class Form_f_KYKM_CHUUKI_SUB_GSON
     End Sub
 
     ' =========================================================
-    '  ヘルパー
+    '  AfterUpdate イベント
     ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
 
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
+    ''' <summary>減損年月: 月初日に正規化 (yyyy/MM → yyyy/MM/01)</summary>
+    Private Sub txt_GSON_DT_Leave(sender As Object, e As EventArgs) Handles txt_GSON_DT.Leave
+        Dim s = txt_GSON_DT.Text.Trim()
+        If String.IsNullOrEmpty(s) Then Return
+        Dim dt As DateTime
+        If DateTime.TryParse(s, dt) Then
+            txt_GSON_DT.Text = New DateTime(dt.Year, dt.Month, 1).ToString("yyyy/MM")
+        End If
+    End Sub
 
-    Private Function NzDbl(v As Object) As Double
-        If IsDBNull(v) OrElse v Is Nothing Then Return 0.0
-        Try : Return Convert.ToDouble(v)
-        Catch : Return 0.0
+    ''' <summary>減損金額変更 → 累計額を再計算してDB更新</summary>
+    Private Sub txt_GSON_RYO_Leave(sender As Object, e As EventArgs) Handles txt_GSON_RYO.Leave
+        If _kykmId = 0 OrElse _rows.Count = 0 OrElse _currentIndex < 0 Then Return
+        Try
+            ' 現在行のgson_ryoを更新
+            Dim lineId = Convert.ToInt32(_rows(_currentIndex)("line_id"))
+            Dim newRyo = ParseDblFromText(txt_GSON_RYO.Text)
+
+            _crud.ExecuteNonQuery(
+                "UPDATE d_gson SET gson_ryo = @ryo, g_update_dt = NOW() WHERE kykm_id = @id AND line_id = @lid",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@ryo", newRyo),
+                    New NpgsqlParameter("@id", _kykmId),
+                    New NpgsqlParameter("@lid", lineId)
+                })
+
+            ' 全行の累計額(gson_rkei)を再計算
+            RecalcGsonRkei()
+            LoadData()
+        Catch ex As Exception
+            MessageBox.Show("減損金額更新エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
-    End Function
+    End Sub
+
+    ''' <summary>全減損行の累計額(gson_rkei)を再計算</summary>
+    Private Sub RecalcGsonRkei()
+        Try
+            Dim dt = _crud.GetDataTable(
+                "SELECT line_id, COALESCE(gson_ryo, 0) AS gson_ryo FROM d_gson WHERE kykm_id = @id ORDER BY line_id",
+                New List(Of NpgsqlParameter) From {New NpgsqlParameter("@id", _kykmId)})
+            If dt Is Nothing Then Return
+
+            Dim cumulative As Double = 0
+            For Each r As System.Data.DataRow In dt.Rows
+                cumulative += Convert.ToDouble(r("gson_ryo"))
+                _crud.ExecuteNonQuery(
+                    "UPDATE d_gson SET gson_rkei = @rkei WHERE kykm_id = @id AND line_id = @lid",
+                    New List(Of NpgsqlParameter) From {
+                        New NpgsqlParameter("@rkei", cumulative),
+                        New NpgsqlParameter("@id", _kykmId),
+                        New NpgsqlParameter("@lid", Convert.ToInt32(r("line_id")))
+                    })
+            Next
+        Catch ex As Exception
+            MessageBox.Show("累計額再計算エラー: " & ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
 
     Private Sub Form_f_KYKM_CHUUKI_SUB_GSON_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()

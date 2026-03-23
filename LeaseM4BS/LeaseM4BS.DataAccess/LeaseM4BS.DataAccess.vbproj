@@ -114,7 +114,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CashScheduleBuilder.vb" />
+    <Compile Include="ContractCalcHelper.vb" />
     <Compile Include="CrudHelper.vb" />
+    <Compile Include="TaxRateHelper.vb" />
     <Compile Include="DbConnectionManager.vb" />
     <Compile Include="KeijoCalculationEngine.vb" />
     <Compile Include="KeijoSqlBuilder.vb" />

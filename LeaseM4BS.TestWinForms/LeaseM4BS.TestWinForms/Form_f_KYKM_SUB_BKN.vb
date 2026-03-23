@@ -147,28 +147,6 @@ Partial Public Class Form_f_KYKM_SUB_BKN
         MessageBox.Show("期間額計算は未実装です。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
-    ' =========================================================
-    '  ヘルパー
-    ' =========================================================
-    Private Function NzStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return ""
-        Return v.ToString()
-    End Function
-
-    Private Function NzAmtStr(v As Object) As String
-        If IsDBNull(v) OrElse v Is Nothing Then Return "0"
-        Try : Return Convert.ToDouble(v).ToString("N0")
-        Catch : Return v.ToString()
-        End Try
-    End Function
-
-    Private Function NzDbl(v As Object) As Double
-        If IsDBNull(v) OrElse v Is Nothing Then Return 0.0
-        Try : Return Convert.ToDouble(v)
-        Catch : Return 0.0
-        End Try
-    End Function
-
     Private Sub Form_f_KYKM_SUB_BKN_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         _crud?.Dispose()
     End Sub
