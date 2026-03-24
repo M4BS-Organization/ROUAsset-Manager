@@ -129,6 +129,21 @@ Public Class FrmLeaseContractMain
     Private numIBR As NumericUpDown
     Private lblAppliedRate As Label
 
+    ' === タブ2（初回金）: 契約参照情報 ===
+    Private lblInitContractNo As Label
+    Private lblInitContractName As Label
+    Private lblInitLeasePeriod As Label
+
+    ' === タブ3（会計）: 判定結果連動 ===
+    Private lblAcctJudgeResult As Label
+
+    ' === タブ4（転貸）: 契約参照情報 ===
+    Private lblSubContractNo As Label
+    Private lblSubContractName As Label
+    Private lblSubStartDate As Label
+    Private lblSubEndDate As Label
+    Private lblSubLeasePeriod As Label
+
     Private chkSublease As CheckBox
     Private pnlSubleaseDetail As Panel
     Private txtSublesseeName As TextBox
@@ -640,7 +655,12 @@ Public Class FrmLeaseContractMain
 
         tabMain.TabPages.AddRange({pgContract, pgInitial, pgAccounting, pgSublease, pgJudgment})
         AddHandler tabMain.SelectedIndexChanged, Sub(s, e)
-            If tabMain.SelectedTab Is pgAccounting Then UpdateAccountingTabValues()
+            If tabMain.SelectedTab Is pgInitial Then SyncTab1ToInitialCost()
+            If tabMain.SelectedTab Is pgAccounting Then
+                UpdateAccountingTabValues()
+                SyncJudgeToAccounting()
+            End If
+            If tabMain.SelectedTab Is pgSublease Then SyncTab1ToSublease()
             If tabMain.SelectedTab Is pgJudgment Then SyncTab1ToJudge()
         End Sub
 
@@ -1101,10 +1121,48 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 2
+            .ColumnCount = 1, .RowCount = 3
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+
+        ' --- 契約参照情報 ---
+        Dim grpRef As GroupBox = CreateSection("契約参照情報")
+        Dim tblRef As New TableLayoutPanel() With {
+            .Dock = DockStyle.Top, .AutoSize = True,
+            .ColumnCount = 6, .Padding = New Padding(8)
+        }
+        tblRef.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblRef.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
+        tblRef.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblRef.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 40.0F))
+        tblRef.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblRef.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 30.0F))
+
+        lblInitContractNo = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+        lblInitContractName = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+        lblInitLeasePeriod = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+
+        tblRef.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        tblRef.Controls.Add(CreateFieldLabel("契約番号"), 0, 0)
+        tblRef.Controls.Add(lblInitContractNo, 1, 0)
+        tblRef.Controls.Add(CreateFieldLabel("契約名称"), 2, 0)
+        tblRef.Controls.Add(lblInitContractName, 3, 0)
+        tblRef.Controls.Add(CreateFieldLabel("リース期間"), 4, 0)
+        tblRef.Controls.Add(lblInitLeasePeriod, 5, 0)
+        tblRef.RowCount = 1
+        grpRef.Controls.Add(tblRef)
+        mainTbl.Controls.Add(grpRef, 0, 0)
 
         Dim grpCost As GroupBox = CreateSection("初回費用明細")
         grpCost.Height = 280
@@ -1206,8 +1264,8 @@ Public Class FrmLeaseContractMain
         AddFieldRow(tblOther, "リース・インセンティブ", numLeaseIncentive, Nothing, Nothing)
         grpOther.Controls.Add(tblOther)
 
-        mainTbl.Controls.Add(grpCost, 0, 0)
-        mainTbl.Controls.Add(grpOther, 0, 1)
+        mainTbl.Controls.Add(grpCost, 0, 1)
+        mainTbl.Controls.Add(grpOther, 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgInitial.Controls.Add(scroll)
@@ -1218,15 +1276,30 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 3
+            .ColumnCount = 1, .RowCount = 4
         }
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 判定結果バナー
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 現契約期間 + 現支払情報
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 会計期間・金額 + 返済スケジュールマトリックス
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))  ' 変更履歴
 
-        mainTbl.Controls.Add(BuildAccSchTopRowSection(), 0, 0)
-        mainTbl.Controls.Add(BuildAccSchAccountingSection(), 0, 1)
-        mainTbl.Controls.Add(BuildAccChangeHistorySection(), 0, 2)
+        ' --- 判定結果連動バナー ---
+        lblAcctJudgeResult = New Label() With {
+            .Dock = DockStyle.Top, .Height = 32,
+            .Text = "リース判定: ---",
+            .Font = New Font("Meiryo", 10.0F, FontStyle.Bold),
+            .ForeColor = CLR_HEADER,
+            .BackColor = Color.FromArgb(230, 240, 250),
+            .TextAlign = ContentAlignment.MiddleLeft,
+            .Padding = New Padding(10, 0, 0, 0),
+            .Margin = New Padding(0, 0, 0, 4)
+        }
+        _tooltipProvider.SetToolTip(lblAcctJudgeResult, "リース判定タブの結果に基づく会計処理区分です")
+        mainTbl.Controls.Add(lblAcctJudgeResult, 0, 0)
+
+        mainTbl.Controls.Add(BuildAccSchTopRowSection(), 0, 1)
+        mainTbl.Controls.Add(BuildAccSchAccountingSection(), 0, 2)
+        mainTbl.Controls.Add(BuildAccChangeHistorySection(), 0, 3)
 
         scroll.Controls.Add(mainTbl)
         pgAccounting.Controls.Add(scroll)
@@ -1687,10 +1760,61 @@ Public Class FrmLeaseContractMain
 
         Dim mainTbl As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
-            .ColumnCount = 1, .RowCount = 2
+            .ColumnCount = 1, .RowCount = 3
         }
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
         mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+
+        ' --- 元契約参照情報 ---
+        Dim grpOrigContract As GroupBox = CreateSection("元契約情報（参照）")
+        Dim tblOrig As New TableLayoutPanel() With {
+            .Dock = DockStyle.Top, .AutoSize = True,
+            .ColumnCount = 6, .Padding = New Padding(8)
+        }
+        tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 35.0F))
+        tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+
+        Dim readOnlyLabelStyle As Action(Of Label) = Sub(lbl)
+                                                         lbl.Dock = DockStyle.Fill
+                                                         lbl.Font = FNT_INPUT
+                                                         lbl.ForeColor = CLR_TEXT
+                                                         lbl.BackColor = CLR_READONLY
+                                                         lbl.TextAlign = ContentAlignment.MiddleLeft
+                                                         lbl.Padding = New Padding(4, 0, 0, 0)
+                                                     End Sub
+
+        lblSubContractNo = New Label()
+        readOnlyLabelStyle(lblSubContractNo)
+        lblSubContractName = New Label()
+        readOnlyLabelStyle(lblSubContractName)
+        lblSubLeasePeriod = New Label()
+        readOnlyLabelStyle(lblSubLeasePeriod)
+        lblSubStartDate = New Label()
+        readOnlyLabelStyle(lblSubStartDate)
+        lblSubEndDate = New Label()
+        readOnlyLabelStyle(lblSubEndDate)
+
+        tblOrig.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        tblOrig.Controls.Add(CreateFieldLabel("契約番号"), 0, 0)
+        tblOrig.Controls.Add(lblSubContractNo, 1, 0)
+        tblOrig.Controls.Add(CreateFieldLabel("契約名称"), 2, 0)
+        tblOrig.Controls.Add(lblSubContractName, 3, 0)
+        tblOrig.Controls.Add(CreateFieldLabel("リース期間"), 4, 0)
+        tblOrig.Controls.Add(lblSubLeasePeriod, 5, 0)
+
+        tblOrig.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        tblOrig.Controls.Add(CreateFieldLabel("開始日"), 0, 1)
+        tblOrig.Controls.Add(lblSubStartDate, 1, 1)
+        tblOrig.Controls.Add(CreateFieldLabel("終了日"), 2, 1)
+        tblOrig.Controls.Add(lblSubEndDate, 3, 1)
+        tblOrig.RowCount = 2
+        grpOrigContract.Controls.Add(tblOrig)
+        mainTbl.Controls.Add(grpOrigContract, 0, 0)
 
         Dim pnlToggle As New Panel() With {.Dock = DockStyle.Top, .Height = 40, .Padding = New Padding(8)}
         chkSublease = New CheckBox() With {
@@ -1769,8 +1893,8 @@ Public Class FrmLeaseContractMain
         pnlSubleaseDetail.Controls.Add(grpSubIncome)
         pnlSubleaseDetail.Controls.Add(grpSubInfo)
 
-        mainTbl.Controls.Add(pnlToggle, 0, 0)
-        mainTbl.Controls.Add(pnlSubleaseDetail, 0, 1)
+        mainTbl.Controls.Add(pnlToggle, 0, 1)
+        mainTbl.Controls.Add(pnlSubleaseDetail, 0, 2)
 
         scroll.Controls.Add(mainTbl)
         pgSublease.Controls.Add(scroll)
@@ -2017,6 +2141,100 @@ Public Class FrmLeaseContractMain
 
         scroll.Controls.Add(mainTbl)
         pgJudgment.Controls.Add(scroll)
+    End Sub
+
+    ''' <summary>
+    ''' タブ1（契約入力）→ タブ2（初回金）へ契約参照情報を同期する。
+    ''' </summary>
+    Private Sub SyncTab1ToInitialCost()
+        If Not _isLoaded Then Return
+        If _isSyncingData Then Return
+        _isSyncingData = True
+        Try
+            lblInitContractNo.Text = txtContractNo.Text
+            lblInitContractName.Text = txtContractName.Text
+            lblInitLeasePeriod.Text = lblLeaseMonths.Text
+        Finally
+            _isSyncingData = False
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' タブ1（契約入力）→ タブ4（転貸）へ元契約の基本情報を同期する。
+    ''' </summary>
+    Private Sub SyncTab1ToSublease()
+        If Not _isLoaded Then Return
+        If _isSyncingData Then Return
+        _isSyncingData = True
+        Try
+            lblSubContractNo.Text = txtContractNo.Text
+            lblSubContractName.Text = txtContractName.Text
+            lblSubStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
+            lblSubEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
+            lblSubLeasePeriod.Text = lblLeaseMonths.Text
+        Finally
+            _isSyncingData = False
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' タブ5（リース判定）→ タブ3（会計）へ判定結果を反映する。
+    ''' 判定結果に基づき会計処理区分の表示を自動設定する。
+    ''' </summary>
+    Private Sub SyncJudgeToAccounting()
+        If Not _isLoaded Then Return
+        If _isSyncingData Then Return
+        _isSyncingData = True
+        Try
+            If lblResultText Is Nothing OrElse lblAcctJudgeResult Is Nothing Then Return
+
+            Dim judgeResult As String = lblResultText.Text
+            lblAcctJudgeResult.Text = "リース判定: " & judgeResult
+
+            Select Case judgeResult
+                Case "オンバランス処理"
+                    lblAcctJudgeResult.ForeColor = Color.White
+                    lblAcctJudgeResult.BackColor = Color.FromArgb(220, 53, 69)
+                    ' オンバランス: 使用権資産・リース負債の計上欄を有効化
+                    SetAccountingMatrixEnabled(True)
+
+                Case "オフバランス処理"
+                    lblAcctJudgeResult.ForeColor = Color.White
+                    lblAcctJudgeResult.BackColor = Color.FromArgb(23, 162, 184)
+                    ' オフバランス: 計上欄を無効化（賃貸借処理）
+                    SetAccountingMatrixEnabled(False)
+
+                Case "対象外"
+                    lblAcctJudgeResult.ForeColor = CLR_TEXT
+                    lblAcctJudgeResult.BackColor = Color.FromArgb(204, 204, 204)
+                    SetAccountingMatrixEnabled(False)
+
+                Case Else
+                    lblAcctJudgeResult.ForeColor = CLR_HEADER
+                    lblAcctJudgeResult.BackColor = Color.FromArgb(230, 240, 250)
+            End Select
+        Finally
+            _isSyncingData = False
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 会計タブの返済スケジュールマトリックス（使用権資産・リース負債・除去債務）の
+    ''' 有効/無効を切り替える。オフバランス時は入力不要のため無効化する。
+    ''' </summary>
+    Private Sub SetAccountingMatrixEnabled(enabled As Boolean)
+        Dim matrixFields() As TextBox = {
+            txtSchPresentValue,
+            txtSchRouBegin, txtSchRouIncrease, txtSchRouChange, txtSchRouDecrease, txtSchRouEnd,
+            txtSchLiabBegin, txtSchLiabIncrease, txtSchLiabChange, txtSchLiabDecrease, txtSchLiabEnd,
+            txtSchAroBegin, txtSchAroIncrease, txtSchAroChange, txtSchAroDecrease, txtSchAroEnd
+        }
+        For Each field In matrixFields
+            If field IsNot Nothing Then
+                field.Enabled = enabled
+                field.BackColor = If(enabled, CLR_CARD, CLR_READONLY)
+            End If
+        Next
     End Sub
 
     Private Sub RecalcAll()
@@ -2312,6 +2530,9 @@ Public Class FrmLeaseContractMain
 
         lblResultReason.Text = String.Join(vbCrLf, reasonParts)
         lblJudgmentPreview.Text = "リース判定: " & lblResultText.Text
+
+        ' 判定結果を会計タブに反映
+        SyncJudgeToAccounting()
     End Sub
 
     Private Sub OnInitialCostChanged(sender As Object, e As DataGridViewCellEventArgs)
