@@ -119,7 +119,7 @@ Partial Public Class FrmFlexContract
             dgvRow.Cells("colContractName").Value = rec.ContractName
             dgvRow.Cells("colAssetNo").Value = rec.AssetNo
             dgvRow.Cells("colAssetName").Value = rec.AssetName
-            dgvRow.Cells("colAssetCategory").Value = rec.AssetCategory
+            dgvRow.Cells("colAssetCategory").Value = rec.AssetCategoryCd
             dgvRow.Cells("colStartDate").Value = If(rec.LeaseStartDate.HasValue,
                 rec.LeaseStartDate.Value.ToString("yyyy/MM/dd"), "")
             dgvRow.Cells("colEndDate").Value = If(rec.LeaseEndDate.HasValue,

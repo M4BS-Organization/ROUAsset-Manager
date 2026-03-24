@@ -3,6 +3,7 @@ Imports System.Collections.Generic
 ''' <summary>
 ''' CTBレコード: ctb_lease_integrated + ctb_dept_allocation を統合した1レコード
 ''' 1レコード = 1契約 × 1資産 × 1配賦部門
+''' ※種別固有情報はctb_property_attribute（EAV）に移行済み
 ''' </summary>
 Public Class CtbRecord
     ' === 識別キー ===
@@ -22,33 +23,11 @@ Public Class CtbRecord
 
     ' === 資産入力画面: 基本情報 ===
     Public Property AssetNo As String = ""
-    Public Property AssetCategory As String = ""
+    Public Property AssetCategoryCd As String = ""
     Public Property AssetName As String = ""
     Public Property CompanyName As String = ""
     Public Property InstallLocation As String = ""
     Public Property Remarks As String = ""
-
-    ' === 不動産固有 ===
-    Public Property ReStructure As String = ""
-    Public Property ReArea As String = ""
-    Public Property ReLayout As String = ""
-    Public Property ReCompletionDate As Date? = Nothing
-    Public Property ReLandlordName As String = ""
-    Public Property ReBrokerCompany As String = ""
-    Public Property ReUsageRestrictions As String = ""
-
-    ' === 車両固有 ===
-    Public Property VhChassisNo As String = ""
-    Public Property VhRegistrationNo As String = ""
-    Public Property VhVehicleType As String = ""
-    Public Property VhInspectionDate As Date? = Nothing
-    Public Property VhMileageLimit As String = ""
-
-    ' === OA機器固有 ===
-    Public Property OaModelNo As String = ""
-    Public Property OaSerialNo As String = ""
-    Public Property OaMaintenanceDate As Date? = Nothing
-    Public Property OaMaintenanceContract As String = ""
 
     ' === 配賦情報（1レコードに1部門） ===
     Public Property DeptCd As String = ""
@@ -61,11 +40,14 @@ Public Class CtbRecord
     Public Property TotalPayment As Decimal = 0D
     Public Property SplitStatus As String = "unsplit"
 
-    ' === 入力時の一時保持用（複数部門）: データストア格納時は上記の単一フィールドを使用 ===
+    ' === 入力時の一時保持用（複数部門） ===
     Public Property DeptAllocations As New List(Of CtbDeptAllocation)
 
+    ' === 物件マスタ参照（EAV属性含む） ===
+    Public Property PropertyRec As PropertyRecord = Nothing
+
     ''' <summary>
-    ''' 配賦部門の表示文字列（例: "総務部(75%)"）
+    ''' 配賦部門の表示文字列（例: "本社(100%)"）
     ''' </summary>
     Public ReadOnly Property DeptAllocationDisplay As String
         Get
