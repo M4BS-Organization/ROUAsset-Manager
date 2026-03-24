@@ -65,10 +65,27 @@ BEGIN
             CAST(k.k_glsryo AS NUMERIC(15,2))               AS monthly_payment,
             CAST(k.k_slsryo AS NUMERIC(15,2))               AS total_payment,
             k.kykbnl,
-            k.rng_bango
+            k.rng_bango,
+            -- d_kykm（物件明細）から物件名・種別を取得（最初の1物件）
+            m.bukn_nm                                        AS property_name,
+            CASE
+                WHEN bk.bkind_nm LIKE '%不動産%' OR bk.bkind_nm LIKE '%建物%' THEN 'AC01'
+                WHEN bk.bkind_nm LIKE '%車両%' THEN 'AC04'
+                WHEN bk.bkind_nm LIKE '%OA%' OR bk.bkind_nm LIKE '%機械%' THEN 'AC03'
+                WHEN bk.bkind_nm LIKE '%構築%' THEN 'AC02'
+                ELSE 'AC05'
+            END                                              AS asset_category_cd
         FROM d_kykh k
         LEFT JOIN m_kknri kn ON k.kknri_id = kn.kknri_id
         LEFT JOIN m_lcpt lc ON k.lcpt_id = lc.lcpt_id
+        LEFT JOIN LATERAL (
+            SELECT kykm.bukn_nm, kykm.bkind_id
+            FROM d_kykm kykm
+            WHERE kykm.kykh_id = k.kykh_id
+            ORDER BY kykm.kykm_no
+            LIMIT 1
+        ) m ON TRUE
+        LEFT JOIN m_bkind bk ON m.bkind_id = bk.bkind_id
         WHERE k.k_history_f IS NOT TRUE
           AND k.kykbnj IS NOT NULL
           AND (p_contract_no IS NULL OR k.kykbnj = p_contract_no)
@@ -147,9 +164,12 @@ BEGIN
                 ) VALUES (
                     v_ctb_id,
                     1,
-                    'AC01',  -- デフォルト: 建物（後からUI変更可能）
-                    NULL,    -- 資産名は未設定（資産詳細入力画面から入力）
-                    '移行データ: 資産詳細入力画面から編集してください'
+                    COALESCE(v_rec.asset_category_cd, 'AC01'),
+                    v_rec.property_name,  -- d_kykm.bukn_nm（NULLの場合は空）
+                    CASE WHEN v_rec.property_name IS NOT NULL
+                         THEN 'd_kykmから移行'
+                         ELSE 'migration: edit from asset detail entry'
+                    END
                 )
                 ON CONFLICT (ctb_id, property_no) DO NOTHING;
 
