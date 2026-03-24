@@ -98,6 +98,223 @@ Public Class CtbRepository
     End Sub
 
     ''' <summary>
+    ''' 契約番号+物件番号を指定してCTBレコードを更新（1トランザクション）
+    ''' ctb_lease_integrated + ctb_property + ctb_property_attribute + ctb_dept_allocation
+    ''' </summary>
+    Public Sub UpdateByContractNo(rec As CtbRecord)
+        If String.IsNullOrEmpty(rec.ContractNo) Then Return
+
+        Using conn As NpgsqlConnection = _connMgr.GetConnection()
+            Using txn As NpgsqlTransaction = conn.BeginTransaction()
+                Try
+                    ' 1. ctb_lease_integrated UPDATE
+                    Dim ctbId As Integer = UpdateLeaseIntegrated(conn, txn, rec)
+                    If ctbId = 0 Then
+                        txn.Rollback()
+                        Return
+                    End If
+
+                    ' 2. ctb_property UPSERT
+                    If rec.PropertyRec IsNot Nothing Then
+                        rec.PropertyRec.CtbId = ctbId
+                        Dim propId As Integer = UpsertProperty(conn, txn, rec.PropertyRec)
+                        _propRepo.InsertPropertyAttributes(conn, txn, propId, rec.PropertyRec.Attributes)
+                    End If
+
+                    ' 3. ctb_dept_allocation: 既存削除→再INSERT
+                    DeleteDeptAllocations(conn, txn, ctbId)
+                    If rec.DeptAllocations IsNot Nothing AndAlso rec.DeptAllocations.Count > 0 Then
+                        For Each alloc In rec.DeptAllocations
+                            InsertDeptAllocation(conn, txn, ctbId, alloc.DeptCd, alloc.AllocationRatio, alloc.PaymentAmount)
+                        Next
+                    ElseIf Not String.IsNullOrEmpty(rec.DeptCd) Then
+                        InsertDeptAllocation(conn, txn, ctbId, rec.DeptCd, rec.AllocationRatio, rec.MonthlyPayment)
+                    End If
+
+                    txn.Commit()
+                Catch
+                    txn.Rollback()
+                    Throw
+                End Try
+            End Using
+        End Using
+    End Sub
+
+    ''' <summary>
+    ''' 契約番号を指定してCTBレコードを論理削除（split_status='deleted'に設定）
+    ''' </summary>
+    Public Sub SoftDeleteByContractNo(contractNo As String)
+        If String.IsNullOrEmpty(contractNo) Then Return
+
+        Const sql As String =
+            "UPDATE ctb_lease_integrated SET " &
+            "split_status = 'deleted', update_dt = CURRENT_TIMESTAMP " &
+            "WHERE contract_no = @contract_no"
+
+        Using conn As NpgsqlConnection = _connMgr.GetConnection()
+            Using cmd As New NpgsqlCommand(sql, conn)
+                cmd.Parameters.AddWithValue("@contract_no", contractNo)
+                cmd.ExecuteNonQuery()
+            End Using
+        End Using
+    End Sub
+
+    ''' <summary>
+    ''' CTBレコード群をUPSERT（INSERT or UPDATE、1トランザクション）
+    ''' 既存レコード（contract_no+property_noで一致）はUPDATE、なければINSERT
+    ''' </summary>
+    Public Sub UpsertAll(records As List(Of CtbRecord))
+        If records Is Nothing OrElse records.Count = 0 Then Return
+
+        Using conn As NpgsqlConnection = _connMgr.GetConnection()
+            Using txn As NpgsqlTransaction = conn.BeginTransaction()
+                Try
+                    For Each rec In records
+                        Dim ctbId As Integer = UpsertLeaseIntegrated(conn, txn, rec)
+
+                        If rec.PropertyRec IsNot Nothing Then
+                            rec.PropertyRec.CtbId = ctbId
+                            Dim propId As Integer = UpsertProperty(conn, txn, rec.PropertyRec)
+                            _propRepo.InsertPropertyAttributes(conn, txn, propId, rec.PropertyRec.Attributes)
+                        End If
+
+                        ' 配賦: 既存削除→再INSERT
+                        DeleteDeptAllocations(conn, txn, ctbId)
+                        If rec.DeptAllocations IsNot Nothing AndAlso rec.DeptAllocations.Count > 0 Then
+                            For Each alloc In rec.DeptAllocations
+                                InsertDeptAllocation(conn, txn, ctbId, alloc.DeptCd, alloc.AllocationRatio, alloc.PaymentAmount)
+                            Next
+                        ElseIf Not String.IsNullOrEmpty(rec.DeptCd) Then
+                            InsertDeptAllocation(conn, txn, ctbId, rec.DeptCd, rec.AllocationRatio, rec.MonthlyPayment)
+                        End If
+                    Next
+                    txn.Commit()
+                Catch
+                    txn.Rollback()
+                    Throw
+                End Try
+            End Using
+        End Using
+    End Sub
+
+    ' --- Private helpers for UPDATE/UPSERT ---
+
+    Private Function UpdateLeaseIntegrated(conn As NpgsqlConnection, txn As NpgsqlTransaction, rec As CtbRecord) As Integer
+        Const sql As String =
+            "UPDATE ctb_lease_integrated SET " &
+            "contract_name = @contract_name, contract_type_cd = @contract_type_cd, " &
+            "supplier_cd = @supplier_cd, mgmt_dept_cd = @mgmt_dept_cd, " &
+            "lease_start_date = @lease_start_date, lease_end_date = @lease_end_date, " &
+            "free_rent_months = @free_rent_months, lease_term_months = @lease_term_months, " &
+            "asset_category_cd = @asset_category_cd, " &
+            "monthly_payment = @monthly_payment, lease_depreciation = @lease_depreciation, " &
+            "total_payment = @total_payment, split_status = @split_status, " &
+            "update_dt = CURRENT_TIMESTAMP " &
+            "WHERE contract_no = @contract_no AND property_no = @property_no " &
+            "RETURNING ctb_id"
+
+        Using cmd As New NpgsqlCommand(sql, conn, txn)
+            cmd.Parameters.AddWithValue("@contract_no", rec.ContractNo)
+            cmd.Parameters.AddWithValue("@property_no", rec.PropertyNo)
+            cmd.Parameters.AddWithValue("@contract_name", NullIfEmpty(rec.ContractName))
+            cmd.Parameters.AddWithValue("@contract_type_cd", NullIfEmpty(rec.ContractTypeCd))
+            cmd.Parameters.AddWithValue("@supplier_cd", NullIfEmpty(rec.SupplierCd))
+            cmd.Parameters.AddWithValue("@mgmt_dept_cd", NullIfEmpty(rec.MgmtDeptCd))
+            cmd.Parameters.AddWithValue("@lease_start_date", NullIfNothing(rec.LeaseStartDate))
+            cmd.Parameters.AddWithValue("@lease_end_date", NullIfNothing(rec.LeaseEndDate))
+            cmd.Parameters.AddWithValue("@free_rent_months", rec.FreeRentMonths)
+            cmd.Parameters.AddWithValue("@lease_term_months", NullIfNothing(rec.LeaseTermMonths))
+            cmd.Parameters.AddWithValue("@asset_category_cd", NullIfEmpty(rec.AssetCategoryCd))
+            cmd.Parameters.AddWithValue("@monthly_payment", rec.MonthlyPayment)
+            cmd.Parameters.AddWithValue("@lease_depreciation", rec.LeaseDepreciation)
+            cmd.Parameters.AddWithValue("@total_payment", rec.TotalPayment)
+            cmd.Parameters.AddWithValue("@split_status", rec.SplitStatus)
+
+            Dim result As Object = cmd.ExecuteScalar()
+            Return If(result Is Nothing, 0, CInt(result))
+        End Using
+    End Function
+
+    Private Function UpsertLeaseIntegrated(conn As NpgsqlConnection, txn As NpgsqlTransaction, rec As CtbRecord) As Integer
+        Const sql As String =
+            "INSERT INTO ctb_lease_integrated (" &
+            "contract_no, property_no, contract_name, contract_type_cd, supplier_cd, mgmt_dept_cd, " &
+            "lease_start_date, lease_end_date, free_rent_months, lease_term_months, " &
+            "asset_category_cd, " &
+            "monthly_payment, lease_depreciation, total_payment, split_status" &
+            ") VALUES (" &
+            "@contract_no, @property_no, @contract_name, @contract_type_cd, @supplier_cd, @mgmt_dept_cd, " &
+            "@lease_start_date, @lease_end_date, @free_rent_months, @lease_term_months, " &
+            "@asset_category_cd, " &
+            "@monthly_payment, @lease_depreciation, @total_payment, @split_status" &
+            ") ON CONFLICT (contract_no, property_no) DO UPDATE SET " &
+            "contract_name = EXCLUDED.contract_name, contract_type_cd = EXCLUDED.contract_type_cd, " &
+            "supplier_cd = EXCLUDED.supplier_cd, mgmt_dept_cd = EXCLUDED.mgmt_dept_cd, " &
+            "lease_start_date = EXCLUDED.lease_start_date, lease_end_date = EXCLUDED.lease_end_date, " &
+            "free_rent_months = EXCLUDED.free_rent_months, lease_term_months = EXCLUDED.lease_term_months, " &
+            "asset_category_cd = EXCLUDED.asset_category_cd, " &
+            "monthly_payment = EXCLUDED.monthly_payment, lease_depreciation = EXCLUDED.lease_depreciation, " &
+            "total_payment = EXCLUDED.total_payment, split_status = EXCLUDED.split_status, " &
+            "update_dt = CURRENT_TIMESTAMP " &
+            "RETURNING ctb_id"
+
+        Using cmd As New NpgsqlCommand(sql, conn, txn)
+            cmd.Parameters.AddWithValue("@contract_no", rec.ContractNo)
+            cmd.Parameters.AddWithValue("@property_no", rec.PropertyNo)
+            cmd.Parameters.AddWithValue("@contract_name", NullIfEmpty(rec.ContractName))
+            cmd.Parameters.AddWithValue("@contract_type_cd", NullIfEmpty(rec.ContractTypeCd))
+            cmd.Parameters.AddWithValue("@supplier_cd", NullIfEmpty(rec.SupplierCd))
+            cmd.Parameters.AddWithValue("@mgmt_dept_cd", NullIfEmpty(rec.MgmtDeptCd))
+            cmd.Parameters.AddWithValue("@lease_start_date", NullIfNothing(rec.LeaseStartDate))
+            cmd.Parameters.AddWithValue("@lease_end_date", NullIfNothing(rec.LeaseEndDate))
+            cmd.Parameters.AddWithValue("@free_rent_months", rec.FreeRentMonths)
+            cmd.Parameters.AddWithValue("@lease_term_months", NullIfNothing(rec.LeaseTermMonths))
+            cmd.Parameters.AddWithValue("@asset_category_cd", NullIfEmpty(rec.AssetCategoryCd))
+            cmd.Parameters.AddWithValue("@monthly_payment", rec.MonthlyPayment)
+            cmd.Parameters.AddWithValue("@lease_depreciation", rec.LeaseDepreciation)
+            cmd.Parameters.AddWithValue("@total_payment", rec.TotalPayment)
+            cmd.Parameters.AddWithValue("@split_status", rec.SplitStatus)
+
+            Return CInt(cmd.ExecuteScalar())
+        End Using
+    End Function
+
+    Private Function UpsertProperty(conn As NpgsqlConnection, txn As NpgsqlTransaction, rec As PropertyRecord) As Integer
+        Const sql As String =
+            "INSERT INTO ctb_property " &
+            "(ctb_id, property_no, asset_category_cd, asset_no, asset_name, " &
+            " company_name, install_location, remarks) " &
+            "VALUES (@ctb_id, @property_no, @asset_category_cd, @asset_no, @asset_name, " &
+            " @company_name, @install_location, @remarks) " &
+            "ON CONFLICT (ctb_id, property_no) DO UPDATE SET " &
+            "asset_category_cd = EXCLUDED.asset_category_cd, " &
+            "asset_no = EXCLUDED.asset_no, asset_name = EXCLUDED.asset_name, " &
+            "company_name = EXCLUDED.company_name, install_location = EXCLUDED.install_location, " &
+            "remarks = EXCLUDED.remarks, update_dt = CURRENT_TIMESTAMP " &
+            "RETURNING property_id"
+
+        Using cmd As New NpgsqlCommand(sql, conn, txn)
+            cmd.Parameters.AddWithValue("@ctb_id", rec.CtbId)
+            cmd.Parameters.AddWithValue("@property_no", rec.PropertyNo)
+            cmd.Parameters.AddWithValue("@asset_category_cd", If(String.IsNullOrEmpty(rec.AssetCategoryCd), "AC01", rec.AssetCategoryCd))
+            cmd.Parameters.AddWithValue("@asset_no", NullIfEmpty(rec.AssetNo))
+            cmd.Parameters.AddWithValue("@asset_name", NullIfEmpty(rec.AssetName))
+            cmd.Parameters.AddWithValue("@company_name", NullIfEmpty(rec.CompanyName))
+            cmd.Parameters.AddWithValue("@install_location", NullIfEmpty(rec.InstallLocation))
+            cmd.Parameters.AddWithValue("@remarks", NullIfEmpty(rec.Remarks))
+            Return CInt(cmd.ExecuteScalar())
+        End Using
+    End Function
+
+    Private Sub DeleteDeptAllocations(conn As NpgsqlConnection, txn As NpgsqlTransaction, ctbId As Integer)
+        Const sql As String = "DELETE FROM ctb_dept_allocation WHERE ctb_id = @ctb_id"
+        Using cmd As New NpgsqlCommand(sql, conn, txn)
+            cmd.Parameters.AddWithValue("@ctb_id", ctbId)
+            cmd.ExecuteNonQuery()
+        End Using
+    End Sub
+
+    ''' <summary>
     ''' DBからCTBレコードを全件取得（ctb_property + ctb_dept_allocation JOIN）
     ''' 資産情報はctb_propertyから取得する
     ''' </summary>

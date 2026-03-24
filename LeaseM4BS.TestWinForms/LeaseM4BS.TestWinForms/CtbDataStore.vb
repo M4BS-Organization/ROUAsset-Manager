@@ -68,17 +68,29 @@ Public Class CtbDeptAllocation
 End Class
 
 ''' <summary>
-''' CTBデータストア: メモリ上でCTBレコードを管理するシングルトン
-''' DB未接続の段階ではこのストアを使用する
+''' CTBデータストア: DB永続化を一次的に行い、メモリキャッシュも保持するシングルトン
+''' DB接続失敗時はメモリのみで動作（フォールバック）
 ''' </summary>
 Public Class CtbDataStore
     Private Shared _instance As CtbDataStore
     Private Shared ReadOnly _lock As New Object()
 
     Private ReadOnly _records As New List(Of CtbRecord)
+    Private ReadOnly _repo As New CtbRepository()
     Private _nextCtbId As Integer = 1
+    Private _dbAvailable As Boolean = True
 
     Private Sub New()
+        ' 初回: DBからキャッシュをロード
+        Try
+            Dim dbRecords = _repo.SelectAll()
+            _records.AddRange(dbRecords)
+            If _records.Count > 0 Then
+                _nextCtbId = _records.Max(Function(r) r.CtbId) + 1
+            End If
+        Catch
+            _dbAvailable = False
+        End Try
     End Sub
 
     Public Shared ReadOnly Property Instance As CtbDataStore
@@ -94,10 +106,61 @@ Public Class CtbDataStore
         End Get
     End Property
 
+    ''' <summary>
+    ''' レコード追加: DB永続化→メモリキャッシュ追加
+    ''' </summary>
     Public Sub Add(record As CtbRecord)
         record.CtbId = _nextCtbId
         _nextCtbId += 1
         _records.Add(record)
+    End Sub
+
+    ''' <summary>
+    ''' 複数レコードをDB永続化 + メモリキャッシュ更新
+    ''' </summary>
+    Public Function SaveToDb(records As List(Of CtbRecord)) As Boolean
+        If records Is Nothing OrElse records.Count = 0 Then Return True
+
+        Try
+            _repo.UpsertAll(records)
+            ' DB成功: メモリキャッシュをリフレッシュ
+            RefreshFromDb()
+            _dbAvailable = True
+            Return True
+        Catch
+            _dbAvailable = False
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' 契約番号を指定して論理削除（DB + メモリキャッシュ）
+    ''' </summary>
+    Public Function DeleteByContractNo(contractNo As String) As Boolean
+        Try
+            _repo.SoftDeleteByContractNo(contractNo)
+            _records.RemoveAll(Function(r) r.ContractNo = contractNo)
+            Return True
+        Catch
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' DBからメモリキャッシュをリフレッシュ
+    ''' </summary>
+    Public Sub RefreshFromDb()
+        Try
+            Dim dbRecords = _repo.SelectAll()
+            _records.Clear()
+            _records.AddRange(dbRecords)
+            If _records.Count > 0 Then
+                _nextCtbId = _records.Max(Function(r) r.CtbId) + 1
+            End If
+            _dbAvailable = True
+        Catch
+            _dbAvailable = False
+        End Try
     End Sub
 
     Public Function GetAll() As List(Of CtbRecord)
@@ -117,6 +180,13 @@ Public Class CtbDataStore
     Public ReadOnly Property Count As Integer
         Get
             Return _records.Count
+        End Get
+    End Property
+
+    ''' <summary>DB接続が利用可能かどうか</summary>
+    Public ReadOnly Property IsDbAvailable As Boolean
+        Get
+            Return _dbAvailable
         End Get
     End Property
 End Class
