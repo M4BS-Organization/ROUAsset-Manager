@@ -102,6 +102,8 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -116,6 +118,7 @@
   <ItemGroup>
     <Compile Include="Placeholder.vb" />
     <Compile Include="SyncTab1ToJudgeTests.vb" />
+    <Compile Include="SyncTabDataFlowTests.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -125,6 +128,10 @@
     <ProjectReference Include="..\LeaseM4BS.DataAccess\LeaseM4BS.DataAccess.vbproj">
       <Project>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</Project>
       <Name>LeaseM4BS.DataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\LeaseM4BS.TestWinForms\LeaseM4BS.TestWinForms\LeaseM4BS.TestWinForms.vbproj">
+      <Project>{77A9AE2A-E73B-468C-BCCE-841079F4724C}</Project>
+      <Name>LeaseM4BS.TestWinForms</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
