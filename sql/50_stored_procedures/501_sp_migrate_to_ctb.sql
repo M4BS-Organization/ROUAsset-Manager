@@ -148,8 +148,8 @@ BEGIN
                     v_ctb_id,
                     1,
                     'AC01',  -- デフォルト: 建物（後からUI変更可能）
-                    v_rec.contract_name,
-                    'マイグレーションにより自動作成'
+                    NULL,    -- 資産名は未設定（資産詳細入力画面から入力）
+                    '移行データ: 資産詳細入力画面から編集してください'
                 )
                 ON CONFLICT (ctb_id, property_no) DO NOTHING;
 
