@@ -2180,42 +2180,41 @@ Public Class FrmLeaseContractMain
     ''' <summary>
     ''' タブ5（リース判定）→ タブ3（会計）へ判定結果を反映する。
     ''' 判定結果に基づき会計処理区分の表示を自動設定する。
+    ''' このメソッドは判定→会計の一方向同期であり循環は起こらないため、
+    ''' _isSyncingData の影響を受けずに実行できる。
+    ''' RecalcJudge() から呼ばれる場合は _isSyncingData = True の状態であるため、
+    ''' _isSyncingData によるガードは行わない。
     ''' </summary>
     Private Sub SyncJudgeToAccounting()
         If Not _isLoaded Then Return
-        If _isSyncingData Then Return
-        _isSyncingData = True
-        Try
-            If lblResultText Is Nothing OrElse lblAcctJudgeResult Is Nothing Then Return
 
-            Dim judgeResult As String = lblResultText.Text
-            lblAcctJudgeResult.Text = "リース判定: " & judgeResult
+        Dim judgeResult As String = lblResultText.Text
+        lblAcctJudgeResult.Text = "リース判定: " & judgeResult
 
-            Select Case judgeResult
-                Case "オンバランス処理"
-                    lblAcctJudgeResult.ForeColor = Color.White
-                    lblAcctJudgeResult.BackColor = Color.FromArgb(220, 53, 69)
-                    ' オンバランス: 使用権資産・リース負債の計上欄を有効化
-                    SetAccountingMatrixEnabled(True)
+        Select Case judgeResult
+            Case "オンバランス処理"
+                lblAcctJudgeResult.ForeColor = Color.White
+                lblAcctJudgeResult.BackColor = Color.FromArgb(220, 53, 69)
+                ' オンバランス: 使用権資産・リース負債の計上欄を有効化
+                SetAccountingMatrixEnabled(True)
 
-                Case "オフバランス処理"
-                    lblAcctJudgeResult.ForeColor = Color.White
-                    lblAcctJudgeResult.BackColor = Color.FromArgb(23, 162, 184)
-                    ' オフバランス: 計上欄を無効化（賃貸借処理）
-                    SetAccountingMatrixEnabled(False)
+            Case "オフバランス処理"
+                lblAcctJudgeResult.ForeColor = Color.White
+                lblAcctJudgeResult.BackColor = Color.FromArgb(23, 162, 184)
+                ' オフバランス: 計上欄を無効化（賃貸借処理）
+                SetAccountingMatrixEnabled(False)
 
-                Case "対象外"
-                    lblAcctJudgeResult.ForeColor = CLR_TEXT
-                    lblAcctJudgeResult.BackColor = Color.FromArgb(204, 204, 204)
-                    SetAccountingMatrixEnabled(False)
+            Case "対象外"
+                lblAcctJudgeResult.ForeColor = CLR_TEXT
+                lblAcctJudgeResult.BackColor = Color.FromArgb(204, 204, 204)
+                SetAccountingMatrixEnabled(False)
 
-                Case Else
-                    lblAcctJudgeResult.ForeColor = CLR_HEADER
-                    lblAcctJudgeResult.BackColor = Color.FromArgb(230, 240, 250)
-            End Select
-        Finally
-            _isSyncingData = False
-        End Try
+            Case Else
+                ' 未判定（"---" など）: マトリックスを無効化して入力を抑制する
+                lblAcctJudgeResult.ForeColor = CLR_HEADER
+                lblAcctJudgeResult.BackColor = Color.FromArgb(230, 240, 250)
+                SetAccountingMatrixEnabled(False)
+        End Select
     End Sub
 
     ''' <summary>
