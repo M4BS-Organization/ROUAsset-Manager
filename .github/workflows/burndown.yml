@@ -1,4 +1,4 @@
-name: Sprint Burndown
+name: Sprint Burn-Up
 
 on:
   schedule:
@@ -9,11 +9,10 @@ on:
 env:
   PROJECT_NUMBER: 3
   ORG: M4BS-Organization
-  BURNDOWN_ISSUE: 10
-  TOTAL_SP: 21
+  BURNUP_ISSUE: 10
 
 jobs:
-  burndown:
+  burnup:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -30,53 +29,60 @@ jobs:
             --format json \
             --jq '.items[] | {title: .title, status: .status, sp: (.["story Points"] // 0)}')
 
-          # Done の SP を合計
+          # SP 集計（動的計算 — ハードコード不要）
+          TOTAL_SP=$(echo "$ITEMS" | jq -s '[.[].sp] | add // 0')
           DONE_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Done") | .sp] | add // 0')
           IN_PROGRESS_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "In Progress") | .sp] | add // 0')
-
-          # 残 SP
+          TODO_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Todo") | .sp] | add // 0')
           REMAINING=$((TOTAL_SP - DONE_SP))
 
           # 曜日を取得 (JST)
           DAY=$(TZ=Asia/Tokyo date +%a)
           DATE=$(TZ=Asia/Tokyo date +%m/%d)
-
-          # 理想残の計算 (月=16, 火=11, 水=6, 木=バッファ, 金=0)
           case $DAY in
-            Mon) IDEAL=16; DAY_JP="月" ;;
-            Tue) IDEAL=11; DAY_JP="火" ;;
-            Wed) IDEAL=6;  DAY_JP="水" ;;
-            Thu) IDEAL="-"; DAY_JP="木" ;;
-            Fri) IDEAL=0;  DAY_JP="金" ;;
-            *)   IDEAL="-"; DAY_JP="—" ;;
+            Mon) DAY_JP="月" ;; Tue) DAY_JP="火" ;; Wed) DAY_JP="水" ;;
+            Thu) DAY_JP="木" ;; Fri) DAY_JP="金" ;; *)   DAY_JP="—" ;;
           esac
 
-          # 状態判定
-          if [ "$IDEAL" = "-" ]; then
-            STATUS="📦 バッファ日"
-            EMOJI=":package:"
-          elif [ "$REMAINING" -le "$IDEAL" ]; then
-            STATUS="✅ 順調"
-            EMOJI=":white_check_mark:"
-          elif [ "$((REMAINING - IDEAL))" -le 2 ]; then
-            STATUS="⚠️ やや遅れ"
-            EMOJI=":warning:"
+          # 進捗率
+          if [ "$TOTAL_SP" -gt 0 ]; then
+            PCT=$((DONE_SP * 100 / TOTAL_SP))
           else
-            STATUS="🔴 遅れ ($((REMAINING - IDEAL))SP)"
-            EMOJI=":red_circle:"
+            PCT=0
           fi
 
-          # Done Issue リスト
+          # 状態判定（消化率ベース）
+          if [ "$PCT" -ge 80 ]; then
+            STATUS="🚀 ほぼ完了"
+          elif [ "$PCT" -ge 50 ]; then
+            STATUS="✅ 順調"
+          elif [ "$PCT" -ge 25 ]; then
+            STATUS="⚠️ やや遅れ"
+          else
+            STATUS="🔴 遅れ"
+          fi
+
+          # Issue リスト
           DONE_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Done") | "✅ \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
           PROGRESS_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "In Progress") | "🔧 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
           TODO_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Todo") | "📋 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
 
-          # プログレスバー (20文字幅)
-          PCT=$((DONE_SP * 100 / TOTAL_SP))
-          FILLED=$((PCT / 5))
-          EMPTY=$((20 - FILLED))
-          BAR=$(printf '▓%.0s' $(seq 1 $FILLED) 2>/dev/null || true)
-          BAR="${BAR}$(printf '░%.0s' $(seq 1 $EMPTY) 2>/dev/null || true)"
+          # バーンアップチャート（テキスト）
+          # スコープ線 = TOTAL_SP, 消化線 = DONE_SP を20文字幅で描画
+          SCOPE_FILLED=$((TOTAL_SP > 0 ? 20 : 0))
+          DONE_FILLED=$((TOTAL_SP > 0 ? DONE_SP * 20 / TOTAL_SP : 0))
+          PROGRESS_FILLED=$((TOTAL_SP > 0 ? IN_PROGRESS_SP * 20 / TOTAL_SP : 0))
+
+          DONE_BAR=$(printf '█%.0s' $(seq 1 $DONE_FILLED) 2>/dev/null || true)
+          PROGRESS_BAR=$(printf '▓%.0s' $(seq 1 $PROGRESS_FILLED) 2>/dev/null || true)
+          REMAIN_LEN=$((20 - DONE_FILLED - PROGRESS_FILLED))
+          if [ "$REMAIN_LEN" -gt 0 ]; then
+            REMAIN_BAR=$(printf '░%.0s' $(seq 1 $REMAIN_LEN) 2>/dev/null || true)
+          else
+            REMAIN_BAR=""
+          fi
+
+          CHART_DONE="${DONE_BAR}${PROGRESS_BAR}${REMAIN_BAR}"
 
           # --- Slack 通知 ---
           SLACK_PAYLOAD=$(cat <<PAYLOAD
@@ -86,24 +92,31 @@ jobs:
                 "type": "header",
                 "text": {
                   "type": "plain_text",
-                  "text": "📊 スプリント バーンダウン  ${DATE}(${DAY_JP})",
+                  "text": "📈 バーンアップ  ${DATE}(${DAY_JP})",
                   "emoji": true
                 }
               },
               {
                 "type": "section",
                 "fields": [
-                  {"type": "mrkdwn", "text": "*消化SP:*\n${DONE_SP} / ${TOTAL_SP}"},
-                  {"type": "mrkdwn", "text": "*残SP:*\n${REMAINING}"},
-                  {"type": "mrkdwn", "text": "*理想残:*\n${IDEAL}"},
-                  {"type": "mrkdwn", "text": "*状態:*\n${STATUS}"}
+                  {"type": "mrkdwn", "text": "*スコープ:*\n${TOTAL_SP} SP"},
+                  {"type": "mrkdwn", "text": "*消化:*\n${DONE_SP} SP"},
+                  {"type": "mrkdwn", "text": "*進行中:*\n${IN_PROGRESS_SP} SP"},
+                  {"type": "mrkdwn", "text": "*残:*\n${TODO_SP} SP"}
                 ]
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "\`${BAR}\` ${PCT}% (${DONE_SP}/${TOTAL_SP} SP)"
+                  "text": "*消化*  \`${CHART_DONE}\` ${PCT}%\n█ Done(${DONE_SP})  ▓ 進行中(${IN_PROGRESS_SP})  ░ 残(${TODO_SP})"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*状態:* ${STATUS}"
                 }
               },
               {
@@ -121,7 +134,7 @@ jobs:
                 "elements": [
                   {
                     "type": "mrkdwn",
-                    "text": "<https://github.com/orgs/M4BS-Organization/projects/3|📋 Project Board> | <https://github.com/M4BS-Organization/ROUAsset-Manager/issues/10|📈 バーンダウンIssue>"
+                    "text": "<https://github.com/orgs/M4BS-Organization/projects/3|📋 Project Board> | <https://github.com/M4BS-Organization/ROUAsset-Manager/issues/10|📈 バーンアップIssue>"
                   }
                 ]
               }
@@ -137,16 +150,17 @@ jobs:
           echo "Slack notification sent"
 
           # --- GitHub Issue にも記録 ---
-          gh issue comment $BURNDOWN_ISSUE \
+          gh issue comment $BURNUP_ISSUE \
             --repo "$ORG/ROUAsset-Manager" \
-            --body "## 📊 バーンダウン ${DATE}(${DAY_JP})
+            --body "## 📈 バーンアップ ${DATE}(${DAY_JP})
 
-          | 消化SP | 残SP | 理想残 | 状態 |
-          |---|---|---|---|
-          | **${DONE_SP}** / ${TOTAL_SP} | **${REMAINING}** | ${IDEAL} | ${STATUS} |
+          | スコープ | 消化 | 進行中 | 残 | 状態 |
+          |---------|------|--------|-----|------|
+          | **${TOTAL_SP}** SP | **${DONE_SP}** SP | **${IN_PROGRESS_SP}** SP | **${TODO_SP}** SP | ${STATUS} |
 
           \`\`\`
-          ${BAR} ${PCT}% (${DONE_SP}/${TOTAL_SP} SP)
+          消化  ${CHART_DONE} ${PCT}%
+          █ Done(${DONE_SP})  ▓ 進行中(${IN_PROGRESS_SP})  ░ 残(${TODO_SP})
           \`\`\`
 
           **Done:** ${DONE_LIST:-なし}
