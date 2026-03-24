@@ -3,7 +3,7 @@
 -- データベース・ユーザー作成スクリプト
 --
 -- 実行方法:
---   psql -U postgres -f 000_init.sql
+--   psql -U postgres -f 001_init.sql
 --
 -- 注意: このスクリプトは PostgreSQL スーパーユーザー（postgres）で実行してください
 -- ============================================================
@@ -31,6 +31,13 @@ END
 $$;
 
 -- ==========================================================
+-- データベース作成（本番環境）
+-- ==========================================================
+SELECT 'CREATE DATABASE lease_m4bs OWNER lease_m4bs_user ENCODING ''UTF8'' LC_COLLATE ''ja_JP.UTF-8'' LC_CTYPE ''ja_JP.UTF-8'' TEMPLATE template0'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'lease_m4bs')
+\gexec
+
+-- ==========================================================
 -- データベース作成（開発環境）
 -- ==========================================================
 SELECT 'CREATE DATABASE lease_m4bs_dev OWNER lease_m4bs_user ENCODING ''UTF8'' LC_COLLATE ''ja_JP.UTF-8'' LC_CTYPE ''ja_JP.UTF-8'' TEMPLATE template0'
@@ -47,8 +54,19 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'lease_m4bs_test')
 -- ==========================================================
 -- 各データベースに対する権限設定
 -- ==========================================================
+GRANT ALL PRIVILEGES ON DATABASE lease_m4bs TO lease_m4bs_user;
 GRANT ALL PRIVILEGES ON DATABASE lease_m4bs_dev TO lease_m4bs_user;
 GRANT ALL PRIVILEGES ON DATABASE lease_m4bs_test TO lease_m4bs_user;
+
+-- ==========================================================
+-- 本番データベースに接続してスキーマ権限を設定
+-- ==========================================================
+\connect lease_m4bs
+
+GRANT ALL ON SCHEMA public TO lease_m4bs_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO lease_m4bs_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO lease_m4bs_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO lease_m4bs_user;
 
 -- ==========================================================
 -- 開発データベースに接続してスキーマ権限を設定
@@ -75,7 +93,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO lease_m4bs_u
 --
 -- 次のステップ:
 --   1. 各データベースに接続してテーブルを作成:
---      psql -U lease_m4bs_user -d lease_m4bs_dev -f 001_ddl.sql
+--      psql -U lease_m4bs_user -d lease_m4bs -f 301_master_tables.sql
 --   2. 初期データを投入:
---      psql -U lease_m4bs_user -d lease_m4bs_dev -f 002_seed_dev.sql
+--      psql -U lease_m4bs_user -d lease_m4bs -f seed.sql
 -- ============================================================

@@ -565,21 +565,18 @@ Public Class FrmLeaseContractMain
                     ctb.DeptName = alloc.DeptName
                     ctb.AllocationRatio = alloc.AllocationRatio
 
-                    CtbDataStore.Instance.Add(ctb)
                     dbRecords.Add(ctb)
                     ctbCount += 1
                 Next
             Next
         End If
 
-        ' DB永続化
-        Try
-            Dim repo As New CtbRepository()
-            repo.InsertAll(dbRecords)
-        Catch ex As Exception
-            MessageBox.Show("DB登録でエラーが発生しました。メモリには保持されています。" & Environment.NewLine & ex.Message,
+        ' DB永続化（UPSERT: 新規=INSERT、既存=UPDATE）
+        Dim dbSuccess As Boolean = CtbDataStore.Instance.SaveToDb(dbRecords)
+        If Not dbSuccess Then
+            MessageBox.Show("DB登録でエラーが発生しました。メモリには保持されています。",
                             "DB登録エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-        End Try
+        End If
 
         Dim args As New ContractRegisteredEventArgs() With {
             .MgmtDept = If(Not String.IsNullOrEmpty(deptName), deptName, cmbMgmtDeptCode.Text),
@@ -1721,33 +1718,62 @@ Public Class FrmLeaseContractMain
             pv = Math.Round(pv, 0)
             txtSchPresentValue.Text = pv.ToString("N0")
 
-            ' --- 使用権資産・リース負債 当初認識（第34号§27・§22） ---
-            ' 期首が未設定（新規契約）の場合のみ自動計算する
-            Dim rouBeginVal As Decimal = 0
-            Dim liabBeginVal As Decimal = 0
-            Decimal.TryParse(txtSchRouBegin.Text.Replace(",", ""),
-                             System.Globalization.NumberStyles.Any,
-                             System.Globalization.CultureInfo.InvariantCulture, rouBeginVal)
-            Decimal.TryParse(txtSchLiabBegin.Text.Replace(",", ""),
-                             System.Globalization.NumberStyles.Any,
-                             System.Globalization.CultureInfo.InvariantCulture, liabBeginVal)
+            ' --- 判定結果に基づく会計処理区分の制御（Issue #16） ---
+            Dim judgeResult As String = If(lblResultText IsNot Nothing, lblResultText.Text, "")
+            Dim isOnBalance As Boolean = (judgeResult = "オンバランス処理")
+            Dim isOffBalance As Boolean = (judgeResult = "オフバランス処理" OrElse judgeResult = "対象外")
 
-            If rouBeginVal = 0 AndAlso liabBeginVal = 0 Then
-                ' 使用権資産 = PV + 初期直接費用 + 原状回復費用見積 - リース・インセンティブ（第34号§27）
-                Dim rouAmount As Decimal = pv + numInitialDirectCost.Value + numRestorationCost.Value - numLeaseIncentive.Value
-                rouAmount = Math.Max(0, rouAmount)
-                txtSchRouBegin.Text = "0"
-                txtSchRouIncrease.Text = rouAmount.ToString("N0")
-                txtSchRouChange.Text = "0"
-                txtSchRouDecrease.Text = "0"
-                txtSchRouEnd.Text = rouAmount.ToString("N0")
+            ' 使用権資産・リース負債の計上欄の有効/無効制御
+            Dim rouLiabControls() As Control = {
+                txtSchRouBegin, txtSchRouIncrease, txtSchRouChange, txtSchRouDecrease, txtSchRouEnd,
+                txtSchLiabBegin, txtSchLiabIncrease, txtSchLiabChange, txtSchLiabDecrease, txtSchLiabEnd
+            }
+            For Each ctl In rouLiabControls
+                If ctl IsNot Nothing Then ctl.Enabled = isOnBalance
+            Next
 
-                ' リース負債 = PV（第34号§22）
-                txtSchLiabBegin.Text = "0"
-                txtSchLiabIncrease.Text = pv.ToString("N0")
-                txtSchLiabChange.Text = "0"
-                txtSchLiabDecrease.Text = "0"
-                txtSchLiabEnd.Text = pv.ToString("N0")
+            If isOffBalance Then
+                ' オフバランス/対象外: 使用権資産・リース負債をゼロクリア
+                txtSchRouBegin.Text = "0" : txtSchRouIncrease.Text = "0"
+                txtSchRouChange.Text = "0" : txtSchRouDecrease.Text = "0" : txtSchRouEnd.Text = "0"
+                txtSchLiabBegin.Text = "0" : txtSchLiabIncrease.Text = "0"
+                txtSchLiabChange.Text = "0" : txtSchLiabDecrease.Text = "0" : txtSchLiabEnd.Text = "0"
+
+                ' ARO（除去債務）もゼロクリア
+                If txtSchAroBegin IsNot Nothing Then
+                    txtSchAroBegin.Text = "0" : txtSchAroIncrease.Text = "0"
+                    txtSchAroChange.Text = "0" : txtSchAroDecrease.Text = "0" : txtSchAroEnd.Text = "0"
+                End If
+
+            Else
+                ' オンバランス or 判定未実行: 使用権資産・リース負債を自動計算
+                ' 期首が未設定（新規契約）の場合のみ自動計算する
+                Dim rouBeginVal As Decimal = 0
+                Dim liabBeginVal As Decimal = 0
+                Decimal.TryParse(txtSchRouBegin.Text.Replace(",", ""),
+                                 System.Globalization.NumberStyles.Any,
+                                 System.Globalization.CultureInfo.InvariantCulture, rouBeginVal)
+                Decimal.TryParse(txtSchLiabBegin.Text.Replace(",", ""),
+                                 System.Globalization.NumberStyles.Any,
+                                 System.Globalization.CultureInfo.InvariantCulture, liabBeginVal)
+
+                If rouBeginVal = 0 AndAlso liabBeginVal = 0 Then
+                    ' 使用権資産 = PV + 初期直接費用 + 原状回復費用見積 - リース・インセンティブ（第34号§27）
+                    Dim rouAmount As Decimal = pv + numInitialDirectCost.Value + numRestorationCost.Value - numLeaseIncentive.Value
+                    rouAmount = Math.Max(0, rouAmount)
+                    txtSchRouBegin.Text = "0"
+                    txtSchRouIncrease.Text = rouAmount.ToString("N0")
+                    txtSchRouChange.Text = "0"
+                    txtSchRouDecrease.Text = "0"
+                    txtSchRouEnd.Text = rouAmount.ToString("N0")
+
+                    ' リース負債 = PV（第34号§22）
+                    txtSchLiabBegin.Text = "0"
+                    txtSchLiabIncrease.Text = pv.ToString("N0")
+                    txtSchLiabChange.Text = "0"
+                    txtSchLiabDecrease.Text = "0"
+                    txtSchLiabEnd.Text = pv.ToString("N0")
+                End If
             End If
 
         Catch ex As Exception

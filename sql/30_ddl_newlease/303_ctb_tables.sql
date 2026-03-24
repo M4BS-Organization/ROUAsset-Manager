@@ -1,4 +1,4 @@
--- psql -U manager -d lease_m4bs -f ctb_tables.sql
+-- psql -U lease_m4bs_user -d lease_m4bs -f 303_ctb_tables.sql
 
 CREATE TABLE IF NOT EXISTS ctb_lease_integrated (
     ctb_id              SERIAL          NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS ctb_lease_integrated (
     lease_term_months   INTEGER         NULL,
 
     asset_no            VARCHAR(20)     NULL,
-    asset_category      VARCHAR(20)     NULL,
+    asset_category_cd   VARCHAR(10)     NULL,
     asset_name          VARCHAR(200)    NULL,
     company_name        VARCHAR(100)    NULL,
     install_location    VARCHAR(200)    NULL,
