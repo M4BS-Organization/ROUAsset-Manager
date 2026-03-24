@@ -23,18 +23,98 @@ jobs:
           GH_TOKEN: ${{ secrets.PROJECT_PAT }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          # プロジェクトアイテムを取得（Status と Story Points）
-          ITEMS=$(gh project item-list $PROJECT_NUMBER \
-            --owner "$ORG" \
-            --format json \
-            --jq '.items[] | {title: .title, status: .status, sp: (.["story Points"] // 0)}')
+          # --- GraphQL でプロジェクトアイテムを Iteration 付きで取得 ---
+          QUERY='
+          query($org: String!, $num: Int!) {
+            organization(login: $org) {
+              projectV2(number: $num) {
+                items(first: 100) {
+                  nodes {
+                    fieldValues(first: 20) {
+                      nodes {
+                        ... on ProjectV2ItemFieldIterationValue {
+                          title
+                          startDate
+                          duration
+                          field { ... on ProjectV2IterationField { name } }
+                        }
+                        ... on ProjectV2ItemFieldNumberValue {
+                          number
+                          field { ... on ProjectV2FieldCommon { name } }
+                        }
+                        ... on ProjectV2ItemFieldSingleSelectValue {
+                          name
+                          field { ... on ProjectV2FieldCommon { name } }
+                        }
+                      }
+                    }
+                    content {
+                      ... on Issue {
+                        title
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }'
 
-          # SP 集計（動的計算 — ハードコード不要）
-          TOTAL_SP=$(echo "$ITEMS" | jq -s '[.[].sp] | add // 0')
-          DONE_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Done") | .sp] | add // 0')
-          IN_PROGRESS_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "In Progress") | .sp] | add // 0')
-          TODO_SP=$(echo "$ITEMS" | jq -s '[.[] | select(.status == "Todo") | .sp] | add // 0')
-          REMAINING=$((TOTAL_SP - DONE_SP))
+          RAW=$(gh api graphql \
+            -f query="$QUERY" \
+            -f org="$ORG" \
+            -F num="$PROJECT_NUMBER")
+
+          # --- 今日の日付（UTC）を取得し、現在の Iteration を特定 ---
+          TODAY=$(date +%Y-%m-%d)
+
+          # jq で各アイテムを平坦化し、iteration の期間に今日が含まれるものだけ抽出
+          ITEMS=$(echo "$RAW" | jq --arg today "$TODAY" '
+            [
+              .data.organization.projectV2.items.nodes[] |
+              {
+                title: (.content.title // "untitled"),
+                number: (.content.number // null),
+                status: (
+                  [.fieldValues.nodes[] |
+                    select(.field?.name? == "Status") | .name
+                  ] | first // "No Status"
+                ),
+                sp: (
+                  [.fieldValues.nodes[] |
+                    select(.field?.name? == "Story Points" or .field?.name? == "story Points" or .field?.name? == "SP") | .number
+                  ] | first // 0
+                ),
+                iteration: (
+                  [.fieldValues.nodes[] |
+                    select(.field?.name? == "Iteration" or .field?.name? == "Sprint") |
+                    {title: .title, startDate: .startDate, duration: .duration}
+                  ] | first // null
+                )
+              } |
+              # 現在の Iteration に含まれるアイテムのみ抽出
+              select(
+                .iteration != null and
+                .iteration.startDate != null and
+                .iteration.duration != null and
+                (.iteration.startDate <= $today) and
+                (
+                  (.iteration.startDate | strptime("%Y-%m-%d") | mktime) +
+                  (.iteration.duration * 86400)
+                  > ($today | strptime("%Y-%m-%d") | mktime)
+                )
+              )
+            ]
+          ')
+
+          # 現在の Sprint 名を取得
+          SPRINT_NAME=$(echo "$ITEMS" | jq -r '.[0].iteration.title // "N/A"')
+
+          # --- SP 集計（現在の Sprint のタスクのみ） ---
+          TOTAL_SP=$(echo "$ITEMS" | jq '[.[].sp] | add // 0')
+          DONE_SP=$(echo "$ITEMS" | jq '[.[] | select(.status == "Done") | .sp] | add // 0')
+          IN_PROGRESS_SP=$(echo "$ITEMS" | jq '[.[] | select(.status == "In Progress") | .sp] | add // 0')
+          REMAINING_SP=$((TOTAL_SP - DONE_SP))
 
           # 曜日を取得 (JST)
           DAY=$(TZ=Asia/Tokyo date +%a)
@@ -62,14 +142,12 @@ jobs:
             STATUS="🔴 遅れ"
           fi
 
-          # Issue リスト
-          DONE_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Done") | "✅ \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
-          PROGRESS_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "In Progress") | "🔧 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
-          TODO_LIST=$(echo "$ITEMS" | jq -rs '[.[] | select(.status == "Todo") | "📋 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
+          # Issue リスト（現在の Sprint のみ）
+          DONE_LIST=$(echo "$ITEMS" | jq -r '[.[] | select(.status == "Done") | "✅ \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
+          PROGRESS_LIST=$(echo "$ITEMS" | jq -r '[.[] | select(.status == "In Progress") | "🔧 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
+          TODO_LIST=$(echo "$ITEMS" | jq -r '[.[] | select(.status == "Todo") | "📋 \(.title) (\(.sp)SP)"] | join("\n")' || echo "なし")
 
-          # バーンアップチャート（テキスト）
-          # スコープ線 = TOTAL_SP, 消化線 = DONE_SP を20文字幅で描画
-          SCOPE_FILLED=$((TOTAL_SP > 0 ? 20 : 0))
+          # バーンアップチャート（テキスト）— 20文字幅
           DONE_FILLED=$((TOTAL_SP > 0 ? DONE_SP * 20 / TOTAL_SP : 0))
           PROGRESS_FILLED=$((TOTAL_SP > 0 ? IN_PROGRESS_SP * 20 / TOTAL_SP : 0))
 
@@ -92,7 +170,7 @@ jobs:
                 "type": "header",
                 "text": {
                   "type": "plain_text",
-                  "text": "📈 バーンアップ  ${DATE}(${DAY_JP})",
+                  "text": "📈 バーンアップ  ${DATE}(${DAY_JP}) — ${SPRINT_NAME}",
                   "emoji": true
                 }
               },
@@ -102,14 +180,14 @@ jobs:
                   {"type": "mrkdwn", "text": "*スコープ:*\n${TOTAL_SP} SP"},
                   {"type": "mrkdwn", "text": "*消化:*\n${DONE_SP} SP"},
                   {"type": "mrkdwn", "text": "*進行中:*\n${IN_PROGRESS_SP} SP"},
-                  {"type": "mrkdwn", "text": "*残:*\n${TODO_SP} SP"}
+                  {"type": "mrkdwn", "text": "*残:*\n${REMAINING_SP} SP"}
                 ]
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*消化*  \`${CHART_DONE}\` ${PCT}%\n█ Done(${DONE_SP})  ▓ 進行中(${IN_PROGRESS_SP})  ░ 残(${TODO_SP})"
+                  "text": "*消化*  \`${CHART_DONE}\` ${PCT}%\n█ Done(${DONE_SP})  ▓ 進行中(${IN_PROGRESS_SP})  ░ 残(${REMAINING_SP})"
                 }
               },
               {
@@ -152,15 +230,15 @@ jobs:
           # --- GitHub Issue にも記録 ---
           gh issue comment $BURNUP_ISSUE \
             --repo "$ORG/ROUAsset-Manager" \
-            --body "## 📈 バーンアップ ${DATE}(${DAY_JP})
+            --body "## 📈 バーンアップ ${DATE}(${DAY_JP}) — ${SPRINT_NAME}
 
           | スコープ | 消化 | 進行中 | 残 | 状態 |
           |---------|------|--------|-----|------|
-          | **${TOTAL_SP}** SP | **${DONE_SP}** SP | **${IN_PROGRESS_SP}** SP | **${TODO_SP}** SP | ${STATUS} |
+          | **${TOTAL_SP}** SP | **${DONE_SP}** SP | **${IN_PROGRESS_SP}** SP | **${REMAINING_SP}** SP | ${STATUS} |
 
           \`\`\`
           消化  ${CHART_DONE} ${PCT}%
-          █ Done(${DONE_SP})  ▓ 進行中(${IN_PROGRESS_SP})  ░ 残(${TODO_SP})
+          █ Done(${DONE_SP})  ▓ 進行中(${IN_PROGRESS_SP})  ░ 残(${REMAINING_SP})
           \`\`\`
 
           **Done:** ${DONE_LIST:-なし}
