@@ -66,8 +66,9 @@ BEGIN
             CAST(k.k_slsryo AS NUMERIC(15,2))               AS total_payment,
             k.kykbnl,
             k.rng_bango,
-            -- d_kykm（物件明細）から物件名・種別を取得（最初の1物件）
+            -- d_kykm（物件明細）から物件名・種別・資産番号を取得（最初の1物件）
             m.bukn_nm                                        AS property_name,
+            m.bukn_bango1                                    AS asset_no,
             CASE
                 WHEN bk.bkind_nm LIKE '%不動産%' OR bk.bkind_nm LIKE '%建物%' THEN 'AC01'
                 WHEN bk.bkind_nm LIKE '%車両%' THEN 'AC04'
@@ -79,7 +80,7 @@ BEGIN
         LEFT JOIN m_kknri kn ON k.kknri_id = kn.kknri_id
         LEFT JOIN m_lcpt lc ON k.lcpt_id = lc.lcpt_id
         LEFT JOIN LATERAL (
-            SELECT kykm.bukn_nm, kykm.bkind_id
+            SELECT kykm.bukn_nm, kykm.bkind_id, kykm.bukn_bango1
             FROM d_kykm kykm
             WHERE kykm.kykh_id = k.kykh_id
             ORDER BY kykm.kykm_no
@@ -159,12 +160,14 @@ BEGIN
                     ctb_id,
                     property_no,
                     asset_category_cd,
+                    asset_no,
                     asset_name,
                     remarks
                 ) VALUES (
                     v_ctb_id,
                     1,
                     COALESCE(v_rec.asset_category_cd, 'AC01'),
+                    v_rec.asset_no,       -- d_kykm.bukn_bango1
                     v_rec.property_name,  -- d_kykm.bukn_nm（NULLの場合は空）
                     CASE WHEN v_rec.property_name IS NOT NULL
                          THEN 'd_kykmから移行'
