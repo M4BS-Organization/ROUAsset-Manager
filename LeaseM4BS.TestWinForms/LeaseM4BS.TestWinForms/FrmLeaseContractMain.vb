@@ -1779,27 +1779,31 @@ Public Class FrmLeaseContractMain
         tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
         tblOrig.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
 
-        Dim readOnlyLabelStyle As Action(Of Label) = Sub(lbl)
-                                                         lbl.Dock = DockStyle.Fill
-                                                         lbl.Font = FNT_INPUT
-                                                         lbl.ForeColor = CLR_TEXT
-                                                         lbl.BackColor = CLR_READONLY
-                                                         lbl.TextAlign = ContentAlignment.MiddleLeft
-                                                         lbl.Padding = New Padding(4, 0, 0, 0)
-                                                     End Sub
+        lblSubContractNo = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+        lblSubContractName = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+        lblSubLeasePeriod = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+        lblSubStartDate = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
+        lblSubEndDate = New Label() With {
+            .Dock = DockStyle.Fill, .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleLeft, .Padding = New Padding(4, 0, 0, 0)
+        }
 
-        lblSubContractNo = New Label()
-        readOnlyLabelStyle(lblSubContractNo)
-        lblSubContractName = New Label()
-        readOnlyLabelStyle(lblSubContractName)
-        lblSubLeasePeriod = New Label()
-        readOnlyLabelStyle(lblSubLeasePeriod)
-        lblSubStartDate = New Label()
-        readOnlyLabelStyle(lblSubStartDate)
-        lblSubEndDate = New Label()
-        readOnlyLabelStyle(lblSubEndDate)
-
+        tblOrig.RowCount = 2
         tblOrig.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+        tblOrig.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
+
         tblOrig.Controls.Add(CreateFieldLabel("契約番号"), 0, 0)
         tblOrig.Controls.Add(lblSubContractNo, 1, 0)
         tblOrig.Controls.Add(CreateFieldLabel("契約名称"), 2, 0)
@@ -1807,12 +1811,11 @@ Public Class FrmLeaseContractMain
         tblOrig.Controls.Add(CreateFieldLabel("リース期間"), 4, 0)
         tblOrig.Controls.Add(lblSubLeasePeriod, 5, 0)
 
-        tblOrig.RowStyles.Add(New RowStyle(SizeType.Absolute, 28.0F))
         tblOrig.Controls.Add(CreateFieldLabel("開始日"), 0, 1)
         tblOrig.Controls.Add(lblSubStartDate, 1, 1)
         tblOrig.Controls.Add(CreateFieldLabel("終了日"), 2, 1)
         tblOrig.Controls.Add(lblSubEndDate, 3, 1)
-        tblOrig.RowCount = 2
+        tblOrig.SetColumnSpan(lblSubEndDate, 3) ' 列4-5の空白を埋める
         grpOrigContract.Controls.Add(tblOrig)
         mainTbl.Controls.Add(grpOrigContract, 0, 0)
 
