@@ -232,11 +232,139 @@ Public Class FrmLeaseContractMain
 
     ''' <summary>
     ''' 外部から設定された初期値（自動採番値）をコントロールに反映する。
-    ''' 新規登録モード時のみ値が設定される。編集・照会モードでは空文字のため上書きしない。
+    ''' Tag に契約番号が設定されていれば編集モードとしてデータをロードする。
     ''' </summary>
     Private Sub ApplyInitialValues()
-        If Not String.IsNullOrEmpty(InitContractNo) Then
+        Dim contractNo As String = ""
+        If Me.Tag IsNot Nothing Then contractNo = Me.Tag.ToString().Trim()
+
+        If Not String.IsNullOrEmpty(contractNo) Then
+            ' 編集モード: 契約番号でデータをロード
+            LoadContractData(contractNo)
+        ElseIf Not String.IsNullOrEmpty(InitContractNo) Then
+            ' 新規登録モード: 自動採番値を反映
             txtContractNo.Text = InitContractNo
+        End If
+    End Sub
+
+    ' ------------------------------------------------------------------
+    ' データロード（編集モード）
+    ' ------------------------------------------------------------------
+
+    ''' <summary>
+    ''' 契約番号を指定してCTBテーブルからデータを取得し、タブ1のコントロールに初期表示する。
+    ''' DB取得失敗時はCtbDataStoreからフォールバック取得する。
+    ''' </summary>
+    Private Sub LoadContractData(contractNo As String)
+        If String.IsNullOrEmpty(contractNo) Then Return
+
+        ' --- データ取得 ---
+        Dim records As List(Of CtbRecord) = Nothing
+        Try
+            Dim repo As New CtbRepository()
+            records = repo.SelectByContractNo(contractNo)
+        Catch
+            ' DB接続失敗時はメモリストアからフォールバック
+        End Try
+
+        If records Is Nothing OrElse records.Count = 0 Then
+            records = CtbDataStore.Instance.GetByContractNo(contractNo)
+        End If
+
+        If records Is Nothing OrElse records.Count = 0 Then
+            MessageBox.Show("該当する契約データが見つかりません。" & Environment.NewLine &
+                            "契約番号: " & contractNo,
+                            "データなし", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
+        ' --- イベント抑制 ---
+        _isLoaded = False
+
+        ' --- 基本情報（先頭レコードから取得） ---
+        Dim baseRec As CtbRecord = records(0)
+
+        txtContractNo.Text = baseRec.ContractNo
+        txtContractName.Text = baseRec.ContractName
+
+        ' ComboBox: コード値でマスタから逆引き
+        SetComboByCode(cmbContractType, _contractTypeTable, "contract_type_cd", baseRec.ContractTypeCd)
+        SetComboByCode(cmbSupplier, _supplierTable, "supplier_cd", baseRec.SupplierCd)
+        SetComboByCode(cmbMgmtDeptCode, _deptTable, "dept_cd", baseRec.MgmtDeptCd)
+
+        ' 日付
+        If baseRec.LeaseStartDate.HasValue Then dtpStartDate.Value = baseRec.LeaseStartDate.Value
+        If baseRec.LeaseEndDate.HasValue Then dtpEndDate.Value = baseRec.LeaseEndDate.Value
+
+        ' 無償期間
+        numFreePeriod.Value = baseRec.FreeRentMonths
+
+        ' --- 資産グリッド ---
+        LoadAssetsFromRecords(records)
+
+        ' --- 計算再開 ---
+        _isLoaded = True
+        CalcLeaseMonths()
+        RecalcAll()
+    End Sub
+
+    ''' <summary>
+    ''' ComboBoxのDataTableからコード値を検索し、該当するインデックスを選択する。
+    ''' </summary>
+    Private Sub SetComboByCode(cmb As ComboBox, dt As Data.DataTable,
+                                codeColumn As String, codeValue As String)
+        If dt Is Nothing OrElse String.IsNullOrEmpty(codeValue) Then
+            cmb.SelectedIndex = -1
+            Return
+        End If
+
+        For i As Integer = 0 To dt.Rows.Count - 1
+            If dt.Rows(i)(codeColumn).ToString() = codeValue Then
+                cmb.SelectedIndex = i
+                Return
+            End If
+        Next
+
+        cmb.SelectedIndex = -1
+    End Sub
+
+    ''' <summary>
+    ''' CTBレコード群からdgvAssetsに資産データをバインドする。
+    ''' 同一契約番号の複数レコード（property_no別）を各行に表示する。
+    ''' </summary>
+    Private Sub LoadAssetsFromRecords(records As List(Of CtbRecord))
+        dgvAssets.Rows.Clear()
+
+        ' property_no でグルーピング（同一資産の配賦部門違いレコードをまとめる）
+        Dim grouped As New Dictionary(Of Integer, CtbRecord)
+        For Each rec As CtbRecord In records
+            If Not grouped.ContainsKey(rec.PropertyNo) Then
+                grouped.Add(rec.PropertyNo, rec)
+            End If
+        Next
+
+        For Each kvp In grouped
+            Dim rec As CtbRecord = kvp.Value
+            Dim rowIndex As Integer = dgvAssets.Rows.Add()
+            Dim row As DataGridViewRow = dgvAssets.Rows(rowIndex)
+            row.Cells("AssetNo").Value = rec.AssetNo
+            row.Cells("AssetCategory").Value = rec.AssetCategoryCd
+            row.Cells("AssetName").Value = rec.AssetName
+            row.Cells("InstallLocation").Value = rec.InstallLocation
+
+            ' 配賦部門情報
+            Dim deptInfo As String = ""
+            If Not String.IsNullOrEmpty(rec.DeptName) Then
+                deptInfo = rec.DeptName
+                If rec.AllocationRatio > 0 Then
+                    deptInfo &= "(" & rec.AllocationRatio.ToString("0.##") & "%)"
+                End If
+            End If
+            row.Cells("DeptAllocation").Value = deptInfo
+        Next
+
+        If lblAssetCount IsNot Nothing Then
+            lblAssetCount.Text = "資産件数: " & grouped.Count & "件"
         End If
     End Sub
 
@@ -374,7 +502,7 @@ Public Class FrmLeaseContractMain
                 Else
                     baseCtb = New CtbRecord()
                     baseCtb.AssetNo = assetNoVal
-                    baseCtb.AssetCategory = If(row.Cells("AssetCategory").Value?.ToString(), "")
+                    baseCtb.AssetCategoryCd = If(row.Cells("AssetCategory").Value?.ToString(), "")
                     baseCtb.AssetName = If(row.Cells("AssetName").Value?.ToString(), "")
                     baseCtb.InstallLocation = If(row.Cells("InstallLocation").Value?.ToString(), "")
                 End If
@@ -408,29 +536,14 @@ Public Class FrmLeaseContractMain
 
                     ' 資産情報コピー
                     ctb.AssetNo = baseCtb.AssetNo
-                    ctb.AssetCategory = baseCtb.AssetCategory
+                    ctb.AssetCategoryCd = baseCtb.AssetCategoryCd
                     ctb.AssetName = baseCtb.AssetName
                     ctb.CompanyName = baseCtb.CompanyName
                     ctb.InstallLocation = baseCtb.InstallLocation
                     ctb.Remarks = baseCtb.Remarks
 
-                    ' 種別固有コピー
-                    ctb.ReStructure = baseCtb.ReStructure
-                    ctb.ReArea = baseCtb.ReArea
-                    ctb.ReLayout = baseCtb.ReLayout
-                    ctb.ReCompletionDate = baseCtb.ReCompletionDate
-                    ctb.ReLandlordName = baseCtb.ReLandlordName
-                    ctb.ReBrokerCompany = baseCtb.ReBrokerCompany
-                    ctb.ReUsageRestrictions = baseCtb.ReUsageRestrictions
-                    ctb.VhChassisNo = baseCtb.VhChassisNo
-                    ctb.VhRegistrationNo = baseCtb.VhRegistrationNo
-                    ctb.VhVehicleType = baseCtb.VhVehicleType
-                    ctb.VhInspectionDate = baseCtb.VhInspectionDate
-                    ctb.VhMileageLimit = baseCtb.VhMileageLimit
-                    ctb.OaModelNo = baseCtb.OaModelNo
-                    ctb.OaSerialNo = baseCtb.OaSerialNo
-                    ctb.OaMaintenanceDate = baseCtb.OaMaintenanceDate
-                    ctb.OaMaintenanceContract = baseCtb.OaMaintenanceContract
+                    ' 物件マスタ参照をコピー（EAV属性含む）
+                    ctb.PropertyRec = baseCtb.PropertyRec
 
                     ' 配賦情報（1レコードに1部門）
                     ctb.DeptCd = alloc.DeptCd
@@ -724,7 +837,13 @@ Public Class FrmLeaseContractMain
             .DropDownStyle = ComboBoxStyle.DropDownList,
             .Font = FNT_INPUT
         }
-        cmbAssetCategory.Items.AddRange(New String() {"不動産", "車両", "OA機器"})
+        ' m_asset_categoryマスタからロード
+        Dim assetCategories As String() = _masterData.LoadAssetCategories()
+        If assetCategories.Length > 0 Then
+            cmbAssetCategory.Items.AddRange(assetCategories)
+        Else
+            cmbAssetCategory.Items.AddRange(New String() {"建物", "構築物", "機械装置", "車両運搬具", "その他"})
+        End If
         cmbAssetCategory.SelectedIndex = 0
 
         txtAssetNo = New TextBox() With {.Dock = DockStyle.Fill}
@@ -2423,35 +2542,26 @@ Public Class FrmLeaseContractMain
         ' 資産詳細データをCTBレコードとして保持
         Dim ctb As New CtbRecord()
         ctb.AssetNo = frm.AssetNo
-        ctb.AssetCategory = frm.AssetCategory
+        ctb.AssetCategoryCd = frm.AssetCategory
         ctb.AssetName = frm.AssetName
         ctb.CompanyName = frm.CompanyNameValue
         ctb.InstallLocation = frm.InstallLocation
         ctb.Remarks = frm.RemarksValue
         ctb.DeptAllocations = frm.DeptAllocationList
 
-        ' 種別固有データ
-        Select Case frm.AssetCategory
-            Case "不動産"
-                ctb.ReStructure = frm.ReStructure
-                ctb.ReArea = frm.ReArea
-                ctb.ReLayout = frm.ReLayout
-                ctb.ReCompletionDate = frm.ReCompletionDate
-                ctb.ReLandlordName = frm.ReLandlordName
-                ctb.ReBrokerCompany = frm.ReBrokerCompany
-                ctb.ReUsageRestrictions = frm.ReUsageRestrictions
-            Case "車両"
-                ctb.VhChassisNo = frm.VhChassisNo
-                ctb.VhRegistrationNo = frm.VhRegistrationNo
-                ctb.VhVehicleType = frm.VhVehicleType
-                ctb.VhInspectionDate = frm.VhInspectionDate
-                ctb.VhMileageLimit = frm.VhMileageLimit
-            Case "OA機器"
-                ctb.OaModelNo = frm.OaModelNo
-                ctb.OaSerialNo = frm.OaSerialNo
-                ctb.OaMaintenanceDate = frm.OaMaintenanceDate
-                ctb.OaMaintenanceContract = frm.OaMaintenanceContract
-        End Select
+        ' 物件マスタレコード（EAV属性はFrmAssetDetailEntryから取得）
+        Dim propRec As New PropertyRecord()
+        propRec.AssetNo = frm.AssetNo
+        propRec.AssetCategoryCd = frm.AssetCategory
+        propRec.AssetName = frm.AssetName
+        propRec.CompanyName = frm.CompanyNameValue
+        propRec.InstallLocation = frm.InstallLocation
+        propRec.Remarks = frm.RemarksValue
+        propRec.DeptAllocations = frm.DeptAllocationList
+        If frm.PropertyAttributes IsNot Nothing Then
+            propRec.Attributes = frm.PropertyAttributes
+        End If
+        ctb.PropertyRec = propRec
 
         _assetCtbMap(frm.AssetNo) = ctb
 

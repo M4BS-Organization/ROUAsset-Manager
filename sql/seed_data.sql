@@ -7,19 +7,18 @@ INSERT INTO m_company (company_cd, company_nm) VALUES
 ON CONFLICT (company_cd) DO NOTHING;
 
 INSERT INTO m_department (dept_cd, dept_nm) VALUES
-    ('001', '総務部'),
-    ('002', '経理部'),
-    ('003', '営業部'),
-    ('004', '情報システム部'),
-    ('005', '人事部')
+    ('001', '本社'),
+    ('002', '大阪支社'),
+    ('003', '名古屋支社'),
+    ('004', '福岡支社')
 ON CONFLICT (dept_cd) DO NOTHING;
 
 INSERT INTO m_supplier (supplier_cd, supplier_nm) VALUES
-    ('S001', '三井不動産株式会社'),
-    ('S002', '三菱地所株式会社'),
-    ('S003', '住友不動産株式会社'),
-    ('S004', '東急不動産株式会社'),
-    ('S005', '野村不動産株式会社')
+    ('LC001', 'オリックス株式会社'),
+    ('LC002', '三井住友ファイナンス＆リース'),
+    ('LC003', '東京センチュリー株式会社'),
+    ('LC004', 'みずほリース株式会社'),
+    ('LC005', 'NTTファイナンス株式会社')
 ON CONFLICT (supplier_cd) DO NOTHING;
 
 INSERT INTO m_bank_account (bank_account_cd, bank_account_nm) VALUES
@@ -37,8 +36,10 @@ INSERT INTO m_asset_category (asset_category_cd, asset_category_nm) VALUES
 ON CONFLICT (asset_category_cd) DO NOTHING;
 
 INSERT INTO m_contract_type (contract_type_cd, contract_type_nm, sort_order) VALUES
-    ('01', '普通賃貸', 1),
-    ('02', '定期賃貸', 2)
+    ('01', 'ファイナンスリース', 1),
+    ('02', 'オペレーティングリース', 2),
+    ('03', '割賦購入', 3),
+    ('04', 'レンタル', 4)
 ON CONFLICT (contract_type_cd) DO NOTHING;
 
 INSERT INTO m_initial_cost_item (cost_item_cd, cost_item_nm, sort_order) VALUES
