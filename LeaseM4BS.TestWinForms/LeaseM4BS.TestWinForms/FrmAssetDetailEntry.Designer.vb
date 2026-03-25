@@ -28,12 +28,13 @@ Partial Class FrmAssetDetailEntry
         Me.lblAssetCategoryDisplay = New System.Windows.Forms.Label()
         Me.lblAssetName = New System.Windows.Forms.Label()
         Me.txtAssetName = New System.Windows.Forms.TextBox()
-        Me.lblCompany = New System.Windows.Forms.Label()
-        Me.cmbCompany = New System.Windows.Forms.ComboBox()
-        Me.lblInstallLocation = New System.Windows.Forms.Label()
-        Me.txtInstallLocation = New System.Windows.Forms.TextBox()
-        Me.lblRemarks = New System.Windows.Forms.Label()
-        Me.txtRemarks = New System.Windows.Forms.TextBox()
+        Me.cmbBkind = New System.Windows.Forms.ComboBox()
+        Me.lblSuuryo = New System.Windows.Forms.Label()
+        Me.numSuuryo = New System.Windows.Forms.NumericUpDown()
+        Me.lblKedaban = New System.Windows.Forms.Label()
+        Me.txtKedaban = New System.Windows.Forms.TextBox()
+        Me.lblSettiDt = New System.Windows.Forms.Label()
+        Me.dtpSettiDt = New System.Windows.Forms.DateTimePicker()
         Me.grpDeptAllocation = New System.Windows.Forms.GroupBox()
         Me.pnlDeptButtons = New System.Windows.Forms.Panel()
         Me.btnAddDept = New System.Windows.Forms.Button()
@@ -180,22 +181,20 @@ Partial Class FrmAssetDetailEntry
         Me.txtAssetNo.ForeColor = CLR_TEXT
         Me.txtAssetNo.ReadOnly = True
         Me.txtAssetNo.BackColor = CLR_READONLY
-        Me.lblAssetCategory.Text = "資産種類"
+        Me.lblAssetCategory.Text = "物件種別"
         Me.lblAssetCategory.Dock = DockStyle.Fill
         Me.lblAssetCategory.Font = FNT_LABEL
         Me.lblAssetCategory.ForeColor = CLR_LABEL
         Me.lblAssetCategory.TextAlign = ContentAlignment.MiddleRight
         Me.lblAssetCategory.Padding = New Padding(0, 0, 4, 0)
-        Me.lblAssetCategoryDisplay.Dock = DockStyle.Fill
-        Me.lblAssetCategoryDisplay.Font = FNT_INPUT
-        Me.lblAssetCategoryDisplay.ForeColor = CLR_TEXT
-        Me.lblAssetCategoryDisplay.TextAlign = ContentAlignment.MiddleLeft
-        Me.lblAssetCategoryDisplay.BackColor = CLR_READONLY
-        Me.lblAssetCategoryDisplay.Padding = New Padding(4, 0, 0, 0)
+        Me.cmbBkind.Dock = DockStyle.Fill
+        Me.cmbBkind.Font = FNT_INPUT
+        Me.cmbBkind.ForeColor = CLR_TEXT
+        Me.cmbBkind.DropDownStyle = ComboBoxStyle.DropDownList
         Me.tblBasicInfo.Controls.Add(Me.lblAssetNo, 0, 0)
         Me.tblBasicInfo.Controls.Add(Me.txtAssetNo, 1, 0)
         Me.tblBasicInfo.Controls.Add(Me.lblAssetCategory, 2, 0)
-        Me.tblBasicInfo.Controls.Add(Me.lblAssetCategoryDisplay, 3, 0)
+        Me.tblBasicInfo.Controls.Add(Me.cmbBkind, 3, 0)
 
         ' Row 1: 資産名 (spans 3)
         Me.tblBasicInfo.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
@@ -212,47 +211,47 @@ Partial Class FrmAssetDetailEntry
         Me.tblBasicInfo.Controls.Add(Me.txtAssetName, 1, 1)
         Me.tblBasicInfo.SetColumnSpan(Me.txtAssetName, 3)
 
-        ' Row 2: 管理会社 | 設置場所
+        ' Row 2: 数量 | 枝番
         Me.tblBasicInfo.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        Me.lblCompany.Text = "管理会社"
-        Me.lblCompany.Dock = DockStyle.Fill
-        Me.lblCompany.Font = FNT_LABEL
-        Me.lblCompany.ForeColor = CLR_LABEL
-        Me.lblCompany.TextAlign = ContentAlignment.MiddleRight
-        Me.lblCompany.Padding = New Padding(0, 0, 4, 0)
-        Me.cmbCompany.Dock = DockStyle.Fill
-        Me.cmbCompany.Font = FNT_INPUT
-        Me.cmbCompany.ForeColor = CLR_TEXT
-        Me.cmbCompany.DropDownStyle = ComboBoxStyle.DropDownList
-        Me.lblInstallLocation.Text = "設置場所"
-        Me.lblInstallLocation.Dock = DockStyle.Fill
-        Me.lblInstallLocation.Font = FNT_LABEL
-        Me.lblInstallLocation.ForeColor = CLR_LABEL
-        Me.lblInstallLocation.TextAlign = ContentAlignment.MiddleRight
-        Me.lblInstallLocation.Padding = New Padding(0, 0, 4, 0)
-        Me.txtInstallLocation.Dock = DockStyle.Fill
-        Me.txtInstallLocation.Font = FNT_INPUT
-        Me.txtInstallLocation.ForeColor = CLR_TEXT
-        Me.tblBasicInfo.Controls.Add(Me.lblCompany, 0, 2)
-        Me.tblBasicInfo.Controls.Add(Me.cmbCompany, 1, 2)
-        Me.tblBasicInfo.Controls.Add(Me.lblInstallLocation, 2, 2)
-        Me.tblBasicInfo.Controls.Add(Me.txtInstallLocation, 3, 2)
+        Me.lblSuuryo.Text = "数量"
+        Me.lblSuuryo.Dock = DockStyle.Fill
+        Me.lblSuuryo.Font = FNT_LABEL
+        Me.lblSuuryo.ForeColor = CLR_LABEL
+        Me.lblSuuryo.TextAlign = ContentAlignment.MiddleRight
+        Me.lblSuuryo.Padding = New Padding(0, 0, 4, 0)
+        Me.numSuuryo.Dock = DockStyle.Fill
+        Me.numSuuryo.Font = FNT_INPUT
+        Me.numSuuryo.ForeColor = CLR_TEXT
+        Me.numSuuryo.Minimum = 1
+        Me.numSuuryo.Maximum = 9999
+        Me.numSuuryo.Value = 1
+        Me.lblKedaban.Text = "枝番"
+        Me.lblKedaban.Dock = DockStyle.Fill
+        Me.lblKedaban.Font = FNT_LABEL
+        Me.lblKedaban.ForeColor = CLR_LABEL
+        Me.lblKedaban.TextAlign = ContentAlignment.MiddleRight
+        Me.lblKedaban.Padding = New Padding(0, 0, 4, 0)
+        Me.txtKedaban.Dock = DockStyle.Fill
+        Me.txtKedaban.Font = FNT_INPUT
+        Me.txtKedaban.ForeColor = CLR_TEXT
+        Me.tblBasicInfo.Controls.Add(Me.lblSuuryo, 0, 2)
+        Me.tblBasicInfo.Controls.Add(Me.numSuuryo, 1, 2)
+        Me.tblBasicInfo.Controls.Add(Me.lblKedaban, 2, 2)
+        Me.tblBasicInfo.Controls.Add(Me.txtKedaban, 3, 2)
 
-        ' Row 3: 備考 (spans 3)
-        Me.tblBasicInfo.RowStyles.Add(New RowStyle(SizeType.Absolute, 50.0F))
-        Me.lblRemarks.Text = "備考"
-        Me.lblRemarks.Dock = DockStyle.Fill
-        Me.lblRemarks.Font = FNT_LABEL
-        Me.lblRemarks.ForeColor = CLR_LABEL
-        Me.lblRemarks.TextAlign = ContentAlignment.MiddleRight
-        Me.lblRemarks.Padding = New Padding(0, 0, 4, 0)
-        Me.txtRemarks.Dock = DockStyle.Fill
-        Me.txtRemarks.Font = FNT_INPUT
-        Me.txtRemarks.ForeColor = CLR_TEXT
-        Me.txtRemarks.Multiline = True
-        Me.tblBasicInfo.Controls.Add(Me.lblRemarks, 0, 3)
-        Me.tblBasicInfo.Controls.Add(Me.txtRemarks, 1, 3)
-        Me.tblBasicInfo.SetColumnSpan(Me.txtRemarks, 3)
+        ' Row 3: 設置日
+        Me.tblBasicInfo.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        Me.lblSettiDt.Text = "設置日"
+        Me.lblSettiDt.Dock = DockStyle.Fill
+        Me.lblSettiDt.Font = FNT_LABEL
+        Me.lblSettiDt.ForeColor = CLR_LABEL
+        Me.lblSettiDt.TextAlign = ContentAlignment.MiddleRight
+        Me.lblSettiDt.Padding = New Padding(0, 0, 4, 0)
+        Me.dtpSettiDt.Dock = DockStyle.Fill
+        Me.dtpSettiDt.Font = FNT_INPUT
+        Me.dtpSettiDt.Format = DateTimePickerFormat.Short
+        Me.tblBasicInfo.Controls.Add(Me.lblSettiDt, 0, 3)
+        Me.tblBasicInfo.Controls.Add(Me.dtpSettiDt, 1, 3)
         Me.tblBasicInfo.RowCount = 4
 
         ' === grpDeptAllocation ===
@@ -634,12 +633,13 @@ Partial Class FrmAssetDetailEntry
     Friend WithEvents lblAssetCategoryDisplay As System.Windows.Forms.Label
     Friend WithEvents lblAssetName As System.Windows.Forms.Label
     Friend WithEvents txtAssetName As System.Windows.Forms.TextBox
-    Friend WithEvents lblCompany As System.Windows.Forms.Label
-    Friend WithEvents cmbCompany As System.Windows.Forms.ComboBox
-    Friend WithEvents lblInstallLocation As System.Windows.Forms.Label
-    Friend WithEvents txtInstallLocation As System.Windows.Forms.TextBox
-    Friend WithEvents lblRemarks As System.Windows.Forms.Label
-    Friend WithEvents txtRemarks As System.Windows.Forms.TextBox
+    Friend WithEvents cmbBkind As System.Windows.Forms.ComboBox
+    Friend WithEvents lblSuuryo As System.Windows.Forms.Label
+    Friend WithEvents numSuuryo As System.Windows.Forms.NumericUpDown
+    Friend WithEvents lblKedaban As System.Windows.Forms.Label
+    Friend WithEvents txtKedaban As System.Windows.Forms.TextBox
+    Friend WithEvents lblSettiDt As System.Windows.Forms.Label
+    Friend WithEvents dtpSettiDt As System.Windows.Forms.DateTimePicker
     Friend WithEvents grpDeptAllocation As System.Windows.Forms.GroupBox
     Friend WithEvents pnlDeptButtons As System.Windows.Forms.Panel
     Friend WithEvents btnAddDept As System.Windows.Forms.Button

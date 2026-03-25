@@ -31,7 +31,8 @@ Partial Class Form_f_flx_CONTRACT
         Me.cmd_SEARCH = New System.Windows.Forms.Button()
         Me.cmd_REF = New System.Windows.Forms.Button()
         Me.cmd_NEW = New System.Windows.Forms.Button()
-        Me.cmd_ROU = New System.Windows.Forms.Button()
+        Me.cmd_ROU_NEW = New System.Windows.Forms.Button()
+        Me.cmd_ROU_REF = New System.Windows.Forms.Button()
         Me.cmd_CLOSE = New System.Windows.Forms.Button()
         Me.pnlFooter = New System.Windows.Forms.Panel()
         Me.cmd_EXCEL_RENEW = New System.Windows.Forms.Button()
@@ -61,7 +62,8 @@ Partial Class Form_f_flx_CONTRACT
         Me.pnlHeader.Controls.Add(Me.lblSearch)
         Me.pnlHeader.Controls.Add(Me.txt_SEARCH)
         Me.pnlHeader.Controls.Add(Me.cmd_SEARCH)
-        Me.pnlHeader.Controls.Add(Me.cmd_ROU)
+        Me.pnlHeader.Controls.Add(Me.cmd_ROU_REF)
+        Me.pnlHeader.Controls.Add(Me.cmd_ROU_NEW)
         Me.pnlHeader.Controls.Add(Me.cmd_REF)
         Me.pnlHeader.Controls.Add(Me.cmd_NEW)
         Me.pnlHeader.Controls.Add(Me.cmd_CLOSE)
@@ -75,7 +77,7 @@ Partial Class Form_f_flx_CONTRACT
         'lblSearch
         '
         Me.lblSearch.AutoSize = True
-        Me.lblSearch.Location = New System.Drawing.Point(863, 34)
+        Me.lblSearch.Location = New System.Drawing.Point(1033, 34)
         Me.lblSearch.Margin = New System.Windows.Forms.Padding(5, 0, 5, 0)
         Me.lblSearch.Name = "lblSearch"
         Me.lblSearch.Size = New System.Drawing.Size(148, 18)
@@ -102,17 +104,29 @@ Partial Class Form_f_flx_CONTRACT
         Me.cmd_SEARCH.Text = "検索(&S)"
         Me.cmd_SEARCH.UseVisualStyleBackColor = False
         '
-        'cmd_ROU
+        'cmd_ROU_NEW
         '
-        Me.cmd_ROU.BackColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(255, Byte), Integer), CType(CType(192, Byte), Integer))
-        Me.cmd_ROU.Location = New System.Drawing.Point(643, 18)
-        Me.cmd_ROU.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
-        Me.cmd_ROU.Name = "cmd_ROU"
-        Me.cmd_ROU.Size = New System.Drawing.Size(200, 51)
-        Me.cmd_ROU.TabIndex = 3
-        Me.cmd_ROU.TabStop = False
-        Me.cmd_ROU.Text = "使用権資産管理(&R)"
-        Me.cmd_ROU.UseVisualStyleBackColor = False
+        Me.cmd_ROU_NEW.BackColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(255, Byte), Integer), CType(CType(192, Byte), Integer))
+        Me.cmd_ROU_NEW.Location = New System.Drawing.Point(643, 18)
+        Me.cmd_ROU_NEW.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.cmd_ROU_NEW.Name = "cmd_ROU_NEW"
+        Me.cmd_ROU_NEW.Size = New System.Drawing.Size(170, 51)
+        Me.cmd_ROU_NEW.TabIndex = 3
+        Me.cmd_ROU_NEW.TabStop = False
+        Me.cmd_ROU_NEW.Text = "新リース:新規(&R)"
+        Me.cmd_ROU_NEW.UseVisualStyleBackColor = False
+        '
+        'cmd_ROU_REF
+        '
+        Me.cmd_ROU_REF.BackColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(255, Byte), Integer), CType(CType(192, Byte), Integer))
+        Me.cmd_ROU_REF.Location = New System.Drawing.Point(818, 18)
+        Me.cmd_ROU_REF.Margin = New System.Windows.Forms.Padding(5, 4, 5, 4)
+        Me.cmd_ROU_REF.Name = "cmd_ROU_REF"
+        Me.cmd_ROU_REF.Size = New System.Drawing.Size(170, 51)
+        Me.cmd_ROU_REF.TabIndex = 4
+        Me.cmd_ROU_REF.TabStop = False
+        Me.cmd_ROU_REF.Text = "新リース:照会/変更(&E)"
+        Me.cmd_ROU_REF.UseVisualStyleBackColor = False
         '
         'cmd_REF
         '
@@ -364,7 +378,8 @@ Partial Class Form_f_flx_CONTRACT
     Friend WithEvents pnlHeader As Panel
     Friend WithEvents cmd_NEW As Button
     Friend WithEvents cmd_CLOSE As Button
-    Friend WithEvents cmd_ROU As Button
+    Friend WithEvents cmd_ROU_NEW As Button
+    Friend WithEvents cmd_ROU_REF As Button
     Friend WithEvents cmd_REF As Button
     Friend WithEvents pnlFooter As Panel
     Friend WithEvents dgv_LIST As DataGridView
