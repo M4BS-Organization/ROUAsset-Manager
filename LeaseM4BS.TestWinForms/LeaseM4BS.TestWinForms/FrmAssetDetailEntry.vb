@@ -26,18 +26,17 @@ Partial Public Class FrmAssetDetailEntry
     End Property
     Public ReadOnly Property InstallLocation As String
         Get
-            Return txtInstallLocation.Text
+            Return ""
         End Get
     End Property
     Public ReadOnly Property CompanyNameValue As String
         Get
-            If cmbCompany.SelectedItem IsNot Nothing Then Return cmbCompany.SelectedItem.ToString()
             Return ""
         End Get
     End Property
     Public ReadOnly Property RemarksValue As String
         Get
-            Return txtRemarks.Text
+            Return ""
         End Get
     End Property
 
@@ -319,8 +318,7 @@ Partial Public Class FrmAssetDetailEntry
     ' コンボボックス・配賦グリッド
     ' =============================================
     Private Sub InitComboBoxes()
-        cmbCompany.Items.AddRange(New String() {"本社", "大阪支店", "名古屋支店"})
-        If cmbCompany.Items.Count > 0 Then cmbCompany.SelectedIndex = 0
+        ' 旧cmbCompanyは削除済み。処理なし。
     End Sub
 
     Private _deptTable As Data.DataTable
@@ -447,11 +445,10 @@ Partial Public Class FrmAssetDetailEntry
         Dim rc As Color = Color.FromArgb(233, 236, 239)
         txtAssetName.ReadOnly = True
         txtAssetName.BackColor = rc
-        cmbCompany.Enabled = False
-        txtInstallLocation.ReadOnly = True
-        txtInstallLocation.BackColor = rc
-        txtRemarks.ReadOnly = True
-        txtRemarks.BackColor = rc
+        If cmbBkind IsNot Nothing Then cmbBkind.Enabled = False
+        If numSuuryo IsNot Nothing Then numSuuryo.Enabled = False
+        If txtKedaban IsNot Nothing Then txtKedaban.ReadOnly = True : txtKedaban.BackColor = rc
+        If dtpSettiDt IsNot Nothing Then dtpSettiDt.Enabled = False
         dgvDeptAllocation.ReadOnly = True
         btnAddDept.Visible = False
         btnRemoveDept.Visible = False

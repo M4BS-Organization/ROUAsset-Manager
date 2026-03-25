@@ -924,6 +924,7 @@
     <Compile Include="My Project\ApplicationEvents.vb" />
     <Compile Include="CtbDataStore.vb" />
     <Compile Include="CtbRepository.vb" />
+    <Compile Include="ContractDataMapper.vb" />
     <Compile Include="PropertyRepository.vb" />
     <Compile Include="FrmAssetDetailEntry.vb">
       <SubType>Form</SubType>

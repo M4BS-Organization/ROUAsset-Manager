@@ -29,6 +29,11 @@ Public Class FrmLeaseContractMain
     ''' </summary>
     Public Property InitContractNo As String = ""
 
+    ''' <summary>
+    ''' d_kykhモードで使用する契約ID。0の場合は新規、0より大きい場合は編集。
+    ''' </summary>
+    Public Property KykhId As Double = 0
+
 
     Private pnlHeader As Panel
     Private pnlBody As Panel
@@ -152,6 +157,14 @@ Public Class FrmLeaseContractMain
     Private txtSubleaseArea As TextBox
     Private dgvSubleaseIncome As DataGridView
 
+    Private txtContractNoLessor As TextBox
+    Private dtpContractDate As DateTimePicker
+    Private numLeaseMonths As NumericUpDown
+    Private txtApprovalNo As TextBox
+    Private dtpApprovalDate As DateTimePicker
+    Private txtApplicant As TextBox
+    Private chkIsExtended As CheckBox
+
     Private grpQ1 As GroupBox, rbQ1Yes As RadioButton, rbQ1No As RadioButton
     Private grpQ2 As GroupBox, rbQ2Yes As RadioButton, rbQ2No As RadioButton
     Private grpQ3 As GroupBox, rbQ3Yes As RadioButton, rbQ3No As RadioButton
@@ -211,6 +224,7 @@ Public Class FrmLeaseContractMain
         Public Property EndDate As String
         Public Property ContractPeriod As String
         Public Property AssetQty As String
+        Public Property KykhId As Double = 0
     End Class
 
     Public Sub New()
@@ -250,11 +264,17 @@ Public Class FrmLeaseContractMain
     ''' Tag に契約番号が設定されていれば編集モードとしてデータをロードする。
     ''' </summary>
     Private Sub ApplyInitialValues()
+        ' d_kykhモード: KykhId > 0 → d_kykh から読込
+        If KykhId > 0 Then
+            LoadFromKykh(KykhId)
+            Return
+        End If
+
+        ' CTBモード（既存）: Tag に契約番号が設定されている
         Dim contractNo As String = ""
         If Me.Tag IsNot Nothing Then contractNo = Me.Tag.ToString().Trim()
 
         If Not String.IsNullOrEmpty(contractNo) Then
-            ' 編集モード: 契約番号でデータをロード
             LoadContractData(contractNo)
         ElseIf Not String.IsNullOrEmpty(InitContractNo) Then
             ' 新規登録モード: 自動採番値を反映
@@ -362,20 +382,12 @@ Public Class FrmLeaseContractMain
             Dim rec As CtbRecord = kvp.Value
             Dim rowIndex As Integer = dgvAssets.Rows.Add()
             Dim row As DataGridViewRow = dgvAssets.Rows(rowIndex)
-            row.Cells("AssetNo").Value = rec.AssetNo
-            row.Cells("AssetCategory").Value = rec.AssetCategoryCd
-            row.Cells("AssetName").Value = rec.AssetName
-            row.Cells("InstallLocation").Value = rec.InstallLocation
-
-            ' 配賦部門情報
-            Dim deptInfo As String = ""
-            If Not String.IsNullOrEmpty(rec.DeptName) Then
-                deptInfo = rec.DeptName
-                If rec.AllocationRatio > 0 Then
-                    deptInfo &= "(" & rec.AllocationRatio.ToString("0.##") & "%)"
-                End If
-            End If
-            row.Cells("DeptAllocation").Value = deptInfo
+            row.Cells("BuknBango1").Value = rec.AssetNo
+            row.Cells("BuknNm").Value = rec.AssetName
+            row.Cells("BkindNm").Value = rec.AssetCategoryCd
+            row.Cells("BSuuryo").Value = "1"
+            row.Cells("SettiDt").Value = ""
+            row.Cells("BKedaban").Value = ""
         Next
 
         If lblAssetCount IsNot Nothing Then
@@ -456,11 +468,21 @@ Public Class FrmLeaseContractMain
             Return
         End If
 
+        ' --- d_kykh 保存 ---
+        Try
+            Dim isNewKykh As Boolean = (KykhId = 0)
+            Dim savedKykhId As Integer = SaveToKykh(isNewKykh)
+            ' ctb同期
+            SyncToCtb(txtContractNo.Text.Trim())
+        Catch ex As Exception
+            MessageBox.Show("d_kykh保存エラー: " & ex.Message, "保存エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End Try
+
         ' リース期間（月数）を計算
         Dim leaseMonths As String = ""
-        If lblLeaseMonths.Text.Contains("ヶ月") Then
-            leaseMonths = lblLeaseMonths.Text.Replace("ヶ月", "").Trim()
-        End If
+        leaseMonths = CInt(numLeaseMonths.Value).ToString()
 
         ' 管理部署名を取得
         Dim deptName As String = ""
@@ -475,8 +497,8 @@ Public Class FrmLeaseContractMain
         If dgvAssets IsNot Nothing Then
             For Each row As DataGridViewRow In dgvAssets.Rows
                 If Not row.IsNewRow AndAlso
-                   row.Cells("AssetNo").Value IsNot Nothing AndAlso
-                   Not String.IsNullOrWhiteSpace(row.Cells("AssetNo").Value.ToString()) Then
+                   row.Cells("BuknBango1").Value IsNot Nothing AndAlso
+                   Not String.IsNullOrWhiteSpace(row.Cells("BuknBango1").Value.ToString()) Then
                     assetCount += 1
                 End If
             Next
@@ -507,7 +529,7 @@ Public Class FrmLeaseContractMain
         If dgvAssets IsNot Nothing Then
             For Each row As DataGridViewRow In dgvAssets.Rows
                 If row.IsNewRow Then Continue For
-                Dim assetNoVal As String = If(row.Cells("AssetNo").Value?.ToString(), "")
+                Dim assetNoVal As String = If(row.Cells("BuknBango1").Value?.ToString(), "")
                 If String.IsNullOrWhiteSpace(assetNoVal) Then Continue For
 
                 ' _assetCtbMapに保持済みの詳細データがあればそれを使う
@@ -517,9 +539,9 @@ Public Class FrmLeaseContractMain
                 Else
                     baseCtb = New CtbRecord()
                     baseCtb.AssetNo = assetNoVal
-                    baseCtb.AssetCategoryCd = If(row.Cells("AssetCategory").Value?.ToString(), "")
-                    baseCtb.AssetName = If(row.Cells("AssetName").Value?.ToString(), "")
-                    baseCtb.InstallLocation = If(row.Cells("InstallLocation").Value?.ToString(), "")
+                    baseCtb.AssetCategoryCd = If(row.Cells("BkindNm").Value?.ToString(), "")
+                    baseCtb.AssetName = If(row.Cells("BuknNm").Value?.ToString(), "")
+                    baseCtb.InstallLocation = ""
                 End If
 
                 ' 配賦部門リストを取得
@@ -586,7 +608,8 @@ Public Class FrmLeaseContractMain
             .StartDate = dtpStartDate.Value.ToString("yyyy/MM/dd"),
             .EndDate = dtpEndDate.Value.ToString("yyyy/MM/dd"),
             .ContractPeriod = leaseMonths,
-            .AssetQty = assetCount.ToString()
+            .AssetQty = assetCount.ToString(),
+            .KykhId = Me.KykhId
         }
 
         RaiseEvent ContractRegistered(Me, args)
@@ -595,6 +618,302 @@ Public Class FrmLeaseContractMain
                         "登録完了", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Me.DialogResult = DialogResult.OK
         Me.Close()
+    End Sub
+
+    ' ------------------------------------------------------------------
+    ' d_kykh 保存（新規/更新）
+    ' ------------------------------------------------------------------
+
+    ''' <summary>
+    ''' 画面の契約基本情報を d_kykh テーブルに INSERT/UPDATE する。
+    ''' </summary>
+    ''' <returns>保存した kykh_id</returns>
+    Private Function SaveToKykh(isNew As Boolean) As Integer
+        Dim mapper As New ContractDataMapper()
+        Dim crud As New CrudHelper()
+        Dim kykhId As Integer = CInt(Me.KykhId)
+
+        Dim vals As New Dictionary(Of String, Object)
+
+        ' --- 基本情報 ---
+        vals.Add("kykbnj", txtContractNo.Text.Trim())
+        vals.Add("kykbnl", txtContractNoLessor.Text.Trim())
+        vals.Add("kyak_nm", txtContractName.Text.Trim())
+
+        ' 契約区分: ComboBox → kkbn_id
+        If cmbContractType.SelectedIndex >= 0 AndAlso _contractTypeTable IsNot Nothing AndAlso
+           cmbContractType.SelectedIndex < _contractTypeTable.Rows.Count Then
+            Dim kkbnName As String = _contractTypeTable.Rows(cmbContractType.SelectedIndex)("contract_type_nm").ToString()
+            vals.Add("kkbn_id", mapper.GetKkbnId(kkbnName))
+        Else
+            vals.Add("kkbn_id", 1)
+        End If
+
+        ' リース会社: ComboBox → lcpt_id
+        If cmbSupplier.SelectedIndex >= 0 AndAlso _supplierTable IsNot Nothing AndAlso
+           cmbSupplier.SelectedIndex < _supplierTable.Rows.Count Then
+            vals.Add("lcpt_id", Convert.ToInt32(_supplierTable.Rows(cmbSupplier.SelectedIndex)("lcpt_id")))
+        Else
+            vals.Add("lcpt_id", 0)
+        End If
+
+        ' 管理部門: ComboBox → kknri_id
+        If cmbMgmtDeptCode.SelectedIndex >= 0 AndAlso _deptTable IsNot Nothing AndAlso
+           cmbMgmtDeptCode.SelectedIndex < _deptTable.Rows.Count Then
+            vals.Add("kknri_id", Convert.ToInt32(_deptTable.Rows(cmbMgmtDeptCode.SelectedIndex)("kknri_id")))
+        Else
+            vals.Add("kknri_id", 0)
+        End If
+
+        ' --- 契約期間 ---
+        vals.Add("kyak_dt", dtpContractDate.Value.Date)
+        vals.Add("start_dt", dtpStartDate.Value.Date)
+        vals.Add("end_dt", dtpEndDate.Value.Date)
+        vals.Add("lkikan", CInt(numLeaseMonths.Value))
+
+        ' --- 社内管理 ---
+        vals.Add("rng_bango", txtApprovalNo.Text.Trim())
+        vals.Add("shonin_dt", dtpApprovalDate.Value.Date)
+        vals.Add("kiansha", txtApplicant.Text.Trim())
+        vals.Add("jencho_f", chkIsExtended.Checked)
+
+        ' --- デフォルト値（d_kykh NOT NULL制約対応） ---
+        vals.Add("saikaisu", CShort(0))
+        vals.Add("update_cnt", 0)
+        vals.Add("k_suuryo", 0)
+        vals.Add("kykm_cnt", 0)
+        vals.Add("k_knyukn", CDec(0))
+        vals.Add("k_glsryo", CDec(0))
+        vals.Add("k_klsryo", CDec(0))
+        vals.Add("k_mlsryo", CDec(0))
+        vals.Add("k_slsryo", CDec(0))
+        vals.Add("shri_kn", CShort(0))
+        vals.Add("shri_cnt", CShort(0))
+        vals.Add("kjkbn_id", CShort(1))
+        vals.Add("kyak_end_f", False)
+        vals.Add("k_ckaiyk_f", False)
+        vals.Add("k_history_f", False)
+        vals.Add("k_seigou_f", False)
+        vals.Add("k_henl_f", False)
+        vals.Add("k_henf_f", False)
+        vals.Add("k_create_id", 0)
+        vals.Add("k_update_id", 0)
+        vals.Add("k_update_dt", DateTime.Now.Date)
+
+        If isNew Then
+            kykhId = mapper.GetNextKykhId()
+            vals.Add("kykh_id", kykhId)
+            vals.Add("k_create_dt", DateTime.Now.Date)
+            crud.Insert("d_kykh", vals)
+        Else
+            crud.Update("d_kykh", vals, "kykh_id = @where_kykh_id",
+                         New List(Of Npgsql.NpgsqlParameter) From {
+                             New Npgsql.NpgsqlParameter("@where_kykh_id", kykhId)
+                         })
+        End If
+
+        Me.KykhId = kykhId
+        Return kykhId
+    End Function
+
+    ''' <summary>
+    ''' d_kykh保存後、ctb_contract_header に同期する。
+    ''' SP sp_migrate_d_kykh_to_ctb を呼び出す。
+    ''' </summary>
+    Private Sub SyncToCtb(contractNo As String)
+        Try
+            Dim crud As New CrudHelper()
+            crud.ExecuteScalar(Of Object)(
+                "SELECT * FROM sp_migrate_d_kykh_to_ctb(@p)",
+                New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@p", contractNo)
+                })
+        Catch ex As Exception
+            ' CTB同期失敗は警告のみ（d_kykh保存は成功済み）
+            System.Diagnostics.Debug.WriteLine("CTB同期エラー: " & ex.Message)
+        End Try
+    End Sub
+
+    ' ------------------------------------------------------------------
+    ' d_kykh からのデータロード（編集モード）
+    ' ------------------------------------------------------------------
+
+    ''' <summary>
+    ''' d_kykh から契約データを取得し、契約タブのコントロールに表示する。
+    ''' </summary>
+    Private Sub LoadFromKykh(kykhId As Double)
+        If kykhId <= 0 Then Return
+
+        Dim crud As New CrudHelper()
+        Dim mapper As New ContractDataMapper()
+
+        Try
+            Dim sql As String =
+                "SELECT k.*, " &
+                "  kkbn.kkbn_nm, " &
+                "  lcpt.lcpt1_cd, lcpt.lcpt1_nm, " &
+                "  kknri.kknri1_cd, kknri.kknri1_nm " &
+                "FROM d_kykh k " &
+                "LEFT JOIN c_kkbn kkbn ON k.kkbn_id = kkbn.kkbn_id " &
+                "LEFT JOIN m_lcpt lcpt ON k.lcpt_id = lcpt.lcpt_id " &
+                "LEFT JOIN m_kknri kknri ON k.kknri_id = kknri.kknri_id " &
+                "WHERE k.kykh_id = @id"
+
+            Dim dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                New Npgsql.NpgsqlParameter("@id", CInt(kykhId))
+            })
+
+            If dt.Rows.Count = 0 Then
+                MessageBox.Show("該当する契約データが見つかりません。" & Environment.NewLine &
+                                "kykh_id: " & kykhId.ToString(),
+                                "データなし", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Return
+            End If
+
+            _isLoaded = False
+            Dim row As Data.DataRow = dt.Rows(0)
+
+            ' --- 基本情報 ---
+            txtContractNo.Text = If(row("kykbnj") IsNot DBNull.Value, row("kykbnj").ToString(), "")
+            txtContractNoLessor.Text = If(row("kykbnl") IsNot DBNull.Value, row("kykbnl").ToString(), "")
+            txtContractName.Text = If(row("kyak_nm") IsNot DBNull.Value, row("kyak_nm").ToString(), "")
+
+            ' 契約区分: kkbn_id → ComboBox
+            If row("kkbn_id") IsNot DBNull.Value Then
+                Dim idx = mapper.FindKkbnIndex(cmbContractType, Convert.ToInt16(row("kkbn_id")))
+                If idx >= 0 Then cmbContractType.SelectedIndex = idx
+            End If
+
+            ' リース会社: lcpt1_cd でComboBoxアイテムを検索
+            If row("lcpt1_cd") IsNot DBNull.Value Then
+                Dim lcptCd As String = row("lcpt1_cd").ToString()
+                For i As Integer = 0 To cmbSupplier.Items.Count - 1
+                    If cmbSupplier.Items(i).ToString().StartsWith(lcptCd) Then
+                        cmbSupplier.SelectedIndex = i
+                        Exit For
+                    End If
+                Next
+                If row("lcpt1_nm") IsNot DBNull.Value Then txtSupplierName.Text = row("lcpt1_nm").ToString()
+            End If
+
+            ' 管理部門: kknri1_cd でComboBoxアイテムを検索
+            If row("kknri1_cd") IsNot DBNull.Value Then
+                Dim kknriCd As String = row("kknri1_cd").ToString()
+                For i As Integer = 0 To cmbMgmtDeptCode.Items.Count - 1
+                    If cmbMgmtDeptCode.Items(i).ToString().StartsWith(kknriCd) Then
+                        cmbMgmtDeptCode.SelectedIndex = i
+                        Exit For
+                    End If
+                Next
+                If row("kknri1_nm") IsNot DBNull.Value Then txtMgmtDeptName.Text = row("kknri1_nm").ToString()
+            End If
+
+            ' --- 契約期間 ---
+            If row("kyak_dt") IsNot DBNull.Value Then dtpContractDate.Value = Convert.ToDateTime(row("kyak_dt"))
+            If row("start_dt") IsNot DBNull.Value Then dtpStartDate.Value = Convert.ToDateTime(row("start_dt"))
+            If row("end_dt") IsNot DBNull.Value Then dtpEndDate.Value = Convert.ToDateTime(row("end_dt"))
+            If row("lkikan") IsNot DBNull.Value Then numLeaseMonths.Value = Convert.ToInt32(row("lkikan"))
+
+            ' --- 社内管理 ---
+            txtApprovalNo.Text = If(row("rng_bango") IsNot DBNull.Value, row("rng_bango").ToString(), "")
+            If row("shonin_dt") IsNot DBNull.Value Then dtpApprovalDate.Value = Convert.ToDateTime(row("shonin_dt"))
+            txtApplicant.Text = If(row("kiansha") IsNot DBNull.Value, row("kiansha").ToString(), "")
+            If row("jencho_f") IsNot DBNull.Value Then chkIsExtended.Checked = Convert.ToBoolean(row("jencho_f"))
+
+            ' --- 物件明細（d_kykm）をグリッドに表示 ---
+            LoadPropertyFromCtb(CInt(kykhId))
+
+            _isLoaded = True
+            ' ※ RecalcAll()→CalcLeaseMonths()は呼ばない（DB値をそのまま使用。
+            '    再計算するとnumLeaseMonths.ValueChangedが発火しdtpEndDateを上書きしてしまう）
+            ' CalcLeaseMonths以外の再計算のみ実行
+            CalcMonthlyTotals()
+            UpdateAccountingTabValues()
+
+        Catch ex As Exception
+            MessageBox.Show("契約データの読込中にエラーが発生しました。" & Environment.NewLine & ex.Message,
+                            "読込エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            _isLoaded = True
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' d_kykm から物件明細を取得し、dgvAssets に表示する。
+    ''' </summary>
+    ''' <summary>
+    ''' ctb_contract_property から物件明細を取得し、dgvAssets に表示する。
+    ''' ctb にデータがない場合は d_kykm からフォールバック読込する。
+    ''' </summary>
+    Private Sub LoadPropertyFromCtb(kykhId As Integer)
+        If dgvAssets Is Nothing Then Return
+        dgvAssets.Rows.Clear()
+
+        Dim crud As New CrudHelper()
+        Dim dt As Data.DataTable = Nothing
+
+        ' --- 1. ctb_contract_property から読込を試行 ---
+        Try
+            Dim ctbIdSql As String = "SELECT ctb_id FROM ctb_lease_integrated WHERE kykh_id = @id LIMIT 1"
+            Dim ctbIdResult = crud.ExecuteScalar(Of Object)(ctbIdSql, New List(Of Npgsql.NpgsqlParameter) From {
+                New Npgsql.NpgsqlParameter("@id", kykhId)
+            })
+
+            If ctbIdResult IsNot Nothing AndAlso Not IsDBNull(ctbIdResult) Then
+                Dim ctbId As Integer = Convert.ToInt32(ctbIdResult)
+                Dim sql As String =
+                    "SELECT p.*, bk.bkind_nm " &
+                    "FROM ctb_contract_property p " &
+                    "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
+                    "WHERE p.ctb_id = @ctb_id " &
+                    "ORDER BY p.property_no"
+                dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@ctb_id", ctbId)
+                })
+            End If
+        Catch ex As Exception
+            ' ctb テーブル未作成等の場合はフォールバックへ
+            System.Diagnostics.Debug.WriteLine("ctb_contract_property読込スキップ: " & ex.Message)
+            dt = Nothing
+        End Try
+
+        ' --- 2. ctb にデータがない場合は d_kykm からフォールバック ---
+        If dt Is Nothing OrElse dt.Rows.Count = 0 Then
+            Try
+                Dim sql As String =
+                    "SELECT m.bukn_bango1, m.bukn_nm, m.bkind_id, m.b_suuryo, " &
+                    "  m.setti_dt, m.b_kedaban, bk.bkind_nm " &
+                    "FROM d_kykm m " &
+                    "LEFT JOIN m_bkind bk ON m.bkind_id = bk.bkind_id " &
+                    "WHERE m.kykh_id = @id " &
+                    "ORDER BY m.kykm_no"
+                dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@id", kykhId)
+                })
+            Catch ex As Exception
+                System.Diagnostics.Debug.WriteLine("d_kykm読込エラー: " & ex.Message)
+                Return
+            End Try
+        End If
+
+        ' --- 3. グリッドに表示 ---
+        If dt Is Nothing Then Return
+
+        For Each row As Data.DataRow In dt.Rows
+            Dim rowIndex As Integer = dgvAssets.Rows.Add()
+            Dim dgvRow As DataGridViewRow = dgvAssets.Rows(rowIndex)
+            dgvRow.Cells("BuknBango1").Value = If(row("bukn_bango1") IsNot DBNull.Value, row("bukn_bango1").ToString(), "")
+            dgvRow.Cells("BuknNm").Value = If(row("bukn_nm") IsNot DBNull.Value, row("bukn_nm").ToString(), "")
+            dgvRow.Cells("BkindNm").Value = If(row("bkind_nm") IsNot DBNull.Value, row("bkind_nm").ToString(), "")
+            dgvRow.Cells("BSuuryo").Value = If(row("b_suuryo") IsNot DBNull.Value, Convert.ToInt32(row("b_suuryo")).ToString(), "1")
+            dgvRow.Cells("SettiDt").Value = If(row.Table.Columns.Contains("setti_dt") AndAlso row("setti_dt") IsNot DBNull.Value,
+                Convert.ToDateTime(row("setti_dt")).ToString("yyyy/MM/dd"), "")
+            dgvRow.Cells("BKedaban").Value = If(row.Table.Columns.Contains("b_kedaban") AndAlso row("b_kedaban") IsNot DBNull.Value,
+                row("b_kedaban").ToString(), "")
+        Next
+
+        If lblAssetCount IsNot Nothing Then
+            lblAssetCount.Text = "資産件数: " & dt.Rows.Count & "件"
+        End If
     End Sub
 
     Private Function CreateHeaderLabel(text As String) As Label
@@ -685,32 +1004,38 @@ Public Class FrmLeaseContractMain
             .Dock = DockStyle.Top,
             .AutoSize = True,
             .ColumnCount = 1,
-            .RowCount = 3
+            .RowCount = 5
         }
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
-        mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        For i As Integer = 0 To 4
+            mainTbl.RowStyles.Add(New RowStyle(SizeType.AutoSize))
+        Next
 
-        Dim grpBasic As GroupBox = CreateSection("基本・管理情報")
+        ' ===== Section 1: 基本情報 =====
+        Dim grpBasic As GroupBox = CreateSection("基本情報")
         Dim tblBasic As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 8, .Padding = New Padding(8)
         }
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 90.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
-        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))   ' 0: ラベル
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 1: 入力
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 150.0F))  ' 2: ラベル（契約番号リース会社）
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 3: 入力
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 4: ラベル
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 5: 入力
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 6: ラベル
+        tblBasic.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 7: 入力
 
         txtContractNo = New TextBox() With {
             .Dock = DockStyle.Fill, .ReadOnly = True,
-            .BackColor = CLR_READONLY, .Text = "LC-2025-0001"
+            .BackColor = CLR_READONLY, .Text = ""
         }
-        _tooltipProvider.SetToolTip(txtContractNo, "契約番号は自動採番されます")
+        _tooltipProvider.SetToolTip(txtContractNo, "契約番号（自社）")
+
+        txtContractNoLessor = New TextBox() With {.Dock = DockStyle.Fill}
+        _tooltipProvider.SetToolTip(txtContractNoLessor, "契約番号（リース会社）")
+
         txtContractName = New TextBox() With {.Dock = DockStyle.Fill}
+
         cmbContractType = New ComboBox() With {
             .Dock = DockStyle.Fill, .DropDownStyle = ComboBoxStyle.DropDownList, .Font = FNT_INPUT
         }
@@ -763,98 +1088,152 @@ Public Class FrmLeaseContractMain
         pnlMgmtDept.Controls.Add(cmbMgmtDeptCode, 0, 0)
         pnlMgmtDept.Controls.Add(txtMgmtDeptName, 1, 0)
 
-        dtpStartDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
-        dtpEndDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
-        numFreePeriod = New NumericUpDown() With {
-            .Dock = DockStyle.Fill, .Maximum = 60,
-            .TextAlign = HorizontalAlignment.Right
-        }
-        lblLeaseMonths = New Label() With {
-            .Dock = DockStyle.Fill, .Text = "---ヶ月",
-            .BackColor = CLR_READONLY, .TextAlign = ContentAlignment.MiddleCenter,
-            .Font = New Font("Meiryo", 11.0F, FontStyle.Bold)
-        }
-        _tooltipProvider.SetToolTip(lblLeaseMonths, "リース期間 = (終了日 - 開始日の月数) - 無償期間")
-
-        AddHandler dtpStartDate.ValueChanged, Sub(s, e)
-                                                  RecalcAll()
-                                                  SyncTab1ToJudge()
-                                              End Sub
-        AddHandler dtpEndDate.ValueChanged, Sub(s, e)
-                                                RecalcAll()
-                                                SyncTab1ToJudge()
-                                            End Sub
-        AddHandler numFreePeriod.ValueChanged, Sub(s, e)
-                                                   RecalcAll()
-                                                   SyncTab1ToJudge()
-                                               End Sub
-
-        ' Row 1: 契約番号, 契約名称
+        ' Row 1: 契約番号（自社）, 契約番号（リース会社）
         Dim r As Integer = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("契約番号"), 0, r)
+        tblBasic.Controls.Add(CreateFieldLabel("契約番号（自社）"), 0, r)
         tblBasic.Controls.Add(txtContractNo, 1, r)
-        tblBasic.Controls.Add(CreateFieldLabel("契約名称"), 2, r)
-        tblBasic.Controls.Add(txtContractName, 3, r)
-        tblBasic.SetColumnSpan(txtContractName, 5)
+        tblBasic.Controls.Add(CreateFieldLabel("契約番号（取引先）"), 2, r)
+        tblBasic.Controls.Add(txtContractNoLessor, 3, r)
         tblBasic.RowCount += 1
 
-        ' Row 2: 契約種類, 取引先ID, 管理部署
+        ' Row 2: 契約名（フル幅）
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("契約種類"), 0, r)
+        tblBasic.Controls.Add(CreateFieldLabel("契約名"), 0, r)
+        tblBasic.Controls.Add(txtContractName, 1, r)
+        tblBasic.SetColumnSpan(txtContractName, 7)
+        tblBasic.RowCount += 1
+
+        ' Row 3: 契約区分, リース会社
+        r = tblBasic.RowCount
+        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblBasic.Controls.Add(CreateFieldLabel("契約区分"), 0, r)
         tblBasic.Controls.Add(cmbContractType, 1, r)
-        tblBasic.Controls.Add(CreateFieldLabel("取引先"), 2, r)
+        tblBasic.Controls.Add(CreateFieldLabel("リース会社"), 2, r)
         tblBasic.Controls.Add(pnlSupplier, 3, r)
-        tblBasic.Controls.Add(CreateFieldLabel("管理部署"), 4, r)
-        tblBasic.Controls.Add(pnlMgmtDept, 5, r)
-        tblBasic.SetColumnSpan(pnlMgmtDept, 3)
+        tblBasic.SetColumnSpan(pnlSupplier, 5)
         tblBasic.RowCount += 1
 
-        ' Row 3: 契約開始日, 契約終了日
+        ' Row 4: 管理部門
         r = tblBasic.RowCount
         tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("契約開始日"), 0, r)
-        tblBasic.Controls.Add(dtpStartDate, 1, r)
-        tblBasic.SetColumnSpan(dtpStartDate, 3)
-        tblBasic.Controls.Add(CreateFieldLabel("契約終了日"), 4, r)
-        tblBasic.Controls.Add(dtpEndDate, 5, r)
-        tblBasic.SetColumnSpan(dtpEndDate, 3)
-        tblBasic.RowCount += 1
-
-        ' Row 4: 無償期間, リース期間
-        r = tblBasic.RowCount
-        tblBasic.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblBasic.Controls.Add(CreateFieldLabel("無償期間"), 0, r)
-        tblBasic.Controls.Add(numFreePeriod, 1, r)
-        tblBasic.SetColumnSpan(numFreePeriod, 3)
-        tblBasic.Controls.Add(CreateFieldLabel("リース期間"), 4, r)
-        tblBasic.Controls.Add(lblLeaseMonths, 5, r)
-        tblBasic.SetColumnSpan(lblLeaseMonths, 3)
+        tblBasic.Controls.Add(CreateFieldLabel("管理部門"), 0, r)
+        tblBasic.Controls.Add(pnlMgmtDept, 1, r)
+        tblBasic.SetColumnSpan(pnlMgmtDept, 7)
         tblBasic.RowCount += 1
 
         grpBasic.Controls.Add(tblBasic)
 
+        ' ===== Section 2: 契約期間 =====
+        Dim grpPeriod As GroupBox = CreateSection("契約期間")
+        Dim tblPeriod As New TableLayoutPanel() With {
+            .Dock = DockStyle.Top, .AutoSize = True,
+            .ColumnCount = 8, .Padding = New Padding(8)
+        }
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 30.0F))
+        tblPeriod.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+
+        dtpContractDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
+        dtpStartDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
+        dtpEndDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
+
+        numLeaseMonths = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 600, .Minimum = 0,
+            .TextAlign = HorizontalAlignment.Right,
+            .Font = New Font("Meiryo", 11.0F, FontStyle.Bold)
+        }
+        _tooltipProvider.SetToolTip(numLeaseMonths, "リース期間（月）。開始日・終了日から自動計算。手入力で終了日を逆算。")
+
+        numFreePeriod = New NumericUpDown() With {
+            .Dock = DockStyle.Fill, .Maximum = 60,
+            .TextAlign = HorizontalAlignment.Right
+        }
+
+        AddHandler dtpStartDate.ValueChanged, Sub(s, e)
+                                                  If _isLoaded Then CalcLeaseMonthsToNum() : RecalcAll() : SyncTab1ToJudge()
+                                              End Sub
+        AddHandler dtpEndDate.ValueChanged, Sub(s, e)
+                                                If _isLoaded Then CalcLeaseMonthsToNum() : RecalcAll() : SyncTab1ToJudge()
+                                            End Sub
+        AddHandler numFreePeriod.ValueChanged, Sub(s, e)
+                                                   If _isLoaded Then CalcLeaseMonthsToNum() : RecalcAll() : SyncTab1ToJudge()
+                                               End Sub
+        AddHandler numLeaseMonths.ValueChanged, Sub(s, e)
+                                                    If Not _isLoaded Then Return
+                                                    ' 手入力時: 終了日を逆算（開始日 + Nヶ月 - 1日）
+                                                    Try
+                                                        Dim months As Integer = CInt(numLeaseMonths.Value) + CInt(numFreePeriod.Value)
+                                                        If months > 0 Then
+                                                            RemoveHandler dtpEndDate.ValueChanged, Nothing
+                                                            dtpEndDate.Value = dtpStartDate.Value.AddMonths(months).AddDays(-1)
+                                                        End If
+                                                    Catch
+                                                    End Try
+                                                End Sub
+
+        ' Row 1: 契約締結日
+        r = tblPeriod.RowCount
+        tblPeriod.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblPeriod.Controls.Add(CreateFieldLabel("契約締結日"), 0, r)
+        tblPeriod.Controls.Add(dtpContractDate, 1, r)
+        tblPeriod.SetColumnSpan(dtpContractDate, 3)
+        tblPeriod.RowCount += 1
+
+        ' Row 2: 開始日, 終了日, リース期間
+        r = tblPeriod.RowCount
+        tblPeriod.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblPeriod.Controls.Add(CreateFieldLabel("開始日"), 0, r)
+        tblPeriod.Controls.Add(dtpStartDate, 1, r)
+        tblPeriod.Controls.Add(CreateFieldLabel("終了日"), 2, r)
+        tblPeriod.Controls.Add(dtpEndDate, 3, r)
+        tblPeriod.Controls.Add(CreateFieldLabel("期間"), 4, r)
+        tblPeriod.Controls.Add(numLeaseMonths, 5, r)
+        tblPeriod.Controls.Add(New Label() With {
+            .Text = "ヶ月", .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft, .Font = FNT_LABEL
+        }, 6, r)
+        tblPeriod.RowCount += 1
+
+        ' Row 3: 無償期間
+        r = tblPeriod.RowCount
+        tblPeriod.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblPeriod.Controls.Add(CreateFieldLabel("無償期間"), 0, r)
+        tblPeriod.Controls.Add(numFreePeriod, 1, r)
+        tblPeriod.Controls.Add(New Label() With {
+            .Text = "ヶ月", .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft, .Font = FNT_LABEL
+        }, 2, r)
+        tblPeriod.RowCount += 1
+
+        grpPeriod.Controls.Add(tblPeriod)
+
+        ' ===== Section 3: 資産情報 =====
         Dim grpProperty As GroupBox = CreateSection("資産情報")
         Dim tblProp As New TableLayoutPanel() With {
             .Dock = DockStyle.Top, .AutoSize = True,
             .ColumnCount = 8, .Padding = New Padding(8, 8, 8, 2)
         }
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 0: 資産種類ラベル
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 1: コンボボックス
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 2: 資産番号ラベル
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 3: テキスト
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))   ' 4: 検索ボタン
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))  ' 5: 新規登録ボタン
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 6: 余白
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))    ' 7: 余白
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
 
         cmbAssetCategory = New ComboBox() With {
             .Dock = DockStyle.Fill,
             .DropDownStyle = ComboBoxStyle.DropDownList,
             .Font = FNT_INPUT
         }
-        ' m_asset_categoryマスタからロード
         Dim assetCategories As String() = _masterData.LoadAssetCategories()
         If assetCategories.Length > 0 Then
             cmbAssetCategory.Items.AddRange(assetCategories)
@@ -959,19 +1338,22 @@ Public Class FrmLeaseContractMain
             .MinimumWidth = 60, .SortMode = DataGridViewColumnSortMode.NotSortable
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "資産番号", .Name = "AssetNo", .Width = 120, .MinimumWidth = 80
+            .HeaderText = "資産番号", .Name = "BuknBango1", .Width = 120, .MinimumWidth = 80
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "資産種類", .Name = "AssetCategory", .Width = 90, .MinimumWidth = 70
+            .HeaderText = "資産名", .Name = "BuknNm", .Width = 220, .MinimumWidth = 120
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "資産名", .Name = "AssetName", .Width = 250, .MinimumWidth = 150
+            .HeaderText = "物件種別", .Name = "BkindNm", .Width = 90, .MinimumWidth = 70
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "設置場所", .Name = "InstallLocation", .Width = 150, .MinimumWidth = 80
+            .HeaderText = "数量", .Name = "BSuuryo", .Width = 50, .MinimumWidth = 40
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "配賦部門", .Name = "DeptAllocation", .Width = 250, .MinimumWidth = 120
+            .HeaderText = "設置日", .Name = "SettiDt", .Width = 100, .MinimumWidth = 80
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "枝番", .Name = "BKedaban", .Width = 60, .MinimumWidth = 40
         })
 
         dgvAssets.AllowUserToAddRows = True
@@ -980,7 +1362,7 @@ Public Class FrmLeaseContractMain
             dgvAssets.Rows.Add()
         Next
 
-        Dim pnlGrid As New Panel()With {
+        Dim pnlGrid As New Panel() With {
             .Dock = DockStyle.Top,
             .Height = 180,
             .Padding = New Padding(8, 0, 8, 8)
@@ -990,7 +1372,7 @@ Public Class FrmLeaseContractMain
         grpProperty.Controls.Add(pnlGrid)
         grpProperty.Controls.Add(tblProp)
 
-        ' === 月額支払明細（会計タブから移動） ===
+        ' ===== Section 4: 月額支払明細 =====
         Dim grpMonthly As GroupBox = CreateSection("月額支払明細")
         grpMonthly.Height = 260
         grpMonthly.AutoSize = False
@@ -1105,9 +1487,55 @@ Public Class FrmLeaseContractMain
         pnlMonthlyGrid.Controls.Add(pnlTotal)
         grpMonthly.Controls.Add(pnlMonthlyGrid)
 
+        ' ===== Section 5: 社内管理 =====
+        Dim grpInternal As GroupBox = CreateSection("社内管理")
+        Dim tblInternal As New TableLayoutPanel() With {
+            .Dock = DockStyle.Top, .AutoSize = True,
+            .ColumnCount = 8, .Padding = New Padding(8)
+        }
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 120.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
+        tblInternal.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+
+        txtApprovalNo = New TextBox() With {.Dock = DockStyle.Fill}
+        dtpApprovalDate = New DateTimePicker() With {.Dock = DockStyle.Fill, .Format = DateTimePickerFormat.Short}
+        txtApplicant = New TextBox() With {.Dock = DockStyle.Fill}
+        chkIsExtended = New CheckBox() With {
+            .Text = "延長あり", .Dock = DockStyle.Fill,
+            .Font = FNT_INPUT
+        }
+
+        ' Row 1: 稟議番号, 承認日
+        r = tblInternal.RowCount
+        tblInternal.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblInternal.Controls.Add(CreateFieldLabel("稟議番号"), 0, r)
+        tblInternal.Controls.Add(txtApprovalNo, 1, r)
+        tblInternal.Controls.Add(CreateFieldLabel("承認日"), 2, r)
+        tblInternal.Controls.Add(dtpApprovalDate, 3, r)
+        tblInternal.RowCount += 1
+
+        ' Row 2: 起案者, 延長フラグ
+        r = tblInternal.RowCount
+        tblInternal.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        tblInternal.Controls.Add(CreateFieldLabel("起案者"), 0, r)
+        tblInternal.Controls.Add(txtApplicant, 1, r)
+        tblInternal.Controls.Add(CreateFieldLabel("延長フラグ"), 2, r)
+        tblInternal.Controls.Add(chkIsExtended, 3, r)
+        tblInternal.RowCount += 1
+
+        grpInternal.Controls.Add(tblInternal)
+
+        ' ===== Layout: 5 sections =====
         mainTbl.Controls.Add(grpBasic, 0, 0)
-        mainTbl.Controls.Add(grpProperty, 0, 1)
-        mainTbl.Controls.Add(grpMonthly, 0, 2)
+        mainTbl.Controls.Add(grpPeriod, 0, 1)
+        mainTbl.Controls.Add(grpProperty, 0, 2)
+        mainTbl.Controls.Add(grpMonthly, 0, 3)
+        mainTbl.Controls.Add(grpInternal, 0, 4)
 
         scroll.Controls.Add(mainTbl)
         pgContract.Controls.Add(scroll)
@@ -1653,7 +2081,7 @@ Public Class FrmLeaseContractMain
             txtSchContractDate.Text = startDt.ToString("yyyy/MM/dd")
             txtSchStartDate.Text = startDt.ToString("yyyy/MM/dd")
             txtSchEndDate.Text = endDt.ToString("yyyy/MM/dd")
-            txtSchContractPeriod.Text = lblLeaseMonths.Text
+            txtSchContractPeriod.Text = CInt(numLeaseMonths.Value).ToString() & "ヶ月"
 
             ' --- ＜現支払情報＞ ---
             txtSchFreePeriod.Text = freePeriodMonths.ToString() & " ヶ月"
@@ -2182,7 +2610,7 @@ Public Class FrmLeaseContractMain
         Try
             lblInitContractNo.Text = txtContractNo.Text
             lblInitContractName.Text = txtContractName.Text
-            lblInitLeasePeriod.Text = lblLeaseMonths.Text
+            lblInitLeasePeriod.Text = CInt(numLeaseMonths.Value).ToString() & "ヶ月"
         Finally
             _isSyncingData = False
         End Try
@@ -2200,7 +2628,7 @@ Public Class FrmLeaseContractMain
             lblSubContractName.Text = txtContractName.Text
             lblSubStartDate.Text = dtpStartDate.Value.ToString("yyyy/MM/dd")
             lblSubEndDate.Text = dtpEndDate.Value.ToString("yyyy/MM/dd")
-            lblSubLeasePeriod.Text = lblLeaseMonths.Text
+            lblSubLeasePeriod.Text = CInt(numLeaseMonths.Value).ToString() & "ヶ月"
         Finally
             _isSyncingData = False
         End Try
@@ -2274,6 +2702,14 @@ Public Class FrmLeaseContractMain
     End Sub
 
     Private Sub CalcLeaseMonths()
+        ' numLeaseMonths版（CalcLeaseMonthsToNum）に委譲
+        CalcLeaseMonthsToNum()
+    End Sub
+
+    ''' <summary>
+    ''' 開始日・終了日・無償期間からリース期間を計算し、numLeaseMonths に反映する。
+    ''' </summary>
+    Private Sub CalcLeaseMonthsToNum()
         If Not _isLoaded Then Return
         Try
             Dim startDt As DateTime = dtpStartDate.Value
@@ -2281,13 +2717,13 @@ Public Class FrmLeaseContractMain
             Dim freePeriodVal As Integer = CInt(numFreePeriod.Value)
             Dim leaseMonths As Integer = ContractCalcHelper.CalcLeaseMonths(startDt, endDt, freePeriodVal)
             Dim totalMonths As Integer = ((endDt.Year - startDt.Year) * 12) + (endDt.Month - startDt.Month)
-            lblLeaseMonths.Text = leaseMonths.ToString() & "ヶ月"
-            _tooltipProvider.SetToolTip(lblLeaseMonths,
+            numLeaseMonths.Value = Math.Max(0, Math.Min(leaseMonths, numLeaseMonths.Maximum))
+            _tooltipProvider.SetToolTip(numLeaseMonths,
                 String.Format("計算式: ({0} - {1})の月数{2} - 無償期間{3}ヶ月 = {4}ヶ月",
                     startDt.ToString("yyyy/MM/dd"), endDt.ToString("yyyy/MM/dd"),
                     totalMonths, freePeriodVal, leaseMonths))
-        Catch ex As Exception
-            lblLeaseMonths.Text = "---ヶ月"
+        Catch
+            numLeaseMonths.Value = 0
         End Try
     End Sub
 
@@ -2310,11 +2746,8 @@ Public Class FrmLeaseContractMain
             AddHandler dtpJudgeStart.ValueChanged, AddressOf OnJudgeTrigger
             AddHandler dtpJudgeEnd.ValueChanged, AddressOf OnJudgeTrigger
 
-            ' 期間連動: CalcLeaseMonths() の計算結果から "ヶ月" を除去して転記
-            Dim monthsText As String = lblLeaseMonths.Text.Replace("ヶ月", "").Trim()
-            Dim months As Integer = 0
-            Integer.TryParse(monthsText, months)
-            lblTermMonths.Text = months.ToString()
+            ' 期間連動: numLeaseMonths の値を転記
+            lblTermMonths.Text = CInt(numLeaseMonths.Value).ToString()
 
             ' 金額連動: 月額支払グリッドの税抜合計 → 判定用月額リース料
             RemoveHandler numMonthlyRentJudge.ValueChanged, AddressOf OnJudgeTrigger
@@ -2764,8 +3197,8 @@ Public Class FrmLeaseContractMain
         For i As Integer = 0 To dgvAssets.Rows.Count - 1
             Dim row As DataGridViewRow = dgvAssets.Rows(i)
             If row.IsNewRow Then Continue For
-            If row.Cells("AssetNo").Value Is Nothing OrElse
-               String.IsNullOrEmpty(row.Cells("AssetNo").Value.ToString()) Then
+            If row.Cells("BuknBango1").Value Is Nothing OrElse
+               String.IsNullOrEmpty(row.Cells("BuknBango1").Value.ToString()) Then
                 emptyRowIndex = i
                 Exit For
             End If
@@ -2773,19 +3206,21 @@ Public Class FrmLeaseContractMain
 
         If emptyRowIndex >= 0 Then
             Dim row As DataGridViewRow = dgvAssets.Rows(emptyRowIndex)
-            row.Cells("AssetNo").Value = frm.AssetNo
-            row.Cells("AssetCategory").Value = frm.AssetCategory
-            row.Cells("AssetName").Value = frm.AssetName
-            row.Cells("InstallLocation").Value = frm.InstallLocation
-            row.Cells("DeptAllocation").Value = frm.DeptAllocationSummary
+            row.Cells("BuknBango1").Value = frm.AssetNo
+            row.Cells("BuknNm").Value = frm.AssetName
+            row.Cells("BkindNm").Value = frm.AssetCategory
+            row.Cells("BSuuryo").Value = "1"
+            row.Cells("SettiDt").Value = ""
+            row.Cells("BKedaban").Value = ""
         Else
             dgvAssets.Rows.Add(
                 False,
                 frm.AssetNo,
-                frm.AssetCategory,
                 frm.AssetName,
-                frm.InstallLocation,
-                frm.DeptAllocationSummary)
+                frm.AssetCategory,
+                "1",
+                "",
+                "")
         End If
 
         ' 資産詳細データをCTBレコードとして保持
@@ -2821,8 +3256,8 @@ Public Class FrmLeaseContractMain
         Dim count As Integer = 0
         For Each row As DataGridViewRow In dgvAssets.Rows
             If row.IsNewRow Then Continue For
-            If row.Cells("AssetNo").Value IsNot Nothing AndAlso
-               Not String.IsNullOrEmpty(row.Cells("AssetNo").Value.ToString()) Then
+            If row.Cells("BuknBango1").Value IsNot Nothing AndAlso
+               Not String.IsNullOrEmpty(row.Cells("BuknBango1").Value.ToString()) Then
                 count += 1
             End If
         Next

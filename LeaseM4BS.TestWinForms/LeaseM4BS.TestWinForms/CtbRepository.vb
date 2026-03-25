@@ -3,7 +3,7 @@ Imports Npgsql
 Imports LeaseM4BS.DataAccess
 
 ''' <summary>
-''' CTB DB persistence: ctb_lease_integrated / ctb_dept_allocation / ctb_property
+''' CTB DB persistence: ctb_lease_integrated / ctb_dept_allocation / ctb_contract_property
 ''' </summary>
 Public Class CtbRepository
 
@@ -12,7 +12,7 @@ Public Class CtbRepository
 
     ''' <summary>
     ''' CTBレコード群をDBに一括INSERT（1トランザクション）
-    ''' ctb_lease_integrated + ctb_property + ctb_property_attribute + ctb_dept_allocation
+    ''' ctb_lease_integrated + ctb_contract_property + ctb_contract_property_attribute + ctb_dept_allocation
     ''' </summary>
     Public Sub InsertAll(records As List(Of CtbRecord))
         If records Is Nothing OrElse records.Count = 0 Then Return
@@ -43,7 +43,7 @@ Public Class CtbRepository
     End Sub
 
     ''' <summary>
-    ''' ctb_lease_integrated INSERT（資産情報はctb_propertyに移行済みのため含まない）
+    ''' ctb_lease_integrated INSERT（資産情報はctb_contract_propertyに移行済みのため含まない）
     ''' </summary>
     Private Function InsertLeaseIntegrated(conn As NpgsqlConnection, txn As NpgsqlTransaction, rec As CtbRecord) As Integer
         Const sql As String =
@@ -99,7 +99,7 @@ Public Class CtbRepository
 
     ''' <summary>
     ''' 契約番号+物件番号を指定してCTBレコードを更新（1トランザクション）
-    ''' ctb_lease_integrated + ctb_property + ctb_property_attribute + ctb_dept_allocation
+    ''' ctb_lease_integrated + ctb_contract_property + ctb_contract_property_attribute + ctb_dept_allocation
     ''' </summary>
     Public Sub UpdateByContractNo(rec As CtbRecord)
         If String.IsNullOrEmpty(rec.ContractNo) Then Return
@@ -114,7 +114,7 @@ Public Class CtbRepository
                         Return
                     End If
 
-                    ' 2. ctb_property UPSERT
+                    ' 2. ctb_contract_property UPSERT
                     If rec.PropertyRec IsNot Nothing Then
                         rec.PropertyRec.CtbId = ctbId
                         Dim propId As Integer = UpsertProperty(conn, txn, rec.PropertyRec)
@@ -281,7 +281,7 @@ Public Class CtbRepository
 
     Private Function UpsertProperty(conn As NpgsqlConnection, txn As NpgsqlTransaction, rec As PropertyRecord) As Integer
         Const sql As String =
-            "INSERT INTO ctb_property " &
+            "INSERT INTO ctb_contract_property " &
             "(ctb_id, property_no, asset_category_cd, asset_no, asset_name, " &
             " company_name, install_location, remarks) " &
             "VALUES (@ctb_id, @property_no, @asset_category_cd, @asset_no, @asset_name, " &
@@ -315,8 +315,8 @@ Public Class CtbRepository
     End Sub
 
     ''' <summary>
-    ''' DBからCTBレコードを全件取得（ctb_property + ctb_dept_allocation JOIN）
-    ''' 資産情報はctb_propertyから取得する
+    ''' DBからCTBレコードを全件取得（ctb_contract_property + ctb_dept_allocation JOIN）
+    ''' 資産情報はctb_contract_propertyから取得する
     ''' </summary>
     Public Function SelectAll() As List(Of CtbRecord)
         Const sql As String =
@@ -328,7 +328,7 @@ Public Class CtbRepository
             "p.asset_no, p.asset_name, p.company_name, p.install_location, p.remarks AS property_remarks, " &
             "d.dept_cd, md.dept_nm, d.allocation_ratio " &
             "FROM ctb_lease_integrated c " &
-            "LEFT JOIN ctb_property p ON c.ctb_id = p.ctb_id " &
+            "LEFT JOIN ctb_contract_property p ON c.ctb_id = p.ctb_id " &
             "LEFT JOIN ctb_dept_allocation d ON c.ctb_id = d.ctb_id " &
             "LEFT JOIN m_department md ON d.dept_cd = md.dept_cd " &
             "ORDER BY c.contract_no, c.property_no"
@@ -363,7 +363,7 @@ Public Class CtbRepository
             "p.asset_no, p.asset_name, p.company_name, p.install_location, p.remarks AS property_remarks, " &
             "d.dept_cd, md.dept_nm, d.allocation_ratio " &
             "FROM ctb_lease_integrated c " &
-            "LEFT JOIN ctb_property p ON c.ctb_id = p.ctb_id " &
+            "LEFT JOIN ctb_contract_property p ON c.ctb_id = p.ctb_id " &
             "LEFT JOIN ctb_dept_allocation d ON c.ctb_id = d.ctb_id " &
             "LEFT JOIN m_department md ON d.dept_cd = md.dept_cd " &
             "WHERE c.contract_no = @contract_no " &
@@ -387,7 +387,7 @@ Public Class CtbRepository
 
     ''' <summary>
     ''' NpgsqlDataReader → CtbRecord マッピング
-    ''' 資産情報はctb_property（p.）から取得
+    ''' 資産情報はctb_contract_property（p.）から取得
     ''' </summary>
     Private Shared Function MapReaderToCtbRecord(reader As NpgsqlDataReader) As CtbRecord
         Dim rec As New CtbRecord()
@@ -408,7 +408,7 @@ Public Class CtbRepository
         rec.LeaseDepreciation = SafeGetDecimal(reader, "lease_depreciation")
         rec.TotalPayment = SafeGetDecimal(reader, "total_payment")
         rec.SplitStatus = SafeGetString(reader, "split_status")
-        ' --- ctb_property (p.) ---
+        ' --- ctb_contract_property (p.) ---
         rec.AssetNo = SafeGetString(reader, "asset_no")
         rec.AssetName = SafeGetString(reader, "asset_name")
         rec.CompanyName = SafeGetString(reader, "company_name")

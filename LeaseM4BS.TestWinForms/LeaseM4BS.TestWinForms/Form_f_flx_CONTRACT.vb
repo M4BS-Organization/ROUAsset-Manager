@@ -13,8 +13,9 @@ Partial Public Class Form_f_flx_CONTRACT
         ' 初期表示：全件検索
         SearchData()
         SecurityChecker.ApplyDataUpdateLimit(Me)
-        ' 使用権資産管理ボタンの権限制御（ApplyDataUpdateLimitの対象外のため個別制御）
-        cmd_ROU.Enabled = SecurityChecker.CanUpdate()
+        ' 新リースボタンの権限制御（ApplyDataUpdateLimitの対象外のため個別制御）
+        cmd_ROU_NEW.Enabled = SecurityChecker.CanUpdate()
+        cmd_ROU_REF.Enabled = SecurityChecker.CanUpdate()
     End Sub
 
     ' ---------------------------------------------------------
@@ -116,33 +117,40 @@ Partial Public Class Form_f_flx_CONTRACT
         Me.Close()
     End Sub
 
-    ' [使用権資産管理] ボタン — 新リース対応版の4タブ画面を開く
-    Private Sub cmd_ROU_Click(sender As Object, e As EventArgs) Handles cmd_ROU.Click
+    ' [新リース:新規] ボタン — 新リース対応画面を新規モードで開く
+    Private Sub cmd_ROU_NEW_Click(sender As Object, e As EventArgs) Handles cmd_ROU_NEW.Click
         Try
             Dim frm As New FrmLeaseContractMain()
-            Dim selectedRow = dgv_LIST.GetSelectedRow()
-
-            If selectedRow IsNot Nothing AndAlso dgv_LIST.Rows.Count > 0 Then
-                ' 一覧にデータあり → 選択行の契約番号で編集モード
-                Dim contractNo As String = ""
-                If selectedRow.Cells("自社契約番号").Value IsNot Nothing Then
-                    contractNo = selectedRow.Cells("自社契約番号").Value.ToString()
-                End If
-                frm.Text = "新リース会計対応 リース契約管理 - " & contractNo
-                frm.Tag = contractNo
-            Else
-                ' 一覧が空 → 新規登録モード
-                frm.InitContractNo = FrmFlexContract.GetNextContractNo()
-                frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
-                frm.Tag = ""
-            End If
-
+            frm.KykhId = 0
+            frm.InitContractNo = FrmFlexContract.GetNextContractNo()
+            frm.Text = "新リース会計対応 リース契約管理 - 新規登録"
             frm.ShowDialog()
-
-            ' 戻ってきたら一覧更新
             SearchData()
         Catch ex As Exception
-            MessageBox.Show("使用権資産管理画面の表示中にエラーが発生しました。" & Environment.NewLine & ex.Message,
+            MessageBox.Show("新リース画面の表示中にエラーが発生しました。" & Environment.NewLine & ex.Message,
+                            "画面遷移エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    ' [新リース:照会/変更] ボタン — 選択行のd_kykhデータを新リース画面で表示
+    Private Sub cmd_ROU_REF_Click(sender As Object, e As EventArgs) Handles cmd_ROU_REF.Click
+        Dim selectedRow = dgv_LIST.GetSelectedRow()
+        If selectedRow Is Nothing Then
+            MessageBox.Show("契約を選択してください。", "選択エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Try
+            Dim frm As New FrmLeaseContractMain()
+            frm.KykhId = Convert.ToDouble(selectedRow.Cells("kykh_id").Value)
+            frm.Text = "新リース会計対応 リース契約管理 - " &
+                        If(selectedRow.Cells("自社契約番号").Value IsNot Nothing,
+                           selectedRow.Cells("自社契約番号").Value.ToString(), "")
+            frm.ShowDialog()
+            SearchData()
+        Catch ex As Exception
+            MessageBox.Show("新リース画面の表示中にエラーが発生しました。" & Environment.NewLine & ex.Message,
                             "画面遷移エラー", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub

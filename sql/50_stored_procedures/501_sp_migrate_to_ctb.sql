@@ -1,15 +1,14 @@
 -- ============================================================
 -- 501_sp_migrate_to_ctb.sql
--- d_kykh → ctb_lease_integrated + ctb_property + ctb_dept_allocation
+-- d_kykh → ctb_lease_integrated + ctb_contract_header
+--        + ctb_contract_property + ctb_dept_allocation
 -- ストアドプロシージャ版（UPSERT対応・差分同期可能）
 --
 -- Phase B Task B-1
--- 依存: 10_ddl_core/103_data_tables.sql (d_kykh)
---       10_ddl_core/102_master_tables.sql (m_kknri, m_lcpt)
---       30_ddl_newlease/303_ctb_tables.sql (ctb_lease_integrated, ctb_dept_allocation)
---       30_ddl_newlease/304_ctb_property_eav.sql (ctb_property)
---       40_views_triggers/402_sync_lcpt_supplier.sql (m_supplier同期済み前提)
---       40_views_triggers/403_sync_bcat_department.sql (m_department同期済み前提)
+-- 依存: 10_ddl_core/103_data_tables.sql (d_kykh, d_kykm)
+--       10_ddl_core/102_master_tables.sql (m_kknri, m_bkind)
+--       30_ddl_newlease/303_ctb_tables.sql (ctb_lease_integrated, ctb_contract_header,
+--                                           ctb_contract_property, ctb_dept_allocation)
 --
 -- 使用方法:
 --   SELECT * FROM sp_migrate_d_kykh_to_ctb();
@@ -30,7 +29,7 @@ RETURNS TABLE (
     inserted_count  integer,
     updated_count   integer,
     skipped_count   integer,
-    property_count  integer,
+    header_count    integer,
     alloc_count     integer,
     error_count     integer,
     errors          text[]
@@ -40,7 +39,7 @@ DECLARE
     v_inserted   integer := 0;
     v_updated    integer := 0;
     v_skipped    integer := 0;
-    v_prop_count integer := 0;
+    v_hdr_count  integer := 0;
     v_alloc_count integer := 0;
     v_err_count  integer := 0;
     v_errors     text[] := '{}';
@@ -54,33 +53,54 @@ BEGIN
     FOR v_rec IN
         SELECT
             k.kykh_id,
-            k.kykbnj                                         AS contract_no,
-            k.kyak_nm                                        AS contract_name,
-            LPAD(CAST(k.kkbn_id AS VARCHAR), 2, '0')        AS contract_type_cd,
-            lc.lcpt1_cd                                      AS supplier_cd,
-            kn.kknri1_cd                                     AS mgmt_dept_cd,
-            CAST(k.start_dt AS DATE)                         AS lease_start_date,
-            CAST(k.end_dt AS DATE)                           AS lease_end_date,
-            CAST(k.lkikan AS INTEGER)                        AS lease_term_months,
-            CAST(k.k_glsryo AS NUMERIC(15,2))               AS monthly_payment,
-            CAST(k.k_slsryo AS NUMERIC(15,2))               AS total_payment,
+            k.kykbnj,
             k.kykbnl,
+            k.kyak_nm,
+            k.kkbn_id,
+            k.lcpt_id,
+            k.kknri_id,
+            k.kyak_dt,
+            k.start_dt,
+            k.end_dt,
+            k.lkikan,
             k.rng_bango,
-            -- d_kykm（物件明細）から物件名・種別・資産番号を取得（最初の1物件）
-            m.bukn_nm                                        AS property_name,
-            m.bukn_bango1                                    AS asset_no,
+            k.shonin_dt,
+            k.kiansha,
+            k.jencho_f,
+            k.k_glsryo,
+            k.k_klsryo,
+            k.k_slsryo,
+            k.zritu,
+            k.saikaisu,
+            k.kyak_end_f,
+            COALESCE(CAST(k.shri_kn AS INTEGER), 1)  AS payment_interval_months,
+            kn.kknri1_cd                              AS mgmt_dept_cd,
+            -- d_kykm（物件明細）から各種カラムを取得（最初の1物件）
+            m.bukn_nm,
+            m.bukn_bango1,
+            m.bkind_id,
+            m.skmk_id,
+            m.b_suuryo,
+            m.b_knyukn,
+            m.b_glsryo,
+            m.b_klsryo,
+            m.b_bcat_id,
+            m.kari_ritu,
             CASE
                 WHEN bk.bkind_nm LIKE '%不動産%' OR bk.bkind_nm LIKE '%建物%' THEN 'AC01'
                 WHEN bk.bkind_nm LIKE '%車両%' THEN 'AC04'
                 WHEN bk.bkind_nm LIKE '%OA%' OR bk.bkind_nm LIKE '%機械%' THEN 'AC03'
                 WHEN bk.bkind_nm LIKE '%構築%' THEN 'AC02'
                 ELSE 'AC05'
-            END                                              AS asset_category_cd
+            END                                       AS asset_category_cd
         FROM d_kykh k
         LEFT JOIN m_kknri kn ON k.kknri_id = kn.kknri_id
-        LEFT JOIN m_lcpt lc ON k.lcpt_id = lc.lcpt_id
         LEFT JOIN LATERAL (
-            SELECT kykm.bukn_nm, kykm.bkind_id, kykm.bukn_bango1
+            SELECT kykm.bukn_nm, kykm.bkind_id, kykm.bukn_bango1,
+                   kykm.skmk_id, kykm.b_suuryo, kykm.b_knyukn,
+                   kykm.b_glsryo, kykm.b_klsryo, kykm.b_bcat_id,
+                   kykm.kari_ritu,
+                   kykm.setti_dt, kykm.b_kedaban
             FROM d_kykm kykm
             WHERE kykm.kykh_id = k.kykh_id
             ORDER BY kykm.kykm_no
@@ -94,54 +114,38 @@ BEGIN
         BEGIN
             -- ============================================================
             -- 1. ctb_lease_integrated UPSERT
+            --    定義書準拠カラムのみ
             -- ============================================================
             INSERT INTO ctb_lease_integrated (
                 contract_no,
                 property_no,
-                contract_name,
-                contract_type_cd,
-                supplier_cd,
-                mgmt_dept_cd,
                 lease_start_date,
-                lease_end_date,
-                free_rent_months,
-                lease_term_months,
-                asset_name,
-                monthly_payment,
-                total_payment,
-                remarks
+                non_cancellable_months,
+                accounting_lease_term,
+                periodic_payment_amt,
+                payment_interval_months,
+                discount_rate,
+                kykh_id
             ) VALUES (
-                v_rec.contract_no,
+                v_rec.kykbnj,
                 1,
-                v_rec.contract_name,
-                v_rec.contract_type_cd,
-                v_rec.supplier_cd,
-                v_rec.mgmt_dept_cd,
-                v_rec.lease_start_date,
-                v_rec.lease_end_date,
-                0,
-                v_rec.lease_term_months,
-                v_rec.contract_name,  -- asset_name: 契約名で仮設定
-                v_rec.monthly_payment,
-                v_rec.total_payment,
-                CONCAT_WS(' | ',
-                    CASE WHEN v_rec.kykbnl IS NOT NULL THEN '相手方番号:' || v_rec.kykbnl END,
-                    CASE WHEN v_rec.rng_bango IS NOT NULL THEN '稟議番号:' || v_rec.rng_bango END
-                )
+                v_rec.start_dt,
+                CAST(v_rec.lkikan AS INTEGER),
+                CAST(v_rec.lkikan AS INTEGER),
+                CAST(v_rec.k_glsryo AS NUMERIC(15,0)),
+                v_rec.payment_interval_months,
+                COALESCE(v_rec.kari_ritu, 0.0300),
+                v_rec.kykh_id
             )
             ON CONFLICT (contract_no, property_no) DO UPDATE SET
-                contract_name    = EXCLUDED.contract_name,
-                contract_type_cd = EXCLUDED.contract_type_cd,
-                supplier_cd      = EXCLUDED.supplier_cd,
-                mgmt_dept_cd     = EXCLUDED.mgmt_dept_cd,
-                lease_start_date = EXCLUDED.lease_start_date,
-                lease_end_date   = EXCLUDED.lease_end_date,
-                lease_term_months = EXCLUDED.lease_term_months,
-                asset_name       = EXCLUDED.asset_name,
-                monthly_payment  = EXCLUDED.monthly_payment,
-                total_payment    = EXCLUDED.total_payment,
-                remarks          = EXCLUDED.remarks,
-                update_dt        = CURRENT_TIMESTAMP
+                lease_start_date        = EXCLUDED.lease_start_date,
+                non_cancellable_months  = EXCLUDED.non_cancellable_months,
+                accounting_lease_term   = EXCLUDED.accounting_lease_term,
+                periodic_payment_amt    = EXCLUDED.periodic_payment_amt,
+                payment_interval_months = EXCLUDED.payment_interval_months,
+                discount_rate           = EXCLUDED.discount_rate,
+                kykh_id                 = EXCLUDED.kykh_id,
+                update_dt               = CURRENT_TIMESTAMP
             RETURNING ctb_id,
                 (xmax = 0) AS is_new  -- xmax=0 → INSERT, otherwise UPDATE
             INTO v_ctb_id, v_is_new;
@@ -153,34 +157,132 @@ BEGIN
             END IF;
 
             -- ============================================================
-            -- 2. ctb_property 自動作成（新規INSERTの場合のみ）
+            -- 2. ctb_contract_header UPSERT
             -- ============================================================
-            IF v_is_new THEN
-                INSERT INTO ctb_property (
-                    ctb_id,
-                    property_no,
-                    asset_category_cd,
-                    asset_no,
-                    asset_name,
-                    remarks
-                ) VALUES (
-                    v_ctb_id,
-                    1,
-                    COALESCE(v_rec.asset_category_cd, 'AC01'),
-                    v_rec.asset_no,       -- d_kykm.bukn_bango1
-                    v_rec.property_name,  -- d_kykm.bukn_nm（NULLの場合は空）
-                    CASE WHEN v_rec.property_name IS NOT NULL
-                         THEN 'd_kykmから移行'
-                         ELSE 'migration: edit from asset detail entry'
-                    END
-                )
-                ON CONFLICT (ctb_id, property_no) DO NOTHING;
+            INSERT INTO ctb_contract_header (
+                ctb_id,
+                kykh_id,
+                kykbnj,
+                kykbnl,
+                kyak_nm,
+                kkbn_id,
+                lcpt_id,
+                kknri_id,
+                kyak_dt,
+                start_dt,
+                end_dt,
+                lkikan,
+                rng_bango,
+                shonin_dt,
+                kiansha,
+                jencho_f,
+                k_glsryo,
+                k_klsryo,
+                k_slsryo,
+                zritu,
+                saikaisu,
+                kyak_end_f
+            ) VALUES (
+                v_ctb_id,
+                v_rec.kykh_id,
+                v_rec.kykbnj,
+                v_rec.kykbnl,
+                v_rec.kyak_nm,
+                v_rec.kkbn_id,
+                v_rec.lcpt_id,
+                v_rec.kknri_id,
+                v_rec.kyak_dt,
+                v_rec.start_dt,
+                v_rec.end_dt,
+                v_rec.lkikan,
+                v_rec.rng_bango,
+                v_rec.shonin_dt,
+                v_rec.kiansha,
+                v_rec.jencho_f,
+                v_rec.k_glsryo,
+                v_rec.k_klsryo,
+                v_rec.k_slsryo,
+                v_rec.zritu,
+                v_rec.saikaisu,
+                v_rec.kyak_end_f
+            )
+            ON CONFLICT (ctb_id) DO UPDATE SET
+                kykh_id    = EXCLUDED.kykh_id,
+                kykbnj     = EXCLUDED.kykbnj,
+                kykbnl     = EXCLUDED.kykbnl,
+                kyak_nm    = EXCLUDED.kyak_nm,
+                kkbn_id    = EXCLUDED.kkbn_id,
+                lcpt_id    = EXCLUDED.lcpt_id,
+                kknri_id   = EXCLUDED.kknri_id,
+                kyak_dt    = EXCLUDED.kyak_dt,
+                start_dt   = EXCLUDED.start_dt,
+                end_dt     = EXCLUDED.end_dt,
+                lkikan     = EXCLUDED.lkikan,
+                rng_bango  = EXCLUDED.rng_bango,
+                shonin_dt  = EXCLUDED.shonin_dt,
+                kiansha    = EXCLUDED.kiansha,
+                jencho_f   = EXCLUDED.jencho_f,
+                k_glsryo   = EXCLUDED.k_glsryo,
+                k_klsryo   = EXCLUDED.k_klsryo,
+                k_slsryo   = EXCLUDED.k_slsryo,
+                zritu      = EXCLUDED.zritu,
+                saikaisu   = EXCLUDED.saikaisu,
+                kyak_end_f = EXCLUDED.kyak_end_f,
+                update_dt  = CURRENT_TIMESTAMP;
 
-                v_prop_count := v_prop_count + 1;
-            END IF;
+            v_hdr_count := v_hdr_count + 1;
 
             -- ============================================================
-            -- 3. ctb_dept_allocation UPSERT
+            -- 3. ctb_contract_property UPSERT
+            -- ============================================================
+            INSERT INTO ctb_contract_property (
+                ctb_id,
+                property_no,
+                bukn_nm,
+                bukn_bango1,
+                bkind_id,
+                skmk_id,
+                b_suuryo,
+                b_knyukn,
+                b_glsryo,
+                b_klsryo,
+                b_bcat_id,
+                asset_category_cd,
+                setti_dt,
+                b_kedaban
+            ) VALUES (
+                v_ctb_id,
+                1,
+                v_rec.bukn_nm,
+                v_rec.bukn_bango1,
+                v_rec.bkind_id,
+                v_rec.skmk_id,
+                v_rec.b_suuryo,
+                v_rec.b_knyukn,
+                v_rec.b_glsryo,
+                v_rec.b_klsryo,
+                v_rec.b_bcat_id,
+                COALESCE(v_rec.asset_category_cd, 'AC01'),
+                v_rec.setti_dt,
+                v_rec.b_kedaban
+            )
+            ON CONFLICT (ctb_id, property_no) DO UPDATE SET
+                bukn_nm           = EXCLUDED.bukn_nm,
+                bukn_bango1       = EXCLUDED.bukn_bango1,
+                bkind_id          = EXCLUDED.bkind_id,
+                skmk_id           = EXCLUDED.skmk_id,
+                b_suuryo          = EXCLUDED.b_suuryo,
+                b_knyukn          = EXCLUDED.b_knyukn,
+                b_glsryo          = EXCLUDED.b_glsryo,
+                b_klsryo          = EXCLUDED.b_klsryo,
+                b_bcat_id         = EXCLUDED.b_bcat_id,
+                asset_category_cd = EXCLUDED.asset_category_cd,
+                setti_dt          = EXCLUDED.setti_dt,
+                b_kedaban         = EXCLUDED.b_kedaban,
+                update_dt         = CURRENT_TIMESTAMP;
+
+            -- ============================================================
+            -- 4. ctb_dept_allocation UPSERT
             -- ============================================================
             IF v_rec.mgmt_dept_cd IS NOT NULL THEN
                 INSERT INTO ctb_dept_allocation (
@@ -193,7 +295,7 @@ BEGIN
                     v_ctb_id,
                     v_rec.mgmt_dept_cd,
                     100.00,
-                    v_rec.monthly_payment,
+                    CAST(v_rec.k_glsryo AS NUMERIC(15,0)),
                     CASE WHEN v_is_new THEN 'マイグレーション自動作成' ELSE '差分同期更新' END
                 )
                 ON CONFLICT (ctb_id, dept_cd) DO UPDATE SET
@@ -210,11 +312,11 @@ BEGIN
             v_err_count := v_err_count + 1;
             v_errors := array_append(v_errors,
                 format('contract_no=%s, kykh_id=%s: %s',
-                    v_rec.contract_no, v_rec.kykh_id, SQLERRM));
+                    v_rec.kykbnj, v_rec.kykh_id, SQLERRM));
 
             -- pg_notifyでエラー通知
             PERFORM pg_notify('migration_error', json_build_object(
-                'contract_no', v_rec.contract_no,
+                'contract_no', v_rec.kykbnj,
                 'kykh_id', v_rec.kykh_id,
                 'error', SQLERRM,
                 'ts', CURRENT_TIMESTAMP
@@ -227,12 +329,12 @@ BEGIN
     -- ============================================================
     RETURN QUERY SELECT
         v_inserted, v_updated, v_skipped,
-        v_prop_count, v_alloc_count,
+        v_hdr_count, v_alloc_count,
         v_err_count, v_errors;
 END;
 $$;
 
 COMMENT ON FUNCTION sp_migrate_d_kykh_to_ctb(VARCHAR)
-    IS 'd_kykh→ctb_lease_integrated/ctb_property/ctb_dept_allocation差分同期SP';
+    IS 'd_kykh→ctb_lease_integrated/ctb_contract_header/ctb_contract_property/ctb_dept_allocation差分同期SP';
 
 COMMIT;

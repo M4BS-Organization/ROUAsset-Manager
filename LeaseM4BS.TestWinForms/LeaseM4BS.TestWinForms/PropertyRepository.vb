@@ -3,7 +3,7 @@ Imports Npgsql
 Imports LeaseM4BS.DataAccess
 
 ''' <summary>
-''' ctb_property / ctb_property_attribute / m_property_attribute_def のDB操作
+''' ctb_contract_property / ctb_contract_property_attribute / m_property_attribute_def のDB操作
 ''' </summary>
 Public Class PropertyRepository
 
@@ -63,7 +63,7 @@ Public Class PropertyRepository
     Public Function InsertProperty(conn As NpgsqlConnection, txn As NpgsqlTransaction,
                                     rec As PropertyRecord) As Integer
         Const sql As String =
-            "INSERT INTO ctb_property " &
+            "INSERT INTO ctb_contract_property " &
             "(ctb_id, property_no, asset_category_cd, asset_no, asset_name, " &
             " company_name, install_location, remarks) " &
             "VALUES (@ctb_id, @property_no, @asset_category_cd, @asset_no, @asset_name, " &
@@ -91,7 +91,7 @@ Public Class PropertyRepository
         If attributes Is Nothing OrElse attributes.Count = 0 Then Return
 
         Const sql As String =
-            "INSERT INTO ctb_property_attribute (property_id, attr_def_id, attribute_value) " &
+            "INSERT INTO ctb_contract_property_attribute (property_id, attr_def_id, attribute_value) " &
             "VALUES (@property_id, @attr_def_id, @attribute_value) " &
             "ON CONFLICT (property_id, attr_def_id) DO UPDATE SET " &
             "attribute_value = EXCLUDED.attribute_value, update_dt = CURRENT_TIMESTAMP"
@@ -116,7 +116,7 @@ Public Class PropertyRepository
             "d.max_length, d.is_required, d.sort_order, d.default_value, " &
             "a.attribute_value " &
             "FROM m_property_attribute_def d " &
-            "LEFT JOIN ctb_property_attribute a " &
+            "LEFT JOIN ctb_contract_property_attribute a " &
             "  ON d.attr_def_id = a.attr_def_id AND a.property_id = @property_id " &
             "WHERE d.asset_category_cd = @asset_category_cd " &
             "ORDER BY d.sort_order"
@@ -159,7 +159,7 @@ Public Class PropertyRepository
         Const sql As String =
             "SELECT property_id, ctb_id, property_no, asset_category_cd, " &
             "asset_no, asset_name, company_name, install_location, remarks " &
-            "FROM ctb_property WHERE ctb_id = @ctb_id ORDER BY property_no"
+            "FROM ctb_contract_property WHERE ctb_id = @ctb_id ORDER BY property_no"
 
         Dim results As New List(Of PropertyRecord)
 
