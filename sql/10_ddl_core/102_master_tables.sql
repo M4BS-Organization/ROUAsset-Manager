@@ -61,6 +61,7 @@ CREATE TABLE public.m_bkind (
     bkind2_nm character varying(40),
     bkind3_cd character varying(12),
     bkind3_nm character varying(40),
+    asset_category_cd character varying(10),  -- 新リース会計: m_asset_category への紐づけ
     biko character varying(100),
     create_id integer,
     create_dt timestamp without time zone,

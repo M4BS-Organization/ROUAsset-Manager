@@ -87,13 +87,7 @@ BEGIN
             m.b_klsryo,
             m.b_bcat_id,
             m.kari_ritu,
-            CASE
-                WHEN bk.bkind_nm LIKE '%不動産%' OR bk.bkind_nm LIKE '%建物%' THEN 'AC01'
-                WHEN bk.bkind_nm LIKE '%車両%' THEN 'AC04'
-                WHEN bk.bkind_nm LIKE '%OA%' OR bk.bkind_nm LIKE '%機械%' THEN 'AC03'
-                WHEN bk.bkind_nm LIKE '%構築%' THEN 'AC02'
-                ELSE 'AC05'
-            END                                       AS asset_category_cd
+            COALESCE(bk.asset_category_cd, 'AC05')    AS asset_category_cd
         FROM d_kykh k
         LEFT JOIN m_kknri kn ON k.kknri_id = kn.kknri_id
         LEFT JOIN LATERAL (

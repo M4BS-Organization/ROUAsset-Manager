@@ -1301,11 +1301,19 @@ Public Class FrmLeaseContractMain
             .DropDownStyle = ComboBoxStyle.DropDownList,
             .Font = FNT_INPUT
         }
-        Dim assetCategories As String() = _masterData.LoadAssetCategories()
-        If assetCategories.Length > 0 Then
-            cmbAssetCategory.Items.AddRange(assetCategories)
-        Else
-            cmbAssetCategory.Items.AddRange(New String() {"建物", "構築物", "機械装置", "車両運搬具", "その他"})
+        ' m_bkind から物件種別を取得（資産区分として表示）
+        Try
+            Dim crud As New CrudHelper()
+            Dim bkindDt = crud.GetDataTable(
+                "SELECT bkind_nm FROM m_bkind WHERE history_f IS NOT TRUE ORDER BY bkind_id",
+                New List(Of Npgsql.NpgsqlParameter))
+            For Each row As Data.DataRow In bkindDt.Rows
+                cmbAssetCategory.Items.Add(row("bkind_nm").ToString())
+            Next
+        Catch
+        End Try
+        If cmbAssetCategory.Items.Count = 0 Then
+            cmbAssetCategory.Items.AddRange(New String() {"不動産", "車両", "OA機器", "機械装置", "その他"})
         End If
         cmbAssetCategory.SelectedIndex = 0
 
@@ -1341,7 +1349,7 @@ Public Class FrmLeaseContractMain
 
         Dim rAsset As Integer = tblProp.RowCount
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("資産種類"), 0, rAsset)
+        tblProp.Controls.Add(CreateFieldLabel("資産区分"), 0, rAsset)
         tblProp.Controls.Add(cmbAssetCategory, 1, rAsset)
         tblProp.Controls.Add(CreateFieldLabel("資産番号"), 2, rAsset)
         tblProp.Controls.Add(txtAssetNo, 3, rAsset)
@@ -1411,7 +1419,7 @@ Public Class FrmLeaseContractMain
             .HeaderText = "資産名", .Name = "BuknNm", .Width = 220, .MinimumWidth = 120
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "物件種別", .Name = "BkindNm", .Width = 90, .MinimumWidth = 70
+            .HeaderText = "資産区分", .Name = "BkindNm", .Width = 90, .MinimumWidth = 70
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "数量", .Name = "BSuuryo", .Width = 50, .MinimumWidth = 40

@@ -168,7 +168,7 @@ Partial Class FrmAssetDetailEntry
         Me.tblBasicInfo.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 130.0F))
         Me.tblBasicInfo.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 50.0F))
 
-        ' Row 0: 資産番号 | 資産種類
+        ' Row 0: 資産番号 | 資産区分
         Me.tblBasicInfo.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
         Me.lblAssetNo.Text = "資産番号"
         Me.lblAssetNo.Dock = DockStyle.Fill
@@ -181,7 +181,7 @@ Partial Class FrmAssetDetailEntry
         Me.txtAssetNo.ForeColor = CLR_TEXT
         Me.txtAssetNo.ReadOnly = True
         Me.txtAssetNo.BackColor = CLR_READONLY
-        Me.lblAssetCategory.Text = "物件種別"
+        Me.lblAssetCategory.Text = "資産区分"
         Me.lblAssetCategory.Dock = DockStyle.Fill
         Me.lblAssetCategory.Font = FNT_LABEL
         Me.lblAssetCategory.ForeColor = CLR_LABEL
