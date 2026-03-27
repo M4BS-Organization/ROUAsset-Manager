@@ -681,7 +681,7 @@ Public Class FrmLeaseContractMain
         End If
 
         ' 7. 月額支払明細の金額チェック（負値・上限超過・有効行）
-        Const MAX_AMOUNT As Decimal = 9999999999D
+        Dim MAX_AMOUNT As Decimal = ContractValidationHelper.MAX_AMOUNT
         If dgvMonthlyPayments IsNot Nothing Then
             Dim hasPositiveRow As Boolean = False
             For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
