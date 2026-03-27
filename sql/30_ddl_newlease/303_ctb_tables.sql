@@ -8,6 +8,7 @@
 --   3. ctb_remeasurement_history - 定義書準拠
 --   4. ctb_contract_header     - 新規: d_kykh と型統一した契約基本情報
 --   5. ctb_contract_property   - 新規: d_kykm と型統一した物件明細
+--   6. ctb_monthly_payment_detail - 新規: 科目別月額支払内訳（リース/非リース分類）
 --
 -- 依存:
 --   10_ddl_core/101_code_tables.sql   (c_kkbn)
@@ -273,5 +274,53 @@ CREATE INDEX IF NOT EXISTS idx_contract_property_ctb ON ctb_contract_property (c
 CREATE INDEX IF NOT EXISTS idx_contract_property_bukn ON ctb_contract_property (bukn_bango1);
 
 COMMENT ON TABLE ctb_contract_property IS '物件明細テーブル（d_kykmと型統一）';
+
+
+-- ============================================================
+-- 6. 月額支払明細テーブル (ctb_monthly_payment_detail)
+--    科目別の月額内訳を管理。画面の月額支払明細グリッドに対応。
+--    is_lease_component でリース構成部分/非リース構成部分を分類（ASBJ34号）。
+-- ============================================================
+
+DROP TABLE IF EXISTS ctb_monthly_payment_detail CASCADE;
+
+CREATE TABLE IF NOT EXISTS ctb_monthly_payment_detail (
+    -- === PK ===
+    detail_id           SERIAL          NOT NULL,
+    ctb_id              INTEGER         NOT NULL,           -- FK → ctb_lease_integrated
+
+    -- === 科目 ===
+    monthly_item_cd     VARCHAR(10)     NULL,               -- 科目コード → m_monthly_item
+    monthly_item_nm     VARCHAR(100)    NULL,               -- 科目名（賃料/管理費/共益費/...）
+
+    -- === 金額 ===
+    payment_amount      NUMERIC(15,2)   NOT NULL DEFAULT 0, -- 支払額（税抜）
+    tax_rate            NUMERIC(5,4)    NULL,               -- 消費税率
+    tax_amount          NUMERIC(15,2)   NULL DEFAULT 0,     -- 消費税額
+    total_amount        NUMERIC(15,2)   NULL DEFAULT 0,     -- 税込合計
+
+    -- === 支払方法 ===
+    bank_account_cd     VARCHAR(10)     NULL,               -- 振込先口座 → m_bank_account
+    payment_method_cd   VARCHAR(10)     NULL,               -- 支払方法 → m_payment_method
+    payment_day         VARCHAR(20)     NULL,               -- 支払日（毎月末/毎月25日等）
+
+    -- === 会計分類（新リース固有） ===
+    is_lease_component  BOOLEAN         NOT NULL DEFAULT TRUE, -- リース構成部分か否か
+    -- TRUE: 賃料（リース負債の算出対象）
+    -- FALSE: 管理費/共益費（非リース構成部分、費用処理）
+
+    -- === システム ===
+    create_dt           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_dt           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_ctb_monthly_payment PRIMARY KEY (detail_id),
+    CONSTRAINT fk_monthly_payment_ctb FOREIGN KEY (ctb_id)
+        REFERENCES ctb_lease_integrated (ctb_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_monthly_payment_ctb ON ctb_monthly_payment_detail (ctb_id);
+
+COMMENT ON TABLE ctb_monthly_payment_detail IS '月額支払明細テーブル（科目別内訳・リース/非リース分類）';
+COMMENT ON COLUMN ctb_monthly_payment_detail.is_lease_component IS 'TRUE=リース構成部分（負債算出対象）、FALSE=非リース構成部分（費用処理）';
 
 COMMIT;
