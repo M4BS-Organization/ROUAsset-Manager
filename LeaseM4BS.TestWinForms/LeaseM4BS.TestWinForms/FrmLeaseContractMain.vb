@@ -55,6 +55,7 @@ Public Class FrmLeaseContractMain
     Private txtAssetNo As TextBox
     Private btnAssetSearch As Button
     Private btnAssetNew As Button
+    Private btnAssetEdit As Button
     Private dgvAssets As DataGridView
     Private lblAssetCount As Label
     Private btnDeleteRow As Button
@@ -388,6 +389,16 @@ Public Class FrmLeaseContractMain
             row.Cells("BSuuryo").Value = "1"
             row.Cells("SettiDt").Value = ""
             row.Cells("BKedaban").Value = ""
+
+            ' 配賦部門情報
+            Dim deptInfo As String = ""
+            If Not String.IsNullOrEmpty(rec.DeptName) Then
+                deptInfo = rec.DeptName
+                If rec.AllocationRatio > 0 Then
+                    deptInfo &= "(" & rec.AllocationRatio.ToString("0.##") & "%)"
+                End If
+            End If
+            row.Cells("DeptAlloc").Value = deptInfo
         Next
 
         If lblAssetCount IsNot Nothing Then
@@ -851,43 +862,46 @@ Public Class FrmLeaseContractMain
         Dim crud As New CrudHelper()
         Dim dt As Data.DataTable = Nothing
 
-        ' --- 1. ctb_contract_property から読込を試行 ---
+        ' --- 1. ctb から物件+配賦を1クエリで取得 ---
         Try
-            Dim ctbIdSql As String = "SELECT ctb_id FROM ctb_lease_integrated WHERE kykh_id = @id LIMIT 1"
-            Dim ctbIdResult = crud.ExecuteScalar(Of Object)(ctbIdSql, New List(Of Npgsql.NpgsqlParameter) From {
-                New Npgsql.NpgsqlParameter("@id", kykhId)
+            Dim sql As String =
+                "SELECT p.bukn_bango1, p.bukn_nm, p.b_suuryo, p.setti_dt, p.b_kedaban, " &
+                "  bk.bkind_nm, " &
+                "  (SELECT STRING_AGG(d.dept_nm || '(' || a.haifritu || '%)', ', ' " &
+                "          ORDER BY a.haifritu DESC) " &
+                "   FROM ctb_dept_allocation a " &
+                "   LEFT JOIN m_department d ON a.dept_cd = d.dept_cd " &
+                "   WHERE a.ctb_id = c.ctb_id) AS dept_alloc " &
+                "FROM ctb_contract_property p " &
+                "JOIN ctb_lease_integrated c ON p.ctb_id = c.ctb_id " &
+                "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
+                "WHERE c.kykh_id = @kykh_id " &
+                "ORDER BY c.property_no"
+            dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                New Npgsql.NpgsqlParameter("@kykh_id", kykhId)
             })
-
-            If ctbIdResult IsNot Nothing AndAlso Not IsDBNull(ctbIdResult) Then
-                Dim ctbId As Integer = Convert.ToInt32(ctbIdResult)
-                Dim sql As String =
-                    "SELECT p.*, bk.bkind_nm " &
-                    "FROM ctb_contract_property p " &
-                    "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
-                    "WHERE p.ctb_id = @ctb_id " &
-                    "ORDER BY p.property_no"
-                dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
-                    New Npgsql.NpgsqlParameter("@ctb_id", ctbId)
-                })
-            End If
         Catch ex As Exception
-            ' ctb テーブル未作成等の場合はフォールバックへ
-            System.Diagnostics.Debug.WriteLine("ctb_contract_property読込スキップ: " & ex.Message)
+            System.Diagnostics.Debug.WriteLine("ctb読込スキップ: " & ex.Message)
             dt = Nothing
         End Try
 
-        ' --- 2. ctb にデータがない場合は d_kykm からフォールバック ---
+        ' --- 2. ctb にデータがない場合は d_kykm + d_haif からフォールバック ---
         If dt Is Nothing OrElse dt.Rows.Count = 0 Then
             Try
                 Dim sql As String =
-                    "SELECT m.bukn_bango1, m.bukn_nm, m.bkind_id, m.b_suuryo, " &
-                    "  m.setti_dt, m.b_kedaban, bk.bkind_nm " &
+                    "SELECT m.bukn_bango1, m.bukn_nm, m.b_suuryo, " &
+                    "  m.setti_dt, m.b_kedaban, bk.bkind_nm, " &
+                    "  (SELECT STRING_AGG(b.bcat1_nm || '(' || h.haifritu || '%)', ', ' " &
+                    "          ORDER BY h.haifritu DESC) " &
+                    "   FROM d_haif h " &
+                    "   LEFT JOIN m_bcat b ON h.h_bcat_id = b.bcat_id AND b.history_f IS NOT TRUE " &
+                    "   WHERE h.kykm_id = m.kykm_id) AS dept_alloc " &
                     "FROM d_kykm m " &
                     "LEFT JOIN m_bkind bk ON m.bkind_id = bk.bkind_id " &
-                    "WHERE m.kykh_id = @id " &
+                    "WHERE m.kykh_id = @kykh_id " &
                     "ORDER BY m.kykm_no"
                 dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
-                    New Npgsql.NpgsqlParameter("@id", kykhId)
+                    New Npgsql.NpgsqlParameter("@kykh_id", kykhId)
                 })
             Catch ex As Exception
                 System.Diagnostics.Debug.WriteLine("d_kykm読込エラー: " & ex.Message)
@@ -905,10 +919,10 @@ Public Class FrmLeaseContractMain
             dgvRow.Cells("BuknNm").Value = If(row("bukn_nm") IsNot DBNull.Value, row("bukn_nm").ToString(), "")
             dgvRow.Cells("BkindNm").Value = If(row("bkind_nm") IsNot DBNull.Value, row("bkind_nm").ToString(), "")
             dgvRow.Cells("BSuuryo").Value = If(row("b_suuryo") IsNot DBNull.Value, Convert.ToInt32(row("b_suuryo")).ToString(), "1")
-            dgvRow.Cells("SettiDt").Value = If(row.Table.Columns.Contains("setti_dt") AndAlso row("setti_dt") IsNot DBNull.Value,
+            dgvRow.Cells("SettiDt").Value = If(row("setti_dt") IsNot DBNull.Value,
                 Convert.ToDateTime(row("setti_dt")).ToString("yyyy/MM/dd"), "")
-            dgvRow.Cells("BKedaban").Value = If(row.Table.Columns.Contains("b_kedaban") AndAlso row("b_kedaban") IsNot DBNull.Value,
-                row("b_kedaban").ToString(), "")
+            dgvRow.Cells("BKedaban").Value = If(row("b_kedaban") IsNot DBNull.Value, row("b_kedaban").ToString(), "")
+            dgvRow.Cells("DeptAlloc").Value = If(row("dept_alloc") IsNot DBNull.Value, row("dept_alloc").ToString(), "")
         Next
 
         If lblAssetCount IsNot Nothing Then
@@ -1226,19 +1240,28 @@ Public Class FrmLeaseContractMain
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 10.0F))
 
         cmbAssetCategory = New ComboBox() With {
             .Dock = DockStyle.Fill,
             .DropDownStyle = ComboBoxStyle.DropDownList,
             .Font = FNT_INPUT
         }
-        Dim assetCategories As String() = _masterData.LoadAssetCategories()
-        If assetCategories.Length > 0 Then
-            cmbAssetCategory.Items.AddRange(assetCategories)
-        Else
-            cmbAssetCategory.Items.AddRange(New String() {"建物", "構築物", "機械装置", "車両運搬具", "その他"})
+        ' m_bkind から物件種別を取得（資産区分として表示）
+        Try
+            Dim crud As New CrudHelper()
+            Dim bkindDt = crud.GetDataTable(
+                "SELECT bkind_nm FROM m_bkind WHERE history_f IS NOT TRUE ORDER BY bkind_id",
+                New List(Of Npgsql.NpgsqlParameter))
+            For Each row As Data.DataRow In bkindDt.Rows
+                cmbAssetCategory.Items.Add(row("bkind_nm").ToString())
+            Next
+        Catch
+        End Try
+        If cmbAssetCategory.Items.Count = 0 Then
+            cmbAssetCategory.Items.AddRange(New String() {"不動産", "車両", "OA機器", "機械装置", "その他"})
         End If
         cmbAssetCategory.SelectedIndex = 0
 
@@ -1269,17 +1292,31 @@ Public Class FrmLeaseContractMain
         }
         btnAssetNew.FlatAppearance.BorderSize = 0
 
+        btnAssetEdit = New Button() With {
+            .Text = "照会/変更",
+            .Dock = DockStyle.Fill,
+            .Height = 28,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(23, 162, 184),
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand
+        }
+        btnAssetEdit.FlatAppearance.BorderSize = 0
+
         AddHandler btnAssetSearch.Click, AddressOf OnAssetSearchClick
         AddHandler btnAssetNew.Click, AddressOf OnAssetNewClick
+        AddHandler btnAssetEdit.Click, AddressOf OnAssetEditClick
 
         Dim rAsset As Integer = tblProp.RowCount
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblProp.Controls.Add(CreateFieldLabel("資産種類"), 0, rAsset)
+        tblProp.Controls.Add(CreateFieldLabel("資産区分"), 0, rAsset)
         tblProp.Controls.Add(cmbAssetCategory, 1, rAsset)
         tblProp.Controls.Add(CreateFieldLabel("資産番号"), 2, rAsset)
         tblProp.Controls.Add(txtAssetNo, 3, rAsset)
         tblProp.Controls.Add(btnAssetSearch, 4, rAsset)
         tblProp.Controls.Add(btnAssetNew, 5, rAsset)
+        tblProp.Controls.Add(btnAssetEdit, 6, rAsset)
         tblProp.RowCount += 1
 
         btnDeleteRow = New Button() With {
@@ -1320,12 +1357,18 @@ Public Class FrmLeaseContractMain
             .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
             .ScrollBars = ScrollBars.Both,
             .AllowUserToAddRows = False,
-            .RowHeadersVisible = False,
+            .RowHeadersVisible = True,
+            .RowHeadersWidth = 30,
+            .RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
             .BorderStyle = BorderStyle.None,
             .GridColor = CLR_BORDER,
             .SelectionMode = DataGridViewSelectionMode.CellSelect,
             .ReadOnly = True,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+                .SelectionBackColor = Color.FromArgb(220, 235, 252),
+                .SelectionForeColor = Color.Black
+            },
             .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
                 .BackColor = Color.FromArgb(240, 244, 248),
                 .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
@@ -1333,10 +1376,8 @@ Public Class FrmLeaseContractMain
             },
             .EnableHeadersVisualStyles = False
         }
-        dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "削除フラグ", .Name = "DeleteCheck", .Width = 60,
-            .MinimumWidth = 60, .SortMode = DataGridViewColumnSortMode.NotSortable
-        })
+        dgvAssets.SelectionMode = DataGridViewSelectionMode.FullRowSelect
+        dgvAssets.MultiSelect = False
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "資産番号", .Name = "BuknBango1", .Width = 120, .MinimumWidth = 80
         })
@@ -1344,7 +1385,7 @@ Public Class FrmLeaseContractMain
             .HeaderText = "資産名", .Name = "BuknNm", .Width = 220, .MinimumWidth = 120
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
-            .HeaderText = "物件種別", .Name = "BkindNm", .Width = 90, .MinimumWidth = 70
+            .HeaderText = "資産区分", .Name = "BkindNm", .Width = 90, .MinimumWidth = 70
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "数量", .Name = "BSuuryo", .Width = 50, .MinimumWidth = 40
@@ -1354,6 +1395,9 @@ Public Class FrmLeaseContractMain
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "枝番", .Name = "BKedaban", .Width = 60, .MinimumWidth = 40
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "配賦部署", .Name = "DeptAlloc", .Width = 200, .ReadOnly = True
         })
 
         dgvAssets.AllowUserToAddRows = True
@@ -3144,6 +3188,65 @@ Public Class FrmLeaseContractMain
         End Using
     End Sub
 
+    Private Sub OnAssetEditClick(sender As Object, e As EventArgs)
+        If dgvAssets.SelectedRows.Count = 0 OrElse dgvAssets.SelectedRows(0).IsNewRow Then
+            MessageBox.Show("照会/変更する資産を選択してください。", "選択エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim selectedRow As DataGridViewRow = dgvAssets.SelectedRows(0)
+        Dim assetNo As String = If(selectedRow.Cells("BuknBango1").Value IsNot Nothing,
+                                    selectedRow.Cells("BuknBango1").Value.ToString(), "")
+        Dim assetCategory As String = If(selectedRow.Cells("BkindNm").Value IsNot Nothing,
+                                          selectedRow.Cells("BkindNm").Value.ToString(), "")
+
+        Using frm As New FrmAssetDetailEntry()
+            frm.InitAssetNo = assetNo
+            frm.AssetCategory = assetCategory
+
+            ' ctb_contract_property からデータを取得して画面に設定
+            Try
+                Dim crud As New CrudHelper()
+                Dim sql As String =
+                    "SELECT c.ctb_id, p.bukn_bango1, p.bukn_nm, p.b_suuryo, p.setti_dt, p.b_kedaban, " &
+                    "  bk.bkind_nm " &
+                    "FROM ctb_contract_property p " &
+                    "JOIN ctb_lease_integrated c ON p.ctb_id = c.ctb_id " &
+                    "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
+                    "WHERE c.kykh_id = @kykh_id AND p.bukn_bango1 = @asset_no " &
+                    "LIMIT 1"
+                Dim dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@kykh_id", CInt(Me.KykhId)),
+                    New Npgsql.NpgsqlParameter("@asset_no", assetNo)
+                })
+                If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
+                    Dim row As Data.DataRow = dt.Rows(0)
+                    frm.InitCtbId = If(row("ctb_id") IsNot DBNull.Value, Convert.ToInt32(row("ctb_id")), 0)
+                    frm.InitAssetName = If(row("bukn_nm") IsNot DBNull.Value, row("bukn_nm").ToString(), "")
+                    frm.InitQuantity = If(row("b_suuryo") IsNot DBNull.Value, Convert.ToInt32(row("b_suuryo")), 1)
+                    frm.InitSettiDate = If(row("setti_dt") IsNot DBNull.Value, Convert.ToDateTime(row("setti_dt")), DateTime.Today)
+                    frm.InitKedaban = If(row("b_kedaban") IsNot DBNull.Value, row("b_kedaban").ToString(), "")
+                End If
+            Catch
+                ' ctb未作成時はグリッドの値をそのまま使用
+                frm.InitAssetName = If(selectedRow.Cells("BuknNm").Value IsNot Nothing,
+                                        selectedRow.Cells("BuknNm").Value.ToString(), "")
+                frm.InitKedaban = If(selectedRow.Cells("BKedaban").Value IsNot Nothing,
+                                      selectedRow.Cells("BKedaban").Value.ToString(), "")
+            End Try
+
+            If frm.ShowDialog(Me) = DialogResult.OK Then
+                selectedRow.Cells("BuknBango1").Value = frm.AssetNo
+                selectedRow.Cells("BuknNm").Value = frm.AssetName
+                selectedRow.Cells("BkindNm").Value = frm.AssetCategory
+                selectedRow.Cells("BSuuryo").Value = frm.Quantity.ToString()
+                selectedRow.Cells("SettiDt").Value = frm.SettiDate.ToString("yyyy/MM/dd")
+                selectedRow.Cells("BKedaban").Value = frm.Kedaban
+            End If
+        End Using
+    End Sub
+
     ''' <summary>
     ''' DBとメモリストアと画面上の未登録資産から次の資産番号を生成する
     ''' </summary>
@@ -3212,13 +3315,14 @@ Public Class FrmLeaseContractMain
             row.Cells("BSuuryo").Value = "1"
             row.Cells("SettiDt").Value = ""
             row.Cells("BKedaban").Value = ""
+            row.Cells("DeptAlloc").Value = ""
         Else
             dgvAssets.Rows.Add(
-                False,
                 frm.AssetNo,
                 frm.AssetName,
                 frm.AssetCategory,
                 "1",
+                "",
                 "",
                 "")
         End If
@@ -3265,26 +3369,23 @@ Public Class FrmLeaseContractMain
     End Sub
 
     Private Sub OnDeleteRowClick(sender As Object, e As EventArgs)
-        Dim rowsToDelete As New List(Of DataGridViewRow)()
-        For Each row As DataGridViewRow In dgvAssets.Rows
-            If row.IsNewRow Then Continue For
-            If row.Cells("DeleteCheck").Value IsNot Nothing AndAlso
-               CBool(row.Cells("DeleteCheck").Value) = True Then
-                rowsToDelete.Add(row)
-            End If
-        Next
-
-        If rowsToDelete.Count = 0 Then
+        If dgvAssets.SelectedRows.Count = 0 OrElse dgvAssets.SelectedRows(0).IsNewRow Then
             MessageBox.Show("削除する行を選択してください。", "確認",
                             MessageBoxButtons.OK, MessageBoxIcon.Information)
             Return
         End If
 
-        If MessageBox.Show(rowsToDelete.Count.ToString() & "件の行を削除します。よろしいですか？",
+        Dim selectedRow As DataGridViewRow = dgvAssets.SelectedRows(0)
+        Dim assetNo As String = If(selectedRow.Cells("BuknBango1").Value IsNot Nothing,
+                                    selectedRow.Cells("BuknBango1").Value.ToString(), "")
+        Dim assetName As String = If(selectedRow.Cells("BuknNm").Value IsNot Nothing,
+                                      selectedRow.Cells("BuknNm").Value.ToString(), "")
+
+        If MessageBox.Show("以下の資産を削除します。よろしいですか？" & Environment.NewLine &
+                           "資産番号: " & assetNo & Environment.NewLine &
+                           "資産名: " & assetName,
                            "削除確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            For Each row As DataGridViewRow In rowsToDelete
-                dgvAssets.Rows.Remove(row)
-            Next
+            dgvAssets.Rows.Remove(selectedRow)
             UpdateAssetCount()
         End If
     End Sub

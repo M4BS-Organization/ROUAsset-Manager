@@ -75,7 +75,9 @@ BEGIN
             k.kyak_end_f,
             COALESCE(CAST(k.shri_kn AS INTEGER), 1)  AS payment_interval_months,
             kn.kknri1_cd                              AS mgmt_dept_cd,
-            -- d_kykm（物件明細）から各種カラムを取得（最初の1物件）
+            -- d_kykm（物件明細）から全物件を取得（1契約×N物件 = N行に展開）
+            m.kykm_id,
+            m.kykm_no,
             m.bukn_nm,
             m.bukn_bango1,
             m.bkind_id,
@@ -86,26 +88,13 @@ BEGIN
             m.b_klsryo,
             m.b_bcat_id,
             m.kari_ritu,
-            CASE
-                WHEN bk.bkind_nm LIKE '%不動産%' OR bk.bkind_nm LIKE '%建物%' THEN 'AC01'
-                WHEN bk.bkind_nm LIKE '%車両%' THEN 'AC04'
-                WHEN bk.bkind_nm LIKE '%OA%' OR bk.bkind_nm LIKE '%機械%' THEN 'AC03'
-                WHEN bk.bkind_nm LIKE '%構築%' THEN 'AC02'
-                ELSE 'AC05'
-            END                                       AS asset_category_cd
+            m.setti_dt,
+            m.b_kedaban,
+            ROW_NUMBER() OVER (PARTITION BY k.kykh_id ORDER BY m.kykm_no) AS property_no,
+            COALESCE(bk.asset_category_cd, 'AC05')    AS asset_category_cd
         FROM d_kykh k
         LEFT JOIN m_kknri kn ON k.kknri_id = kn.kknri_id
-        LEFT JOIN LATERAL (
-            SELECT kykm.bukn_nm, kykm.bkind_id, kykm.bukn_bango1,
-                   kykm.skmk_id, kykm.b_suuryo, kykm.b_knyukn,
-                   kykm.b_glsryo, kykm.b_klsryo, kykm.b_bcat_id,
-                   kykm.kari_ritu,
-                   kykm.setti_dt, kykm.b_kedaban
-            FROM d_kykm kykm
-            WHERE kykm.kykh_id = k.kykh_id
-            ORDER BY kykm.kykm_no
-            LIMIT 1
-        ) m ON TRUE
+        LEFT JOIN d_kykm m ON m.kykh_id = k.kykh_id
         LEFT JOIN m_bkind bk ON m.bkind_id = bk.bkind_id
         WHERE k.k_history_f IS NOT TRUE
           AND k.kykbnj IS NOT NULL
@@ -128,7 +117,7 @@ BEGIN
                 kykh_id
             ) VALUES (
                 v_rec.kykbnj,
-                1,
+                v_rec.property_no,
                 v_rec.start_dt,
                 CAST(v_rec.lkikan AS INTEGER),
                 CAST(v_rec.lkikan AS INTEGER),
@@ -282,28 +271,39 @@ BEGIN
                 update_dt         = CURRENT_TIMESTAMP;
 
             -- ============================================================
-            -- 4. ctb_dept_allocation UPSERT
+            -- 4. ctb_dept_allocation（d_haif → 物件単位の配賦明細同期）
             -- ============================================================
-            IF v_rec.mgmt_dept_cd IS NOT NULL THEN
-                INSERT INTO ctb_dept_allocation (
-                    ctb_id,
-                    dept_cd,
-                    allocation_ratio,
-                    payment_amount,
-                    remarks
-                ) VALUES (
-                    v_ctb_id,
-                    v_rec.mgmt_dept_cd,
-                    100.00,
-                    CAST(v_rec.k_glsryo AS NUMERIC(15,0)),
-                    CASE WHEN v_is_new THEN 'マイグレーション自動作成' ELSE '差分同期更新' END
-                )
-                ON CONFLICT (ctb_id, dept_cd) DO UPDATE SET
-                    allocation_ratio = EXCLUDED.allocation_ratio,
-                    payment_amount   = EXCLUDED.payment_amount,
-                    remarks          = EXCLUDED.remarks,
-                    update_dt        = CURRENT_TIMESTAMP;
+            DELETE FROM ctb_dept_allocation WHERE ctb_id = v_ctb_id;
 
+            INSERT INTO ctb_dept_allocation (
+                ctb_id, line_id, h_bcat_id, dept_cd, haifritu, hkmk_id,
+                h_klsryo, h_mlsryo, h_kzei, h_mzei, h_klsryo_zkomi, h_mlsryo_zkomi,
+                rsrvh1_id
+            )
+            SELECT
+                v_ctb_id,
+                h.line_id,
+                h.h_bcat_id,
+                COALESCE(b.bcat1_cd, '000'),
+                COALESCE(h.haifritu, 100.00),
+                h.hkmk_id,
+                h.h_klsryo, h.h_mlsryo, h.h_kzei, h.h_mzei,
+                h.h_klsryo_zkomi, h.h_mlsryo_zkomi,
+                h.rsrvh1_id
+            FROM d_haif h
+            LEFT JOIN m_bcat b ON h.h_bcat_id = b.bcat_id AND b.history_f IS NOT TRUE
+            WHERE h.kykh_id = v_rec.kykh_id
+              AND h.kykm_id = v_rec.kykm_id;
+
+            GET DIAGNOSTICS v_alloc_count = ROW_COUNT;
+
+            -- d_haif にデータがない場合は管理部門から1行作成
+            IF NOT FOUND AND v_rec.mgmt_dept_cd IS NOT NULL THEN
+                INSERT INTO ctb_dept_allocation (
+                    ctb_id, line_id, dept_cd, haifritu
+                ) VALUES (
+                    v_ctb_id, 1, v_rec.mgmt_dept_cd, 100.00
+                );
                 v_alloc_count := v_alloc_count + 1;
             END IF;
 
