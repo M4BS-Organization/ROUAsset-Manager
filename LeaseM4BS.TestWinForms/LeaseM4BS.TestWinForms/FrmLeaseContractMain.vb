@@ -1348,7 +1348,11 @@ Public Class FrmLeaseContractMain
             .GridColor = CLR_BORDER,
             .SelectionMode = DataGridViewSelectionMode.CellSelect,
             .ReadOnly = True,
-            .DefaultCellStyle = New DataGridViewCellStyle() With {.Font = FNT_INPUT, .ForeColor = CLR_TEXT},
+            .DefaultCellStyle = New DataGridViewCellStyle() With {
+                .Font = FNT_INPUT, .ForeColor = CLR_TEXT,
+                .SelectionBackColor = Color.FromArgb(220, 235, 252),
+                .SelectionForeColor = Color.Black
+            },
             .ColumnHeadersDefaultCellStyle = New DataGridViewCellStyle() With {
                 .BackColor = Color.FromArgb(240, 244, 248),
                 .Font = FNT_LABEL, .ForeColor = CLR_LABEL,
