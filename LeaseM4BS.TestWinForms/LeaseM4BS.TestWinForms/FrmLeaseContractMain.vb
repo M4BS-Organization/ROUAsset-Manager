@@ -860,45 +860,47 @@ Public Class FrmLeaseContractMain
 
         Dim crud As New CrudHelper()
         Dim dt As Data.DataTable = Nothing
-        Dim ctbIdResult As Object = Nothing
 
-        ' --- 1. ctb_contract_property から読込を試行 ---
+        ' --- 1. ctb から物件+配賦を1クエリで取得 ---
         Try
-            Dim ctbIdSql As String = "SELECT ctb_id FROM ctb_lease_integrated WHERE kykh_id = @id LIMIT 1"
-            ctbIdResult = crud.ExecuteScalar(Of Object)(ctbIdSql, New List(Of Npgsql.NpgsqlParameter) From {
-                New Npgsql.NpgsqlParameter("@id", kykhId)
+            Dim sql As String =
+                "SELECT p.bukn_bango1, p.bukn_nm, p.b_suuryo, p.setti_dt, p.b_kedaban, " &
+                "  bk.bkind_nm, " &
+                "  (SELECT STRING_AGG(d.dept_nm || '(' || a.haifritu || '%)', ', ' " &
+                "          ORDER BY a.haifritu DESC) " &
+                "   FROM ctb_dept_allocation a " &
+                "   LEFT JOIN m_department d ON a.dept_cd = d.dept_cd " &
+                "   WHERE a.ctb_id = c.ctb_id) AS dept_alloc " &
+                "FROM ctb_contract_property p " &
+                "JOIN ctb_lease_integrated c ON p.ctb_id = c.ctb_id " &
+                "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
+                "WHERE c.kykh_id = @kykh_id " &
+                "ORDER BY c.property_no"
+            dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                New Npgsql.NpgsqlParameter("@kykh_id", kykhId)
             })
-
-            If ctbIdResult IsNot Nothing AndAlso Not IsDBNull(ctbIdResult) Then
-                Dim ctbId As Integer = Convert.ToInt32(ctbIdResult)
-                Dim sql As String =
-                    "SELECT p.*, bk.bkind_nm " &
-                    "FROM ctb_contract_property p " &
-                    "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
-                    "WHERE p.ctb_id = @ctb_id " &
-                    "ORDER BY p.property_no"
-                dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
-                    New Npgsql.NpgsqlParameter("@ctb_id", ctbId)
-                })
-            End If
         Catch ex As Exception
-            ' ctb テーブル未作成等の場合はフォールバックへ
-            System.Diagnostics.Debug.WriteLine("ctb_contract_property読込スキップ: " & ex.Message)
+            System.Diagnostics.Debug.WriteLine("ctb読込スキップ: " & ex.Message)
             dt = Nothing
         End Try
 
-        ' --- 2. ctb にデータがない場合は d_kykm からフォールバック ---
+        ' --- 2. ctb にデータがない場合は d_kykm + d_haif からフォールバック ---
         If dt Is Nothing OrElse dt.Rows.Count = 0 Then
             Try
                 Dim sql As String =
-                    "SELECT m.bukn_bango1, m.bukn_nm, m.bkind_id, m.b_suuryo, " &
-                    "  m.setti_dt, m.b_kedaban, bk.bkind_nm " &
+                    "SELECT m.bukn_bango1, m.bukn_nm, m.b_suuryo, " &
+                    "  m.setti_dt, m.b_kedaban, bk.bkind_nm, " &
+                    "  (SELECT STRING_AGG(b.bcat1_nm || '(' || h.haifritu || '%)', ', ' " &
+                    "          ORDER BY h.haifritu DESC) " &
+                    "   FROM d_haif h " &
+                    "   LEFT JOIN m_bcat b ON h.h_bcat_id = b.bcat_id AND b.history_f IS NOT TRUE " &
+                    "   WHERE h.kykm_id = m.kykm_id) AS dept_alloc " &
                     "FROM d_kykm m " &
                     "LEFT JOIN m_bkind bk ON m.bkind_id = bk.bkind_id " &
-                    "WHERE m.kykh_id = @id " &
+                    "WHERE m.kykh_id = @kykh_id " &
                     "ORDER BY m.kykm_no"
                 dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
-                    New Npgsql.NpgsqlParameter("@id", kykhId)
+                    New Npgsql.NpgsqlParameter("@kykh_id", kykhId)
                 })
             Catch ex As Exception
                 System.Diagnostics.Debug.WriteLine("d_kykm読込エラー: " & ex.Message)
@@ -916,67 +918,11 @@ Public Class FrmLeaseContractMain
             dgvRow.Cells("BuknNm").Value = If(row("bukn_nm") IsNot DBNull.Value, row("bukn_nm").ToString(), "")
             dgvRow.Cells("BkindNm").Value = If(row("bkind_nm") IsNot DBNull.Value, row("bkind_nm").ToString(), "")
             dgvRow.Cells("BSuuryo").Value = If(row("b_suuryo") IsNot DBNull.Value, Convert.ToInt32(row("b_suuryo")).ToString(), "1")
-            dgvRow.Cells("SettiDt").Value = If(row.Table.Columns.Contains("setti_dt") AndAlso row("setti_dt") IsNot DBNull.Value,
+            dgvRow.Cells("SettiDt").Value = If(row("setti_dt") IsNot DBNull.Value,
                 Convert.ToDateTime(row("setti_dt")).ToString("yyyy/MM/dd"), "")
-            dgvRow.Cells("BKedaban").Value = If(row.Table.Columns.Contains("b_kedaban") AndAlso row("b_kedaban") IsNot DBNull.Value,
-                row("b_kedaban").ToString(), "")
+            dgvRow.Cells("BKedaban").Value = If(row("b_kedaban") IsNot DBNull.Value, row("b_kedaban").ToString(), "")
+            dgvRow.Cells("DeptAlloc").Value = If(row("dept_alloc") IsNot DBNull.Value, row("dept_alloc").ToString(), "")
         Next
-
-        ' --- 配賦部署の読込 ---
-        Try
-            Dim allocText As String = ""
-
-            ' ctb_dept_allocation から読込を試行
-            If ctbIdResult IsNot Nothing AndAlso Not IsDBNull(ctbIdResult) Then
-                Dim allocSql As String =
-                    "SELECT d.dept_nm, a.haifritu " &
-                    "FROM ctb_dept_allocation a " &
-                    "LEFT JOIN m_department d ON a.dept_cd = d.dept_cd " &
-                    "WHERE a.ctb_id = @ctb_id " &
-                    "ORDER BY a.haifritu DESC"
-                Dim allocDt = crud.GetDataTable(allocSql, New List(Of Npgsql.NpgsqlParameter) From {
-                    New Npgsql.NpgsqlParameter("@ctb_id", Convert.ToInt32(ctbIdResult))
-                })
-                If allocDt IsNot Nothing AndAlso allocDt.Rows.Count > 0 Then
-                    For Each allocRow As Data.DataRow In allocDt.Rows
-                        Dim deptName As String = If(allocRow("dept_nm") IsNot DBNull.Value, allocRow("dept_nm").ToString(), "不明")
-                        Dim ratio As String = If(allocRow("haifritu") IsNot DBNull.Value, Convert.ToDecimal(allocRow("haifritu")).ToString("0.##"), "0")
-                        If allocText <> "" Then allocText &= ", "
-                        allocText &= deptName & "(" & ratio & "%)"
-                    Next
-                End If
-            End If
-
-            ' d_haif フォールバック（ctb配賦が空の場合）
-            If String.IsNullOrEmpty(allocText) Then
-                Dim haifSql As String =
-                    "SELECT b.bcat1_nm, h.haifritu " &
-                    "FROM d_haif h " &
-                    "LEFT JOIN m_bcat b ON h.h_bcat_id = b.bcat_id AND b.history_f IS NOT TRUE " &
-                    "WHERE h.kykh_id = @kykh_id " &
-                    "ORDER BY h.haifritu DESC"
-                Dim haifDt = crud.GetDataTable(haifSql, New List(Of Npgsql.NpgsqlParameter) From {
-                    New Npgsql.NpgsqlParameter("@kykh_id", kykhId)
-                })
-                If haifDt IsNot Nothing AndAlso haifDt.Rows.Count > 0 Then
-                    For Each haifRow As Data.DataRow In haifDt.Rows
-                        Dim deptName As String = If(haifRow("bcat1_nm") IsNot DBNull.Value, haifRow("bcat1_nm").ToString(), "不明")
-                        Dim ratio As String = If(haifRow("haifritu") IsNot DBNull.Value, Convert.ToDecimal(haifRow("haifritu")).ToString("0.##"), "0")
-                        If allocText <> "" Then allocText &= ", "
-                        allocText &= deptName & "(" & ratio & "%)"
-                    Next
-                End If
-            End If
-
-            ' 全行に配賦情報を設定
-            If Not String.IsNullOrEmpty(allocText) Then
-                For Each dgvRow As DataGridViewRow In dgvAssets.Rows
-                    If Not dgvRow.IsNewRow Then dgvRow.Cells("DeptAlloc").Value = allocText
-                Next
-            End If
-        Catch
-            ' 配賦テーブル未作成の場合は無視
-        End Try
 
         If lblAssetCount IsNot Nothing Then
             lblAssetCount.Text = "資産件数: " & dt.Rows.Count & "件"
