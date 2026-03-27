@@ -55,6 +55,7 @@ Public Class FrmLeaseContractMain
     Private txtAssetNo As TextBox
     Private btnAssetSearch As Button
     Private btnAssetNew As Button
+    Private btnAssetEdit As Button
     Private dgvAssets As DataGridView
     Private lblAssetCount As Label
     Private btnDeleteRow As Button
@@ -1239,8 +1240,9 @@ Public Class FrmLeaseContractMain
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 80.0F))
         tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 100.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
-        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20.0F))
+        tblProp.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 10.0F))
 
         cmbAssetCategory = New ComboBox() With {
             .Dock = DockStyle.Fill,
@@ -1290,8 +1292,21 @@ Public Class FrmLeaseContractMain
         }
         btnAssetNew.FlatAppearance.BorderSize = 0
 
+        btnAssetEdit = New Button() With {
+            .Text = "照会/変更",
+            .Dock = DockStyle.Fill,
+            .Height = 28,
+            .FlatStyle = FlatStyle.Flat,
+            .BackColor = Color.FromArgb(23, 162, 184),
+            .ForeColor = Color.White,
+            .Font = FNT_LABEL,
+            .Cursor = Cursors.Hand
+        }
+        btnAssetEdit.FlatAppearance.BorderSize = 0
+
         AddHandler btnAssetSearch.Click, AddressOf OnAssetSearchClick
         AddHandler btnAssetNew.Click, AddressOf OnAssetNewClick
+        AddHandler btnAssetEdit.Click, AddressOf OnAssetEditClick
 
         Dim rAsset As Integer = tblProp.RowCount
         tblProp.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
@@ -1301,6 +1316,7 @@ Public Class FrmLeaseContractMain
         tblProp.Controls.Add(txtAssetNo, 3, rAsset)
         tblProp.Controls.Add(btnAssetSearch, 4, rAsset)
         tblProp.Controls.Add(btnAssetNew, 5, rAsset)
+        tblProp.Controls.Add(btnAssetEdit, 6, rAsset)
         tblProp.RowCount += 1
 
         btnDeleteRow = New Button() With {
@@ -3168,6 +3184,65 @@ Public Class FrmLeaseContractMain
             frm.AssetCategory = cmbAssetCategory.SelectedItem.ToString()
             If frm.ShowDialog(Me) = DialogResult.OK Then
                 AddAssetRow(frm)
+            End If
+        End Using
+    End Sub
+
+    Private Sub OnAssetEditClick(sender As Object, e As EventArgs)
+        If dgvAssets.SelectedRows.Count = 0 OrElse dgvAssets.SelectedRows(0).IsNewRow Then
+            MessageBox.Show("照会/変更する資産を選択してください。", "選択エラー",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim selectedRow As DataGridViewRow = dgvAssets.SelectedRows(0)
+        Dim assetNo As String = If(selectedRow.Cells("BuknBango1").Value IsNot Nothing,
+                                    selectedRow.Cells("BuknBango1").Value.ToString(), "")
+        Dim assetCategory As String = If(selectedRow.Cells("BkindNm").Value IsNot Nothing,
+                                          selectedRow.Cells("BkindNm").Value.ToString(), "")
+
+        Using frm As New FrmAssetDetailEntry()
+            frm.InitAssetNo = assetNo
+            frm.AssetCategory = assetCategory
+
+            ' ctb_contract_property からデータを取得して画面に設定
+            Try
+                Dim crud As New CrudHelper()
+                Dim sql As String =
+                    "SELECT c.ctb_id, p.bukn_bango1, p.bukn_nm, p.b_suuryo, p.setti_dt, p.b_kedaban, " &
+                    "  bk.bkind_nm " &
+                    "FROM ctb_contract_property p " &
+                    "JOIN ctb_lease_integrated c ON p.ctb_id = c.ctb_id " &
+                    "LEFT JOIN m_bkind bk ON p.bkind_id = bk.bkind_id " &
+                    "WHERE c.kykh_id = @kykh_id AND p.bukn_bango1 = @asset_no " &
+                    "LIMIT 1"
+                Dim dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@kykh_id", CInt(Me.KykhId)),
+                    New Npgsql.NpgsqlParameter("@asset_no", assetNo)
+                })
+                If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
+                    Dim row As Data.DataRow = dt.Rows(0)
+                    frm.InitCtbId = If(row("ctb_id") IsNot DBNull.Value, Convert.ToInt32(row("ctb_id")), 0)
+                    frm.InitAssetName = If(row("bukn_nm") IsNot DBNull.Value, row("bukn_nm").ToString(), "")
+                    frm.InitQuantity = If(row("b_suuryo") IsNot DBNull.Value, Convert.ToInt32(row("b_suuryo")), 1)
+                    frm.InitSettiDate = If(row("setti_dt") IsNot DBNull.Value, Convert.ToDateTime(row("setti_dt")), DateTime.Today)
+                    frm.InitKedaban = If(row("b_kedaban") IsNot DBNull.Value, row("b_kedaban").ToString(), "")
+                End If
+            Catch
+                ' ctb未作成時はグリッドの値をそのまま使用
+                frm.InitAssetName = If(selectedRow.Cells("BuknNm").Value IsNot Nothing,
+                                        selectedRow.Cells("BuknNm").Value.ToString(), "")
+                frm.InitKedaban = If(selectedRow.Cells("BKedaban").Value IsNot Nothing,
+                                      selectedRow.Cells("BKedaban").Value.ToString(), "")
+            End Try
+
+            If frm.ShowDialog(Me) = DialogResult.OK Then
+                selectedRow.Cells("BuknBango1").Value = frm.AssetNo
+                selectedRow.Cells("BuknNm").Value = frm.AssetName
+                selectedRow.Cells("BkindNm").Value = frm.AssetCategory
+                selectedRow.Cells("BSuuryo").Value = frm.Quantity.ToString()
+                selectedRow.Cells("SettiDt").Value = frm.SettiDate.ToString("yyyy/MM/dd")
+                selectedRow.Cells("BKedaban").Value = frm.Kedaban
             End If
         End Using
     End Sub

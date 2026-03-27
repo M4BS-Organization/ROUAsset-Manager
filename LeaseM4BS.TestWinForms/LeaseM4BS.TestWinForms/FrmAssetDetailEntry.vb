@@ -9,6 +9,11 @@ Partial Public Class FrmAssetDetailEntry
 
     Public Property AssetCategory As String = ""
     Public Property InitAssetNo As String = ""
+    Public Property InitAssetName As String = ""
+    Public Property InitQuantity As Integer = 1
+    Public Property InitSettiDate As Date = Date.Today
+    Public Property InitKedaban As String = ""
+    Public Property InitCtbId As Integer = 0
     Public Property IsReadOnly As Boolean = False
     Public Property PropertyAttributes As Dictionary(Of Integer, String) = Nothing
 
@@ -24,6 +29,21 @@ Partial Public Class FrmAssetDetailEntry
     Public ReadOnly Property AssetName As String
         Get
             Return txtAssetName.Text
+        End Get
+    End Property
+    Public ReadOnly Property Quantity As Integer
+        Get
+            Return CInt(numSuuryo.Value)
+        End Get
+    End Property
+    Public ReadOnly Property SettiDate As Date
+        Get
+            Return dtpSettiDt.Value.Date
+        End Get
+    End Property
+    Public ReadOnly Property Kedaban As String
+        Get
+            Return txtKedaban.Text
         End Get
     End Property
     Public ReadOnly Property InstallLocation As String
@@ -177,6 +197,10 @@ Partial Public Class FrmAssetDetailEntry
     ' =============================================
     Private Sub FrmAssetDetailEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         If Not String.IsNullOrEmpty(InitAssetNo) Then txtAssetNo.Text = InitAssetNo
+        If Not String.IsNullOrEmpty(InitAssetName) Then txtAssetName.Text = InitAssetName
+        numSuuryo.Value = InitQuantity
+        dtpSettiDt.Value = InitSettiDate
+        If Not String.IsNullOrEmpty(InitKedaban) Then txtKedaban.Text = InitKedaban
         lblAssetCategoryDisplay.Text = AssetCategory
         pnlRealEstate.Visible = False
         pnlVehicle.Visible = False
@@ -389,6 +413,16 @@ Partial Public Class FrmAssetDetailEntry
 
     Private Sub InitDeptAllocationGrid()
         dgvDeptAllocation.Columns.Clear()
+
+        ' グリッドUI設定（資産グリッドと統一）
+        dgvDeptAllocation.SelectionMode = DataGridViewSelectionMode.FullRowSelect
+        dgvDeptAllocation.MultiSelect = False
+        dgvDeptAllocation.RowHeadersVisible = True
+        dgvDeptAllocation.RowHeadersWidth = 30
+        dgvDeptAllocation.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        dgvDeptAllocation.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 235, 252)
+        dgvDeptAllocation.DefaultCellStyle.SelectionForeColor = Color.Black
+
         Try
             Dim mdl As New LeaseM4BS.DataAccess.MasterDataLoader()
             _deptTable = mdl.LoadDepartments()
@@ -413,11 +447,43 @@ Partial Public Class FrmAssetDetailEntry
         AddHandler dgvDeptAllocation.CurrentCellDirtyStateChanged, Sub(s, ev)
                                                                         If dgvDeptAllocation.IsCurrentCellDirty Then dgvDeptAllocation.CommitEdit(DataGridViewDataErrorContexts.Commit)
                                                                     End Sub
-        If _deptTable.Rows.Count > 0 Then
-            dgvDeptAllocation.Rows.Add(_deptTable.Rows(0)("dept_cd").ToString(), _deptNameList(0), 100.00D)
-        Else
-            dgvDeptAllocation.Rows.Add("", "", 100.00D)
+
+        ' ctb_dept_allocation からデータを読込（照会/変更モード）
+        Dim loaded As Boolean = False
+        If InitCtbId > 0 Then
+            Try
+                Dim crud As New CrudHelper()
+                Dim dt = crud.GetDataTable(
+                    "SELECT d.dept_nm, a.dept_cd, a.haifritu " &
+                    "FROM ctb_dept_allocation a " &
+                    "LEFT JOIN m_department d ON a.dept_cd = d.dept_cd " &
+                    "WHERE a.ctb_id = @ctb_id " &
+                    "ORDER BY a.haifritu DESC",
+                    New List(Of NpgsqlParameter) From {
+                        New NpgsqlParameter("@ctb_id", InitCtbId)
+                    })
+                If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
+                    For Each row As Data.DataRow In dt.Rows
+                        Dim deptNm As String = If(row("dept_nm") IsNot DBNull.Value, row("dept_nm").ToString(), "")
+                        Dim deptCd As String = If(row("dept_cd") IsNot DBNull.Value, row("dept_cd").ToString(), "")
+                        Dim ratio As Decimal = If(row("haifritu") IsNot DBNull.Value, Convert.ToDecimal(row("haifritu")), 0D)
+                        dgvDeptAllocation.Rows.Add(deptCd, deptNm, ratio)
+                    Next
+                    loaded = True
+                End If
+            Catch
+            End Try
         End If
+
+        ' データがない場合はデフォルト1行
+        If Not loaded Then
+            If _deptTable.Rows.Count > 0 Then
+                dgvDeptAllocation.Rows.Add(_deptTable.Rows(0)("dept_cd").ToString(), _deptNameList(0), 100.00D)
+            Else
+                dgvDeptAllocation.Rows.Add("", "", 100.00D)
+            End If
+        End If
+
         UpdateAllocationTotal()
     End Sub
 
