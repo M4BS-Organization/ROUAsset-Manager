@@ -2,6 +2,8 @@ Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
 Imports System.Collections.Generic
+Imports LeaseM4BS.DataAccess
+Imports Npgsql
 
 Partial Public Class FrmAssetDetailEntry
 
@@ -202,18 +204,21 @@ Partial Public Class FrmAssetDetailEntry
     ''' </summary>
     Private Sub UpdateCategorySpecificLabel()
         If grpCategorySpecific Is Nothing Then Return
-        Select Case AssetCategory
-            Case "建物", "不動産"
-                grpCategorySpecific.Text = "建物情報"
-            Case "車両", "車両運搬具"
-                grpCategorySpecific.Text = "車両情報"
-            Case "OA機器", "機械装置"
-                grpCategorySpecific.Text = "OA機器情報"
-            Case "構築物"
-                grpCategorySpecific.Text = "構築物情報"
-            Case Else
-                grpCategorySpecific.Text = "種別固有情報"
-        End Select
+        Dim categoryCd As String = ResolveAssetCategoryCd(AssetCategory)
+        Try
+            Dim crud As New CrudHelper()
+            Dim result = crud.ExecuteScalar(Of Object)(
+                "SELECT asset_category_nm FROM m_asset_category WHERE asset_category_cd = @cd",
+                New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@cd", categoryCd)
+                })
+            If result IsNot Nothing AndAlso Not IsDBNull(result) Then
+                grpCategorySpecific.Text = result.ToString() & "情報"
+                Return
+            End If
+        Catch
+        End Try
+        grpCategorySpecific.Text = "種別固有情報"
     End Sub
 
     ' =============================================
@@ -333,16 +338,23 @@ Partial Public Class FrmAssetDetailEntry
     End Sub
 
     Private Shared Function ResolveAssetCategoryCd(category As String) As String
-        Select Case category
-            Case "不動産", "建物" : Return "AC01"
-            Case "構築物" : Return "AC02"
-            Case "機械装置" : Return "AC03"
-            Case "車両", "車両運搬具" : Return "AC04"
-            Case "OA機器", "その他" : Return "AC05"
-            Case Else
-                If category.StartsWith("AC") Then Return category
-                Return "AC05"
-        End Select
+        ' ACコードが直接渡された場合はそのまま返す
+        If Not String.IsNullOrEmpty(category) AndAlso category.StartsWith("AC") Then Return category
+
+        ' m_bkind.asset_category_cd から取得（ハードコード廃止）
+        Try
+            Dim crud As New CrudHelper()
+            Dim result = crud.ExecuteScalar(Of Object)(
+                "SELECT asset_category_cd FROM m_bkind WHERE bkind_nm = @nm AND history_f IS NOT TRUE LIMIT 1",
+                New List(Of NpgsqlParameter) From {
+                    New NpgsqlParameter("@nm", category)
+                })
+            If result IsNot Nothing AndAlso Not IsDBNull(result) Then Return result.ToString()
+        Catch
+        End Try
+
+        ' DB接続不可時のみデフォルト
+        Return "AC05"
     End Function
 
     ' =============================================
