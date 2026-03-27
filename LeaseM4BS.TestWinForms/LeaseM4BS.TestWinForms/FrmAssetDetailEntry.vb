@@ -361,7 +361,27 @@ Partial Public Class FrmAssetDetailEntry
     ' コンボボックス・配賦グリッド
     ' =============================================
     Private Sub InitComboBoxes()
-        ' 旧cmbCompanyは削除済み。処理なし。
+        ' cmbBkind に m_bkind からデータをロード
+        cmbBkind.Items.Clear()
+        Try
+            Dim crud As New CrudHelper()
+            Dim dt = crud.GetDataTable(
+                "SELECT bkind_nm FROM m_bkind WHERE history_f IS NOT TRUE ORDER BY bkind_id",
+                New List(Of NpgsqlParameter))
+            For Each row As Data.DataRow In dt.Rows
+                cmbBkind.Items.Add(row("bkind_nm").ToString())
+            Next
+        Catch
+        End Try
+        If cmbBkind.Items.Count = 0 Then
+            cmbBkind.Items.AddRange(New String() {"不動産", "車両", "OA機器", "機械装置", "その他"})
+        End If
+
+        ' AssetCategory で初期選択
+        If Not String.IsNullOrEmpty(AssetCategory) Then
+            Dim idx As Integer = cmbBkind.Items.IndexOf(AssetCategory)
+            If idx >= 0 Then cmbBkind.SelectedIndex = idx
+        End If
     End Sub
 
     Private _deptTable As Data.DataTable
