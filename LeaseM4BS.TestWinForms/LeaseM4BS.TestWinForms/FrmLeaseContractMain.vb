@@ -831,8 +831,11 @@ Public Class FrmLeaseContractMain
             txtApplicant.Text = If(row("kiansha") IsNot DBNull.Value, row("kiansha").ToString(), "")
             If row("jencho_f") IsNot DBNull.Value Then chkIsExtended.Checked = Convert.ToBoolean(row("jencho_f"))
 
-            ' --- 物件明細（d_kykm）をグリッドに表示 ---
+            ' --- 物件明細をグリッドに表示 ---
             LoadPropertyFromCtb(CInt(kykhId))
+
+            ' --- 月額支払明細をグリッドに表示 ---
+            LoadMonthlyPaymentsFromCtb(CInt(kykhId))
 
             _isLoaded = True
             ' ※ RecalcAll()→CalcLeaseMonths()は呼ばない（DB値をそのまま使用。
@@ -928,6 +931,60 @@ Public Class FrmLeaseContractMain
         If lblAssetCount IsNot Nothing Then
             lblAssetCount.Text = "資産件数: " & dt.Rows.Count & "件"
         End If
+    End Sub
+
+    ''' <summary>
+    ''' ctb_monthly_payment_detail から月額支払明細を読込み、dgvMonthlyPayments に表示する。
+    ''' ctb にデータがない場合はハードコードのデフォルト値を維持する。
+    ''' </summary>
+    Private Sub LoadMonthlyPaymentsFromCtb(kykhId As Integer)
+        If dgvMonthlyPayments Is Nothing Then Return
+
+        Try
+            Dim crud As New CrudHelper()
+
+            ' ctb_lease_integrated から ctb_id 一覧を取得（1契約に複数ctb_idがある場合は先頭を使用）
+            Dim ctbIdResult = crud.ExecuteScalar(Of Object)(
+                "SELECT ctb_id FROM ctb_lease_integrated WHERE kykh_id = @id LIMIT 1",
+                New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@id", kykhId)
+                })
+
+            If ctbIdResult Is Nothing OrElse IsDBNull(ctbIdResult) Then Return
+
+            Dim ctbId As Integer = Convert.ToInt32(ctbIdResult)
+            Dim sql As String =
+                "SELECT monthly_item_nm, payment_amount, tax_amount, total_amount, " &
+                "  bank_account_cd, payment_method_cd, payment_day " &
+                "FROM ctb_monthly_payment_detail " &
+                "WHERE ctb_id = @ctb_id " &
+                "ORDER BY detail_id"
+            Dim dt = crud.GetDataTable(sql, New List(Of Npgsql.NpgsqlParameter) From {
+                New Npgsql.NpgsqlParameter("@ctb_id", ctbId)
+            })
+
+            If dt Is Nothing OrElse dt.Rows.Count = 0 Then Return
+
+            ' ctb にデータがある場合はデフォルト行をクリアして置換
+            dgvMonthlyPayments.Rows.Clear()
+
+            For Each row As Data.DataRow In dt.Rows
+                dgvMonthlyPayments.Rows.Add(
+                    If(row("monthly_item_nm") IsNot DBNull.Value, row("monthly_item_nm").ToString(), ""),
+                    If(row("payment_amount") IsNot DBNull.Value, Convert.ToDecimal(row("payment_amount")), 0D),
+                    If(row("tax_amount") IsNot DBNull.Value, Convert.ToDecimal(row("tax_amount")), 0D),
+                    If(row("total_amount") IsNot DBNull.Value, Convert.ToDecimal(row("total_amount")), 0D),
+                    If(row("bank_account_cd") IsNot DBNull.Value, row("bank_account_cd").ToString(), Nothing),
+                    If(row("payment_method_cd") IsNot DBNull.Value, row("payment_method_cd").ToString(), Nothing),
+                    If(row("payment_day") IsNot DBNull.Value, row("payment_day").ToString(), ""))
+            Next
+
+            CalcMonthlyTotals()
+
+        Catch ex As Exception
+            ' ctb_monthly_payment_detail 未作成の場合はデフォルト値を維持
+            System.Diagnostics.Debug.WriteLine("月額支払明細読込スキップ: " & ex.Message)
+        End Try
     End Sub
 
     Private Function CreateHeaderLabel(text As String) As Label
