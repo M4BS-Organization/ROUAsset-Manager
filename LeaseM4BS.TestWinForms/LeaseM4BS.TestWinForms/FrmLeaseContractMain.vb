@@ -388,6 +388,16 @@ Public Class FrmLeaseContractMain
             row.Cells("BSuuryo").Value = "1"
             row.Cells("SettiDt").Value = ""
             row.Cells("BKedaban").Value = ""
+
+            ' 配賦部門情報
+            Dim deptInfo As String = ""
+            If Not String.IsNullOrEmpty(rec.DeptName) Then
+                deptInfo = rec.DeptName
+                If rec.AllocationRatio > 0 Then
+                    deptInfo &= "(" & rec.AllocationRatio.ToString("0.##") & "%)"
+                End If
+            End If
+            row.Cells("DeptAlloc").Value = deptInfo
         Next
 
         If lblAssetCount IsNot Nothing Then
@@ -850,11 +860,12 @@ Public Class FrmLeaseContractMain
 
         Dim crud As New CrudHelper()
         Dim dt As Data.DataTable = Nothing
+        Dim ctbIdResult As Object = Nothing
 
         ' --- 1. ctb_contract_property から読込を試行 ---
         Try
             Dim ctbIdSql As String = "SELECT ctb_id FROM ctb_lease_integrated WHERE kykh_id = @id LIMIT 1"
-            Dim ctbIdResult = crud.ExecuteScalar(Of Object)(ctbIdSql, New List(Of Npgsql.NpgsqlParameter) From {
+            ctbIdResult = crud.ExecuteScalar(Of Object)(ctbIdSql, New List(Of Npgsql.NpgsqlParameter) From {
                 New Npgsql.NpgsqlParameter("@id", kykhId)
             })
 
@@ -910,6 +921,62 @@ Public Class FrmLeaseContractMain
             dgvRow.Cells("BKedaban").Value = If(row.Table.Columns.Contains("b_kedaban") AndAlso row("b_kedaban") IsNot DBNull.Value,
                 row("b_kedaban").ToString(), "")
         Next
+
+        ' --- 配賦部署の読込 ---
+        Try
+            Dim allocText As String = ""
+
+            ' ctb_dept_allocation から読込を試行
+            If ctbIdResult IsNot Nothing AndAlso Not IsDBNull(ctbIdResult) Then
+                Dim allocSql As String =
+                    "SELECT d.dept_nm, a.haifritu " &
+                    "FROM ctb_dept_allocation a " &
+                    "LEFT JOIN m_department d ON a.dept_cd = d.dept_cd " &
+                    "WHERE a.ctb_id = @ctb_id " &
+                    "ORDER BY a.haifritu DESC"
+                Dim allocDt = crud.GetDataTable(allocSql, New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@ctb_id", Convert.ToInt32(ctbIdResult))
+                })
+                If allocDt IsNot Nothing AndAlso allocDt.Rows.Count > 0 Then
+                    For Each allocRow As Data.DataRow In allocDt.Rows
+                        Dim deptName As String = If(allocRow("dept_nm") IsNot DBNull.Value, allocRow("dept_nm").ToString(), "不明")
+                        Dim ratio As String = If(allocRow("haifritu") IsNot DBNull.Value, Convert.ToDecimal(allocRow("haifritu")).ToString("0.##"), "0")
+                        If allocText <> "" Then allocText &= ", "
+                        allocText &= deptName & "(" & ratio & "%)"
+                    Next
+                End If
+            End If
+
+            ' d_haif フォールバック（ctb配賦が空の場合）
+            If String.IsNullOrEmpty(allocText) Then
+                Dim haifSql As String =
+                    "SELECT b.bcat1_nm, h.haifritu " &
+                    "FROM d_haif h " &
+                    "LEFT JOIN m_bcat b ON h.h_bcat_id = b.bcat_id AND b.history_f IS NOT TRUE " &
+                    "WHERE h.kykh_id = @kykh_id " &
+                    "ORDER BY h.haifritu DESC"
+                Dim haifDt = crud.GetDataTable(haifSql, New List(Of Npgsql.NpgsqlParameter) From {
+                    New Npgsql.NpgsqlParameter("@kykh_id", kykhId)
+                })
+                If haifDt IsNot Nothing AndAlso haifDt.Rows.Count > 0 Then
+                    For Each haifRow As Data.DataRow In haifDt.Rows
+                        Dim deptName As String = If(haifRow("bcat1_nm") IsNot DBNull.Value, haifRow("bcat1_nm").ToString(), "不明")
+                        Dim ratio As String = If(haifRow("haifritu") IsNot DBNull.Value, Convert.ToDecimal(haifRow("haifritu")).ToString("0.##"), "0")
+                        If allocText <> "" Then allocText &= ", "
+                        allocText &= deptName & "(" & ratio & "%)"
+                    Next
+                End If
+            End If
+
+            ' 全行に配賦情報を設定
+            If Not String.IsNullOrEmpty(allocText) Then
+                For Each dgvRow As DataGridViewRow In dgvAssets.Rows
+                    If Not dgvRow.IsNewRow Then dgvRow.Cells("DeptAlloc").Value = allocText
+                Next
+            End If
+        Catch
+            ' 配賦テーブル未作成の場合は無視
+        End Try
 
         If lblAssetCount IsNot Nothing Then
             lblAssetCount.Text = "資産件数: " & dt.Rows.Count & "件"
@@ -1354,6 +1421,9 @@ Public Class FrmLeaseContractMain
         })
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "枝番", .Name = "BKedaban", .Width = 60, .MinimumWidth = 40
+        })
+        dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
+            .HeaderText = "配賦部署", .Name = "DeptAlloc", .Width = 200, .ReadOnly = True
         })
 
         dgvAssets.AllowUserToAddRows = True
@@ -3212,6 +3282,7 @@ Public Class FrmLeaseContractMain
             row.Cells("BSuuryo").Value = "1"
             row.Cells("SettiDt").Value = ""
             row.Cells("BKedaban").Value = ""
+            row.Cells("DeptAlloc").Value = ""
         Else
             dgvAssets.Rows.Add(
                 False,
@@ -3219,6 +3290,7 @@ Public Class FrmLeaseContractMain
                 frm.AssetName,
                 frm.AssetCategory,
                 "1",
+                "",
                 "",
                 "")
         End If

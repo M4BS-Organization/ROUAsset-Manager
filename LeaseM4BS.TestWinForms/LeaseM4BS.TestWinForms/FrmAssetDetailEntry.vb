@@ -180,9 +180,40 @@ Partial Public Class FrmAssetDetailEntry
         pnlVehicle.Visible = False
         pnlOfficeEquip.Visible = False
         BuildDynamicAttributePanel()
+        UpdateCategorySpecificLabel()
         InitComboBoxes()
         InitDeptAllocationGrid()
+
+        ' 物件種別ComboBox変更時に種別固有パネルを再生成
+        AddHandler cmbBkind.SelectedIndexChanged, Sub(s, ev)
+            If cmbBkind.SelectedItem IsNot Nothing Then
+                AssetCategory = cmbBkind.SelectedItem.ToString()
+                lblAssetCategoryDisplay.Text = AssetCategory
+                BuildDynamicAttributePanel()
+                UpdateCategorySpecificLabel()
+            End If
+        End Sub
+
         If IsReadOnly Then ApplyReadOnlyMode()
+    End Sub
+
+    ''' <summary>
+    ''' 種別固有情報のGroupBoxラベルをカテゴリに応じて動的に変更する。
+    ''' </summary>
+    Private Sub UpdateCategorySpecificLabel()
+        If grpCategorySpecific Is Nothing Then Return
+        Select Case AssetCategory
+            Case "建物", "不動産"
+                grpCategorySpecific.Text = "建物情報"
+            Case "車両", "車両運搬具"
+                grpCategorySpecific.Text = "車両情報"
+            Case "OA機器", "機械装置"
+                grpCategorySpecific.Text = "OA機器情報"
+            Case "構築物"
+                grpCategorySpecific.Text = "構築物情報"
+            Case Else
+                grpCategorySpecific.Text = "種別固有情報"
+        End Select
     End Sub
 
     ' =============================================

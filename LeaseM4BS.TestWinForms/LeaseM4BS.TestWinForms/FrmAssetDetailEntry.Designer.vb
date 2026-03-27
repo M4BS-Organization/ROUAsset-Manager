@@ -144,8 +144,8 @@ Partial Class FrmAssetDetailEntry
         Me.scrollPanel.AutoScroll = True
         Me.scrollPanel.Padding = New Padding(8)
         Me.scrollPanel.BackColor = CLR_CARD
-        Me.scrollPanel.Controls.Add(Me.grpCategorySpecific)
         Me.scrollPanel.Controls.Add(Me.grpDeptAllocation)
+        Me.scrollPanel.Controls.Add(Me.grpCategorySpecific)
         Me.scrollPanel.Controls.Add(Me.grpBasicInfo)
 
         ' === grpBasicInfo ===
