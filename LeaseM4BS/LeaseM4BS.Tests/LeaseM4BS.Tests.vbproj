@@ -119,6 +119,8 @@
     <Compile Include="Placeholder.vb" />
     <Compile Include="SyncTab1ToJudgeTests.vb" />
     <Compile Include="SyncTabDataFlowTests.vb" />
+    <Compile Include="ValidateInputBasicTests.vb" />
+    <Compile Include="ValidateInputAdvancedTests.vb" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -115,6 +115,7 @@
   <ItemGroup>
     <Compile Include="CashScheduleBuilder.vb" />
     <Compile Include="ContractCalcHelper.vb" />
+    <Compile Include="ContractValidationHelper.vb" />
     <Compile Include="CrudHelper.vb" />
     <Compile Include="TaxRateHelper.vb" />
     <Compile Include="DbConnectionManager.vb" />

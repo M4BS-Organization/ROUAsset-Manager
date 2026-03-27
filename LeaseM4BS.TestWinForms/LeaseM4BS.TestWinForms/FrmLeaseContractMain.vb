@@ -468,16 +468,14 @@ Public Class FrmLeaseContractMain
     ''' 登録ボタンクリック時の処理
     ''' </summary>
     Private Sub OnRegisterClick(sender As Object, e As EventArgs)
-        ' 必須項目チェック
+        ' 契約番号の自動設定チェック（システムチェック）
         If String.IsNullOrWhiteSpace(txtContractNo.Text) Then
             MessageBox.Show("契約番号が設定されていません。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
-        If String.IsNullOrWhiteSpace(txtContractName.Text) Then
-            MessageBox.Show("契約名称を入力してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            txtContractName.Focus()
-            Return
-        End If
+
+        ' 入力バリデーション
+        If Not ValidateInput() Then Return
 
         ' --- d_kykh 保存 ---
         Try
@@ -630,6 +628,118 @@ Public Class FrmLeaseContractMain
         Me.DialogResult = DialogResult.OK
         Me.Close()
     End Sub
+
+    ' ------------------------------------------------------------------
+    ' 入力バリデーション
+    ' ------------------------------------------------------------------
+
+    ''' <summary>
+    ''' 保存前の入力チェック。エラーがあれば MessageBox を表示し False を返す。
+    ''' </summary>
+    Private Function ValidateInput() As Boolean
+        ' 1. 契約名称（必須）
+        If String.IsNullOrWhiteSpace(txtContractName.Text) Then
+            MessageBox.Show("「契約名称」を入力してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtContractName.Focus()
+            Return False
+        End If
+
+        ' 2. 契約種類（必須選択）
+        If cmbContractType.SelectedIndex < 0 Then
+            MessageBox.Show("「契約種類」を選択してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            cmbContractType.Focus()
+            Return False
+        End If
+
+        ' 3. 取引先（必須選択）
+        If cmbSupplier.SelectedIndex < 0 Then
+            MessageBox.Show("「取引先」を選択してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            cmbSupplier.Focus()
+            Return False
+        End If
+
+        ' 4. 管理部署（必須選択）
+        If cmbMgmtDeptCode.SelectedIndex < 0 Then
+            MessageBox.Show("「管理部署」を選択してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            cmbMgmtDeptCode.Focus()
+            Return False
+        End If
+
+        ' 5. 日付整合性（開始日 < 終了日）
+        If dtpStartDate.Value >= dtpEndDate.Value Then
+            MessageBox.Show("「契約開始日」が「契約終了日」以降になっています。" & vbCrLf &
+                            "日付を確認してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            dtpStartDate.Focus()
+            Return False
+        End If
+
+        ' 6. 資産グリッド（最低1件の有効行）
+        Dim validAssetCount As Integer = 0
+        If dgvAssets IsNot Nothing Then
+            For Each row As DataGridViewRow In dgvAssets.Rows
+                If Not row.IsNewRow AndAlso
+                   row.Cells("BuknBango1").Value IsNot Nothing AndAlso
+                   Not String.IsNullOrWhiteSpace(row.Cells("BuknBango1").Value.ToString()) Then
+                    validAssetCount += 1
+                End If
+            Next
+        End If
+        If validAssetCount = 0 Then
+            MessageBox.Show("資産が登録されていません。" & vbCrLf &
+                            "少なくとも1件の資産を登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            If dgvAssets IsNot Nothing Then dgvAssets.Focus()
+            Return False
+        End If
+
+        ' 7. 月額支払明細の金額チェック（負値・上限超過・有効行）
+        Dim MAX_AMOUNT As Decimal = ContractValidationHelper.MAX_AMOUNT
+        If dgvMonthlyPayments IsNot Nothing Then
+            Dim hasPositiveRow As Boolean = False
+            For Each row As DataGridViewRow In dgvMonthlyPayments.Rows
+                If row.IsNewRow Then Continue For
+                Dim amountVal As Decimal = 0
+                If row.Cells("MAmountExTax").Value IsNot Nothing Then
+                    Decimal.TryParse(row.Cells("MAmountExTax").Value.ToString().Replace(",", ""), amountVal)
+                End If
+                If amountVal < 0 Then
+                    MessageBox.Show("月額支払明細に負の金額が入力されています。" & vbCrLf &
+                                    "金額を確認してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    dgvMonthlyPayments.CurrentCell = row.Cells("MAmountExTax")
+                    Return False
+                End If
+                If amountVal > MAX_AMOUNT Then
+                    MessageBox.Show("月額支払明細の金額が上限（" & MAX_AMOUNT.ToString("N0") & "円）を超えています。",
+                                    "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    dgvMonthlyPayments.CurrentCell = row.Cells("MAmountExTax")
+                    Return False
+                End If
+                If amountVal > 0 Then hasPositiveRow = True
+            Next
+            If Not hasPositiveRow Then
+                MessageBox.Show("月額支払明細に有効な金額が入力されていません。" & vbCrLf &
+                                "賃料等の金額を入力してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                dgvMonthlyPayments.Focus()
+                Return False
+            End If
+        End If
+
+        ' 8. 転貸タブ: 転貸有の場合の日付チェック（警告のみ）
+        If chkSublease.Checked Then
+            If dtpSubleaseStart.Value >= dtpSubleaseEnd.Value Then
+                Dim result = MessageBox.Show(
+                    "転貸開始日が転貸終了日以降になっています。" & vbCrLf &
+                    "このまま登録しますか？", "確認",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                If result = DialogResult.No Then
+                    tabMain.SelectedTab = pgSublease
+                    dtpSubleaseStart.Focus()
+                    Return False
+                End If
+            End If
+        End If
+
+        Return True
+    End Function
 
     ' ------------------------------------------------------------------
     ' d_kykh 保存（新規/更新）
