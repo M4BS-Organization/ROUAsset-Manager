@@ -1354,10 +1354,8 @@ Public Class FrmLeaseContractMain
             },
             .EnableHeadersVisualStyles = False
         }
-        dgvAssets.Columns.Add(New DataGridViewCheckBoxColumn() With {
-            .HeaderText = "削除フラグ", .Name = "DeleteCheck", .Width = 60,
-            .MinimumWidth = 60, .SortMode = DataGridViewColumnSortMode.NotSortable
-        })
+        dgvAssets.SelectionMode = DataGridViewSelectionMode.FullRowSelect
+        dgvAssets.MultiSelect = False
         dgvAssets.Columns.Add(New DataGridViewTextBoxColumn() With {
             .HeaderText = "資産番号", .Name = "BuknBango1", .Width = 120, .MinimumWidth = 80
         })
@@ -3239,7 +3237,6 @@ Public Class FrmLeaseContractMain
             row.Cells("DeptAlloc").Value = ""
         Else
             dgvAssets.Rows.Add(
-                False,
                 frm.AssetNo,
                 frm.AssetName,
                 frm.AssetCategory,
@@ -3291,26 +3288,23 @@ Public Class FrmLeaseContractMain
     End Sub
 
     Private Sub OnDeleteRowClick(sender As Object, e As EventArgs)
-        Dim rowsToDelete As New List(Of DataGridViewRow)()
-        For Each row As DataGridViewRow In dgvAssets.Rows
-            If row.IsNewRow Then Continue For
-            If row.Cells("DeleteCheck").Value IsNot Nothing AndAlso
-               CBool(row.Cells("DeleteCheck").Value) = True Then
-                rowsToDelete.Add(row)
-            End If
-        Next
-
-        If rowsToDelete.Count = 0 Then
+        If dgvAssets.SelectedRows.Count = 0 OrElse dgvAssets.SelectedRows(0).IsNewRow Then
             MessageBox.Show("削除する行を選択してください。", "確認",
                             MessageBoxButtons.OK, MessageBoxIcon.Information)
             Return
         End If
 
-        If MessageBox.Show(rowsToDelete.Count.ToString() & "件の行を削除します。よろしいですか？",
+        Dim selectedRow As DataGridViewRow = dgvAssets.SelectedRows(0)
+        Dim assetNo As String = If(selectedRow.Cells("BuknBango1").Value IsNot Nothing,
+                                    selectedRow.Cells("BuknBango1").Value.ToString(), "")
+        Dim assetName As String = If(selectedRow.Cells("BuknNm").Value IsNot Nothing,
+                                      selectedRow.Cells("BuknNm").Value.ToString(), "")
+
+        If MessageBox.Show("以下の資産を削除します。よろしいですか？" & Environment.NewLine &
+                           "資産番号: " & assetNo & Environment.NewLine &
+                           "資産名: " & assetName,
                            "削除確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            For Each row As DataGridViewRow In rowsToDelete
-                dgvAssets.Rows.Remove(row)
-            Next
+            dgvAssets.Rows.Remove(selectedRow)
             UpdateAssetCount()
         End If
     End Sub
